@@ -1,18 +1,23 @@
 {
   "name": "@walkr/studio",
   "version": "0.1.0",
+  "private": true,
   "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "dependencies": {
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0"
   },
-  "files": ["dist"],
+  "devDependencies": {
+    "@types/react": "^18.3.13",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.2",
+    "typescript": "^5.8.2",
+    "vite": "^5.4.8"
+  },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "lint": "eslint src --ext .ts,.tsx",
-    "type-check": "tsc -p tsconfig.json --noEmit",
-    "dev": "tsc -p tsconfig.json --watch"
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "type-check": "tsc --noEmit"
   }
 }
