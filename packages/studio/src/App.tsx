@@ -34,6 +34,8 @@ function App() {
     toggleLoop,
     stepForward,
     stepBackward,
+    resizeStep,
+    reorderSteps,
     updateSelectedStep,
   } = useStudio();
 
@@ -71,6 +73,8 @@ function App() {
               }
               setPlayhead(time);
             }}
+            onResizeStep={resizeStep}
+            onReorderSteps={reorderSteps}
           />
           <PreviewPane walkthrough={state.walkthrough} mode={state.mode} />
         </section>

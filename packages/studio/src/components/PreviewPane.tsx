@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 import { WalkrEngine } from "../../../engine/src/engine";
 import type { Walkthrough } from "../../../core/src/types";
@@ -7,28 +7,41 @@ import type { PlaybackMode } from "../types";
 interface PreviewPaneProps {
   walkthrough: Walkthrough | null;
   mode: PlaybackMode;
+  onScriptChange?: (callback: (walkthrough: Walkthrough) => void) => void | (() => void);
 }
 
-export const PreviewPane = ({ walkthrough, mode }: PreviewPaneProps) => {
+export const PreviewPane = ({ walkthrough, mode, onScriptChange }: PreviewPaneProps) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const engineRef = useRef<WalkrEngine | null>(null);
   const playbackState = useRef<"idle" | "playing" | "paused">("idle");
+  const activeWalkthroughRef = useRef<Walkthrough | null>(null);
 
-  useEffect(() => {
-    if (!containerRef.current) {
-      return;
+  const remountEngine = useCallback((): WalkrEngine | null => {
+    const container = containerRef.current;
+    if (!container) {
+      return null;
     }
 
+    engineRef.current?.unmount();
+
     const engine = new WalkrEngine();
-    engine.mount(containerRef.current);
+    engine.mount(container);
     engineRef.current = engine;
+    playbackState.current = "idle";
+    activeWalkthroughRef.current = null;
+    return engine;
+  }, []);
+
+  useEffect(() => {
+    remountEngine();
 
     return () => {
-      engine.unmount();
+      engineRef.current?.unmount();
       engineRef.current = null;
       playbackState.current = "idle";
+      activeWalkthroughRef.current = null;
     };
-  }, []);
+  }, [remountEngine]);
 
   useEffect(() => {
     const engine = engineRef.current;
@@ -37,16 +50,48 @@ export const PreviewPane = ({ walkthrough, mode }: PreviewPaneProps) => {
     }
 
     if (mode === "playing") {
-      if (playbackState.current === "paused") {
+      if (playbackState.current === "paused" && activeWalkthroughRef.current === walkthrough) {
         engine.resume();
         playbackState.current = "playing";
         return;
       }
 
+      if (playbackState.current === "paused" && activeWalkthroughRef.current !== walkthrough) {
+        const nextEngine = remountEngine();
+        if (!nextEngine) {
+          return;
+        }
+
+        playbackState.current = "playing";
+        activeWalkthroughRef.current = walkthrough;
+        void nextEngine.play(walkthrough).finally(() => {
+          playbackState.current = "idle";
+          activeWalkthroughRef.current = null;
+        });
+        return;
+      }
+
+      if (playbackState.current === "playing" && activeWalkthroughRef.current !== walkthrough) {
+        const nextEngine = remountEngine();
+        if (!nextEngine) {
+          return;
+        }
+
+        playbackState.current = "playing";
+        activeWalkthroughRef.current = walkthrough;
+        void nextEngine.play(walkthrough).finally(() => {
+          playbackState.current = "idle";
+          activeWalkthroughRef.current = null;
+        });
+        return;
+      }
+
       if (playbackState.current === "idle") {
         playbackState.current = "playing";
+        activeWalkthroughRef.current = walkthrough;
         void engine.play(walkthrough).finally(() => {
           playbackState.current = "idle";
+          activeWalkthroughRef.current = null;
         });
       }
       return;
@@ -61,13 +106,29 @@ export const PreviewPane = ({ walkthrough, mode }: PreviewPaneProps) => {
     }
 
     if (mode === "stopped" && playbackState.current !== "idle") {
-      playbackState.current = "idle";
-      engine.unmount();
-      if (containerRef.current) {
-        engine.mount(containerRef.current);
-      }
+      remountEngine();
     }
-  }, [mode, walkthrough]);
+  }, [mode, remountEngine, walkthrough]);
+
+  useEffect(() => {
+    if (!onScriptChange) {
+      return;
+    }
+
+    return onScriptChange((nextWalkthrough) => {
+      const engine = remountEngine();
+      if (!engine) {
+        return;
+      }
+
+      playbackState.current = "playing";
+      activeWalkthroughRef.current = nextWalkthrough;
+      void engine.play(nextWalkthrough).finally(() => {
+        playbackState.current = "idle";
+        activeWalkthroughRef.current = null;
+      });
+    });
+  }, [onScriptChange, remountEngine]);
 
   return (
     <section

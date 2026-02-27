@@ -13,5 +13,8 @@
     "lint": "eslint src --ext .ts",
     "type-check": "tsc -p tsconfig.json --noEmit",
     "dev": "tsc -p tsconfig.json --watch"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3"
   }
 }

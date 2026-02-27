@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import type { Step } from "../../../core/src/types";
+import type { Step, Walkthrough } from "../../../core/src/types";
 import { DEFAULT_DEMO_WALKTHROUGH } from "../constants";
 import type { PlaybackMode, SelectedStep, StudioState } from "../types";
 
@@ -14,6 +14,9 @@ interface UseStudioResult {
   toggleLoop: () => void;
   stepForward: () => void;
   stepBackward: () => void;
+  resizeStep: (index: number, newDuration: number) => void;
+  reorderSteps: (from: number, to: number) => void;
+  loadWalkthrough: (walkthrough: Walkthrough) => void;
   updateSelectedStep: (updater: (step: Step) => Step) => void;
 }
 
@@ -31,6 +34,7 @@ const clamp = (value: number, min: number, max: number): number => {
 
 const getTotalDuration = (steps: Step[]): number =>
   steps.reduce((total, step) => total + Math.max(0, step.duration), 0);
+const MIN_STEP_DURATION_MS = 50;
 
 const findStepIndexAtTime = (steps: Step[], time: number): number | null => {
   if (steps.length === 0) {
@@ -63,6 +67,21 @@ const buildSelectedStep = (steps: Step[], index: number | null): SelectedStep | 
   }
 
   return { index, step: steps[index] };
+};
+
+const findSelectedIndex = (
+  steps: Step[],
+  selectedStep: SelectedStep | null,
+  playheadTime: number,
+): number | null => {
+  if (selectedStep) {
+    const selectedById = steps.findIndex((step) => step.id === selectedStep.step.id);
+    if (selectedById >= 0) {
+      return selectedById;
+    }
+  }
+
+  return findStepIndexAtTime(steps, playheadTime);
 };
 
 export const useStudio = (): UseStudioResult => {
@@ -205,6 +224,87 @@ export const useStudio = (): UseStudioResult => {
     });
   }, []);
 
+  const resizeStep = useCallback((index: number, newDuration: number) => {
+    setState((previous) => {
+      if (!previous.walkthrough || index < 0 || index >= previous.walkthrough.steps.length) {
+        return previous;
+      }
+
+      const clampedDuration = Math.max(MIN_STEP_DURATION_MS, Math.round(newDuration));
+      const currentStep = previous.walkthrough.steps[index];
+      if (!currentStep || currentStep.duration === clampedDuration) {
+        return previous;
+      }
+
+      const nextSteps = [...previous.walkthrough.steps];
+      nextSteps[index] = {
+        ...currentStep,
+        duration: clampedDuration,
+      };
+
+      const nextTotalDuration = getTotalDuration(nextSteps);
+      const nextPlayhead = clamp(previous.playheadTime, 0, nextTotalDuration);
+      const nextSelectedIndex = findSelectedIndex(nextSteps, previous.selectedStep, nextPlayhead);
+
+      return {
+        ...previous,
+        walkthrough: {
+          ...previous.walkthrough,
+          steps: nextSteps,
+        },
+        playheadTime: nextPlayhead,
+        selectedStep: buildSelectedStep(nextSteps, nextSelectedIndex),
+      };
+    });
+  }, []);
+
+  const reorderSteps = useCallback((from: number, to: number) => {
+    setState((previous) => {
+      if (!previous.walkthrough) {
+        return previous;
+      }
+
+      const stepsToReorder = previous.walkthrough.steps;
+      if (
+        from < 0 ||
+        from >= stepsToReorder.length ||
+        to < 0 ||
+        to >= stepsToReorder.length ||
+        from === to
+      ) {
+        return previous;
+      }
+
+      const nextSteps = [...stepsToReorder];
+      const [movedStep] = nextSteps.splice(from, 1);
+      nextSteps.splice(to, 0, movedStep);
+
+      const nextTotalDuration = getTotalDuration(nextSteps);
+      const nextPlayhead = clamp(previous.playheadTime, 0, nextTotalDuration);
+      const nextSelectedIndex = findSelectedIndex(nextSteps, previous.selectedStep, nextPlayhead);
+
+      return {
+        ...previous,
+        walkthrough: {
+          ...previous.walkthrough,
+          steps: nextSteps,
+        },
+        playheadTime: nextPlayhead,
+        selectedStep: buildSelectedStep(nextSteps, nextSelectedIndex),
+      };
+    });
+  }, []);
+
+  const loadWalkthrough = useCallback((walkthrough: Walkthrough) => {
+    setState((previous) => ({
+      ...previous,
+      walkthrough,
+      selectedStep: buildSelectedStep(walkthrough.steps, walkthrough.steps.length > 0 ? 0 : null),
+      playheadTime: 0,
+      mode: "stopped",
+    }));
+  }, []);
+
   const updateSelectedStep = useCallback((updater: (step: Step) => Step) => {
     setState((previous) => {
       if (!previous.walkthrough || !previous.selectedStep) {
@@ -305,6 +405,9 @@ export const useStudio = (): UseStudioResult => {
     toggleLoop,
     stepForward,
     stepBackward,
+    resizeStep,
+    reorderSteps,
+    loadWalkthrough,
     updateSelectedStep,
   };
 };
