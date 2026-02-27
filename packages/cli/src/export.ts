@@ -1,0 +1,93 @@
+import { pathToFileURL } from "node:url";
+import type { Walkthrough } from "../../core/src/types.js";
+
+export interface ExportOptions {
+  format?: "mp4" | "gif" | "webm" | "embed";
+  output?: string;
+  width?: number;
+  height?: number;
+}
+
+function isWalkthrough(value: unknown): value is Walkthrough {
+  if (!value || typeof value !== "object") return false;
+  const v = value as Record<string, unknown>;
+  return typeof v["url"] === "string" && Array.isArray(v["steps"]);
+}
+
+async function loadWalkthrough(scriptPath: string): Promise<Walkthrough> {
+  const url = pathToFileURL(scriptPath);
+  url.searchParams.set("t", String(Date.now()));
+
+  const mod = (await import(url.toString())) as { default?: unknown };
+  const wt = mod.default;
+
+  if (!isWalkthrough(wt)) {
+    throw new Error(
+      `Script "${scriptPath}" must export a Walkthrough as default. Got: ${typeof wt}`,
+    );
+  }
+
+  return wt;
+}
+
+export async function exportCommand(
+  scriptPath: string,
+  options: ExportOptions,
+): Promise<void> {
+  const format = options.format ?? "mp4";
+  const ext = format === "embed" ? "html" : format;
+  const output = options.output ?? `output.${ext}`;
+
+  console.log(`\nWalkr Export`);
+  console.log(`  Script:  ${scriptPath}`);
+  console.log(`  Format:  ${format}`);
+  console.log(`  Output:  ${output}`);
+  console.log(`  Size:    ${options.width ?? 1920} × ${options.height ?? 1080}`);
+  console.log();
+
+  console.log("Loading script…");
+  const walkthrough = await loadWalkthrough(scriptPath);
+  console.log(`  Steps: ${walkthrough.steps.length}`);
+
+  // Dynamic import of @walkr/playwright (peer dep — must be installed)
+  let captureWalkthrough: (
+    wt: Walkthrough,
+    opts: Record<string, unknown>,
+  ) => Promise<{ outputPath: string; duration: number; frameCount: number }>;
+
+  try {
+    const mod = (await import("@walkr/playwright")) as {
+      captureWalkthrough: typeof captureWalkthrough;
+    };
+    captureWalkthrough = mod.captureWalkthrough;
+  } catch {
+    throw new Error(
+      "@walkr/playwright is not installed. Run: pnpm add @walkr/playwright",
+    );
+  }
+
+  console.log("Capturing frames…");
+  let lastPercent = -1;
+
+  const result = await captureWalkthrough(walkthrough, {
+    format,
+    output,
+    width: options.width ?? 1920,
+    height: options.height ?? 1080,
+    fps: 30,
+    onProgress: (percent: number) => {
+      const rounded = Math.round(percent);
+      if (rounded !== lastPercent && rounded % 5 === 0) {
+        lastPercent = rounded;
+        process.stdout.write(`\r  Capturing frames… ${rounded}%`);
+      }
+    },
+  });
+
+  process.stdout.write("\n");
+  console.log("Encoding…");
+  console.log();
+  console.log(`Done: ${result.outputPath}`);
+  console.log(`  Frames:   ${result.frameCount}`);
+  console.log(`  Duration: ${(result.duration / 1000).toFixed(2)}s`);
+}
