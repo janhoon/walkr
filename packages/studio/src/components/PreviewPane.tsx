@@ -1,168 +1,78 @@
-import { useCallback, useEffect, useRef } from "react";
-
-import { WalkrEngine } from "../../../engine/src/engine";
-import type { Walkthrough } from "../../../core/src/types";
-import type { PlaybackMode } from "../types";
+import React from 'react'
 
 interface PreviewPaneProps {
-  walkthrough: Walkthrough | null;
-  mode: PlaybackMode;
-  onScriptChange?: (callback: (walkthrough: Walkthrough) => void) => void | (() => void);
+  url: string | null
+  iframeRef: React.RefObject<HTMLIFrameElement>
 }
 
-export const PreviewPane = ({ walkthrough, mode, onScriptChange }: PreviewPaneProps) => {
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const engineRef = useRef<WalkrEngine | null>(null);
-  const playbackState = useRef<"idle" | "playing" | "paused">("idle");
-  const activeWalkthroughRef = useRef<Walkthrough | null>(null);
-
-  const remountEngine = useCallback((): WalkrEngine | null => {
-    const container = containerRef.current;
-    if (!container) {
-      return null;
-    }
-
-    engineRef.current?.unmount();
-
-    const engine = new WalkrEngine();
-    engine.mount(container);
-    engineRef.current = engine;
-    playbackState.current = "idle";
-    activeWalkthroughRef.current = null;
-    return engine;
-  }, []);
-
-  useEffect(() => {
-    remountEngine();
-
-    return () => {
-      engineRef.current?.unmount();
-      engineRef.current = null;
-      playbackState.current = "idle";
-      activeWalkthroughRef.current = null;
-    };
-  }, [remountEngine]);
-
-  useEffect(() => {
-    const engine = engineRef.current;
-    if (!engine || !walkthrough) {
-      return;
-    }
-
-    if (mode === "playing") {
-      if (playbackState.current === "paused" && activeWalkthroughRef.current === walkthrough) {
-        engine.resume();
-        playbackState.current = "playing";
-        return;
-      }
-
-      if (playbackState.current === "paused" && activeWalkthroughRef.current !== walkthrough) {
-        const nextEngine = remountEngine();
-        if (!nextEngine) {
-          return;
-        }
-
-        playbackState.current = "playing";
-        activeWalkthroughRef.current = walkthrough;
-        void nextEngine.play(walkthrough).finally(() => {
-          playbackState.current = "idle";
-          activeWalkthroughRef.current = null;
-        });
-        return;
-      }
-
-      if (playbackState.current === "playing" && activeWalkthroughRef.current !== walkthrough) {
-        const nextEngine = remountEngine();
-        if (!nextEngine) {
-          return;
-        }
-
-        playbackState.current = "playing";
-        activeWalkthroughRef.current = walkthrough;
-        void nextEngine.play(walkthrough).finally(() => {
-          playbackState.current = "idle";
-          activeWalkthroughRef.current = null;
-        });
-        return;
-      }
-
-      if (playbackState.current === "idle") {
-        playbackState.current = "playing";
-        activeWalkthroughRef.current = walkthrough;
-        void engine.play(walkthrough).finally(() => {
-          playbackState.current = "idle";
-          activeWalkthroughRef.current = null;
-        });
-      }
-      return;
-    }
-
-    if (mode === "paused") {
-      if (playbackState.current === "playing") {
-        engine.pause();
-        playbackState.current = "paused";
-      }
-      return;
-    }
-
-    if (mode === "stopped" && playbackState.current !== "idle") {
-      remountEngine();
-    }
-  }, [mode, remountEngine, walkthrough]);
-
-  useEffect(() => {
-    if (!onScriptChange) {
-      return;
-    }
-
-    return onScriptChange((nextWalkthrough) => {
-      const engine = remountEngine();
-      if (!engine) {
-        return;
-      }
-
-      playbackState.current = "playing";
-      activeWalkthroughRef.current = nextWalkthrough;
-      void engine.play(nextWalkthrough).finally(() => {
-        playbackState.current = "idle";
-        activeWalkthroughRef.current = null;
-      });
-    });
-  }, [onScriptChange, remountEngine]);
-
+export function PreviewPane({ url, iframeRef }: PreviewPaneProps) {
   return (
-    <section
-      style={{
-        position: "relative",
-        border: "1px solid #223146",
-        borderRadius: 14,
-        overflow: "hidden",
-        background: "#0f172a",
-        minHeight: 360,
-      }}
-    >
-      <div
-        ref={containerRef}
-        style={{
-          position: "absolute",
-          inset: 0,
-        }}
-      />
-      {!walkthrough ? (
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            display: "grid",
-            placeItems: "center",
-            color: "#94a3b8",
+    <div style={{
+      flex: 1,
+      background: '#1a1a1a',
+      display: 'flex',
+      flexDirection: 'column',
+      minHeight: 0,
+    }}>
+      <div style={{
+        height: 32,
+        display: 'flex',
+        alignItems: 'center',
+        padding: '0 12px',
+        gap: 8,
+        fontSize: 12,
+        color: '#888',
+        borderBottom: '1px solid #333',
+        flexShrink: 0,
+      }}>
+        <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {url ?? 'No URL'}
+        </span>
+        {url && (
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: '#888', textDecoration: 'none', fontSize: 14 }}
+            title="Open in browser"
+          >
+            &#8599;
+          </a>
+        )}
+      </div>
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 16,
+        minHeight: 0,
+      }}>
+        {url ? (
+          <iframe
+            ref={iframeRef}
+            src={url}
+            style={{
+              width: '100%',
+              height: '100%',
+              border: '1px solid #333',
+              borderRadius: 4,
+              background: '#fff',
+              aspectRatio: '16 / 9',
+              maxHeight: '100%',
+            }}
+            title="Walkthrough preview"
+          />
+        ) : (
+          <div style={{
+            color: '#555',
             fontSize: 14,
-            pointerEvents: "none",
-          }}
-        >
-          No walkthrough loaded
-        </div>
-      ) : null}
-    </section>
-  );
-};
+            textAlign: 'center',
+          }}>
+            No walkthrough loaded
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}

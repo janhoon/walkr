@@ -91,9 +91,10 @@ export interface ParallelStepOptions {
   steps: Step[];
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface Step<
   TType extends StepType = StepType,
-  TOptions = Record<string, unknown>,
+  TOptions extends {} = Record<string, unknown>,
 > {
   id: string;
   type: TType;
