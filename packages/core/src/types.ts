@@ -93,7 +93,7 @@ export interface ParallelStepOptions {
 
 export interface Step<
   TType extends StepType = StepType,
-  TOptions extends Record<string, unknown> = Record<string, unknown>,
+  TOptions = Record<string, unknown>,
 > {
   id: string;
   type: TType;
