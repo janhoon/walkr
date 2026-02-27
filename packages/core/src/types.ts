@@ -12,9 +12,28 @@ export type StepType =
   | "sequence"
   | "parallel";
 
-export interface MoveToOptions {
+export interface CursorConfig {
+  shape?: "circle" | "arrow" | "dot" | "svg";
+  color?: string;
+  size?: number;
+  shadow?: boolean;
+  clickColor?: string;
+  svgContent?: string;
+}
+
+export interface ZoomDefaults {
+  defaultLevel?: number;
+  easing?: string;
+}
+
+export interface StepCursorOverride {
+  cursor?: Partial<CursorConfig>;
+}
+
+export interface MoveToOptions extends StepCursorOverride {
   duration?: number;
   easing?: string;
+  follow?: boolean;
 }
 
 export interface MoveToStepOptions extends MoveToOptions {
@@ -22,7 +41,7 @@ export interface MoveToStepOptions extends MoveToOptions {
   y: number;
 }
 
-export interface ClickOptions {
+export interface ClickOptions extends StepCursorOverride {
   button?: MouseButton;
   double?: boolean;
 }
@@ -32,7 +51,7 @@ export interface ClickStepOptions extends ClickOptions {
   y: number;
 }
 
-export interface TypeOptions {
+export interface TypeOptions extends StepCursorOverride {
   delay?: number;
   selector?: string;
 }
@@ -41,7 +60,7 @@ export interface TypeStepOptions extends TypeOptions {
   text: string;
 }
 
-export interface ScrollOptions {
+export interface ScrollOptions extends StepCursorOverride {
   smooth?: boolean;
 }
 
@@ -50,11 +69,11 @@ export interface ScrollStepOptions extends ScrollOptions {
   y: number;
 }
 
-export interface WaitStepOptions {
+export interface WaitStepOptions extends StepCursorOverride {
   ms: number;
 }
 
-export interface HighlightOptions {
+export interface HighlightOptions extends StepCursorOverride {
   color?: string;
   duration?: number;
 }
@@ -63,17 +82,18 @@ export interface HighlightStepOptions extends HighlightOptions {
   selector: string;
 }
 
-export interface ZoomOptions {
+export interface ZoomOptions extends StepCursorOverride {
   x?: number;
   y?: number;
   easing?: string;
+  follow?: boolean;
 }
 
 export interface ZoomStepOptions extends ZoomOptions {
   level: number;
 }
 
-export interface PanOptions {
+export interface PanOptions extends StepCursorOverride {
   duration?: number;
   easing?: string;
 }
@@ -83,11 +103,11 @@ export interface PanStepOptions extends PanOptions {
   y: number;
 }
 
-export interface SequenceStepOptions {
+export interface SequenceStepOptions extends StepCursorOverride {
   steps: Step[];
 }
 
-export interface ParallelStepOptions {
+export interface ParallelStepOptions extends StepCursorOverride {
   steps: Step[];
 }
 
@@ -118,6 +138,8 @@ export interface Walkthrough {
   steps: Step[];
   title?: string;
   description?: string;
+  zoom?: ZoomDefaults;
+  cursor?: CursorConfig;
 }
 
 export interface WalkthroughOptions {
@@ -125,4 +147,6 @@ export interface WalkthroughOptions {
   steps: Step[];
   title?: string;
   description?: string;
+  zoom?: ZoomDefaults;
+  cursor?: CursorConfig;
 }

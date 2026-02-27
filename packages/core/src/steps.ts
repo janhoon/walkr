@@ -27,6 +27,9 @@ import type {
 } from "./types.js";
 
 let stepCounter = 0;
+const DEFAULT_ZOOM_DURATION = 360;
+const DEFAULT_PAN_DURATION = 360;
+const DEFAULT_EASING = "cubic-bezier(0.42, 0, 0.58, 1)";
 
 export function createStep<
   TType extends StepType,
@@ -94,11 +97,23 @@ export function highlight(
 }
 
 export function zoom(level: number, options: ZoomOptions = {}): ZoomStep {
-  const stepOptions: ZoomStepOptions = { level, ...options };
-  return createStep("zoom", stepOptions, 0);
+  const stepOptions: ZoomStepOptions = {
+    level,
+    easing: options.easing ?? DEFAULT_EASING,
+    ...options,
+  };
+  return createStep("zoom", stepOptions, DEFAULT_ZOOM_DURATION);
 }
 
 export function pan(x: number, y: number, options: PanOptions = {}): PanStep {
-  const stepOptions: PanStepOptions = { x, y, ...options };
-  return createStep("pan", stepOptions, options.duration ?? 0);
+  const stepOptions: PanStepOptions = {
+    x,
+    y,
+    duration: options.duration ?? DEFAULT_PAN_DURATION,
+    easing: options.easing ?? DEFAULT_EASING,
+    ...options,
+  };
+  return createStep("pan", stepOptions, stepOptions.duration ?? DEFAULT_PAN_DURATION);
 }
+
+export type { PanStepOptions, ZoomStepOptions };

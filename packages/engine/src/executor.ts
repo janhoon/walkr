@@ -1,401 +1,639 @@
+import {
+  hideScrollIndicator,
+  moveCursorTo,
+  showClickRipple,
+  showScrollIndicator,
+} from "./cursor.js";
 import type {
   ClickStep,
+  CursorConfig,
+  EngineState,
   HighlightStep,
+  MouseButton,
   MoveToStep,
   PanStep,
+  ParallelStep,
   ScrollStep,
+  SequenceStep,
   Step,
   TypeStep,
   WaitStep,
+  ZoomDefaults,
   ZoomStep,
-} from "@walkr/core";
-import type { PlaybackEvent, PlaybackState } from "./types.js";
-import type { CursorOverlay } from "./cursor.js";
-import { getEasingFunction, interpolatePosition } from "./interpolation.js";
+} from "./types.js";
 
-export class StepExecutor {
-  paused = false;
-  aborted = false;
-  private resumeResolve: (() => void) | null = null;
-  private currentX = 0;
-  private currentY = 0;
+const DEFAULT_MOVE_DURATION = 520;
+const DEFAULT_TYPE_DELAY = 40;
+const DEFAULT_ZOOM_DURATION = 360;
+const DEFAULT_PAN_DURATION = 360;
+const DEFAULT_HIGHLIGHT_DURATION = 700;
+const DEFAULT_VIEWPORT_EASING = "cubic-bezier(0.42, 0, 0.58, 1)";
 
-  constructor(
-    private cursor: CursorOverlay,
-    private iframe: HTMLIFrameElement,
-    private onEvent: (event: PlaybackEvent) => void,
-  ) {}
+export interface ViewportState {
+  zoom: number;
+  panX: number;
+  panY: number;
+}
 
-  setPaused(paused: boolean): void {
-    this.paused = paused;
-    if (!paused && this.resumeResolve) {
-      this.resumeResolve();
-      this.resumeResolve = null;
-    }
+type ViewportTransformState = ViewportState & {
+  originX: number;
+  originY: number;
+};
+
+export interface StepExecutionContext {
+  getCursorConfig?: () => CursorConfig;
+  setCursorConfig?: (config: Partial<CursorConfig>) => void;
+  showScrollIndicator?: (cursor: HTMLElement) => void;
+  hideScrollIndicator?: (cursor: HTMLElement) => void;
+  zoomDefaults?: ZoomDefaults;
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
+function normalizeEasing(easing?: string): string {
+  const value = easing?.trim();
+
+  if (!value || value === "ease" || value === "easeInOut" || value === "ease-in-out") {
+    return DEFAULT_VIEWPORT_EASING;
+  }
+  if (value === "easeOut" || value === "ease-out") {
+    return "cubic-bezier(0, 0, 0.58, 1)";
+  }
+  if (value === "linear") {
+    return "linear";
   }
 
-  setAborted(aborted: boolean): void {
-    this.aborted = aborted;
+  return value;
+}
+
+function toTransform(state: ViewportTransformState): string {
+  return `translate(${state.panX}px, ${state.panY}px) scale(${state.zoom})`;
+}
+
+function toTransformOrigin(state: ViewportTransformState): string {
+  return `${state.originX}% ${state.originY}%`;
+}
+
+function readTransformState(wrapper: HTMLElement): ViewportTransformState {
+  const panX = Number(wrapper.dataset.walkrPanX ?? 0);
+  const panY = Number(wrapper.dataset.walkrPanY ?? 0);
+  const zoom = Number(wrapper.dataset.walkrScale ?? 1);
+  const originX = Number(wrapper.dataset.walkrOriginX ?? 50);
+  const originY = Number(wrapper.dataset.walkrOriginY ?? 50);
+
+  return {
+    panX: Number.isFinite(panX) ? panX : 0,
+    panY: Number.isFinite(panY) ? panY : 0,
+    zoom: Number.isFinite(zoom) ? zoom : 1,
+    originX: Number.isFinite(originX) ? originX : 50,
+    originY: Number.isFinite(originY) ? originY : 50,
+  };
+}
+
+function writeTransformState(wrapper: HTMLElement, state: ViewportTransformState): void {
+  wrapper.dataset.walkrPanX = String(state.panX);
+  wrapper.dataset.walkrPanY = String(state.panY);
+  wrapper.dataset.walkrScale = String(state.zoom);
+  wrapper.dataset.walkrOriginX = String(state.originX);
+  wrapper.dataset.walkrOriginY = String(state.originY);
+  wrapper.style.transformOrigin = toTransformOrigin(state);
+  wrapper.style.transform = toTransform(state);
+}
+
+async function animateTransformState(
+  wrapper: HTMLElement,
+  nextState: ViewportTransformState,
+  duration: number,
+  easing?: string,
+): Promise<void> {
+  const previousState = readTransformState(wrapper);
+  const fromTransform = toTransform(previousState);
+  const toTransformValue = toTransform(nextState);
+  const animationDuration = Math.max(0, duration);
+
+  wrapper.style.transformOrigin = toTransformOrigin(nextState);
+
+  if (animationDuration === 0) {
+    writeTransformState(wrapper, nextState);
+    return;
   }
 
-  private waitForResume(): Promise<void> {
-    if (!this.paused) return Promise.resolve();
-    return new Promise<void>((resolve) => {
-      this.resumeResolve = resolve;
-    });
+  const animation = wrapper.animate(
+    [{ transform: fromTransform }, { transform: toTransformValue }],
+    {
+      duration: animationDuration,
+      easing: normalizeEasing(easing),
+      fill: "forwards",
+    },
+  );
+
+  try {
+    await animation.finished;
+  } catch {
+    // Ignored: animation may be canceled by another viewport update.
   }
 
-  private makeState(stepIndex: number): PlaybackState {
-    return {
-      currentStepIndex: stepIndex,
-      currentTime: 0,
-      totalTime: 0,
-      isPlaying: !this.paused && !this.aborted,
-      isPaused: this.paused,
-      isDone: false,
-    };
+  writeTransformState(wrapper, nextState);
+}
+
+function getFrameDocument(iframe: HTMLIFrameElement): Document | null {
+  try {
+    return iframe.contentDocument ?? iframe.contentWindow?.document ?? null;
+  } catch {
+    return null;
   }
+}
 
-  async executeStep(step: Step, stepIndex: number): Promise<void> {
-    if (this.aborted) return;
-    if (this.paused) await this.waitForResume();
-
-    this.onEvent({
-      type: "step",
-      stepIndex,
-      step,
-      state: this.makeState(stepIndex),
-    });
-
-    // Cast through unknown since Step's default TOptions (Record<string, unknown>)
-    // doesn't directly overlap with specific option types
-    const s = step as unknown;
-    switch (step.type) {
-      case "moveTo":
-        await this.executeMoveTo(s as MoveToStep);
-        break;
-      case "click":
-        await this.executeClick(s as ClickStep);
-        break;
-      case "type":
-        await this.executeType(s as TypeStep);
-        break;
-      case "scroll":
-        await this.executeScroll(s as ScrollStep);
-        break;
-      case "wait":
-        await this.executeWait(s as WaitStep);
-        break;
-      case "zoom":
-        await this.executeZoom(s as ZoomStep);
-        break;
-      case "pan":
-        await this.executePan(s as PanStep);
-        break;
-      case "highlight":
-        await this.executeHighlight(s as HighlightStep);
-        break;
-    }
+function getFrameWindow(iframe: HTMLIFrameElement): Window | null {
+  try {
+    return iframe.contentWindow;
+  } catch {
+    return null;
   }
+}
 
-  /**
-   * requestAnimationFrame-based animation loop with pause support.
-   * Calls `tick(t)` on each frame where t goes from 0 to 1.
-   */
-  private animate(
-    duration: number,
-    tick: (t: number) => void,
-  ): Promise<void> {
-    return new Promise<void>((resolve) => {
-      if (duration <= 0) {
-        tick(1);
-        resolve();
-        return;
-      }
-
-      let elapsed = 0;
-      let lastTimestamp: number | null = null;
-
-      const frame = (timestamp: number): void => {
-        if (this.aborted) {
-          resolve();
-          return;
-        }
-
-        if (this.paused) {
-          lastTimestamp = null;
-          this.waitForResume().then(() => {
-            requestAnimationFrame(frame);
-          });
-          return;
-        }
-
-        if (lastTimestamp !== null) {
-          elapsed += timestamp - lastTimestamp;
-        }
-        lastTimestamp = timestamp;
-
-        const t = Math.min(elapsed / duration, 1);
-        tick(t);
-
-        if (t < 1) {
-          requestAnimationFrame(frame);
-        } else {
-          resolve();
-        }
-      };
-
-      requestAnimationFrame(frame);
-    });
+function getButtonCode(button: MouseButton | undefined): number {
+  if (button === "middle") {
+    return 1;
   }
-
-  private async executeMoveTo(step: MoveToStep): Promise<void> {
-    const from = { x: this.currentX, y: this.currentY };
-    const to = { x: step.options.x, y: step.options.y };
-    const duration = step.duration || 500;
-    const easing = step.options.easing ?? "ease";
-
-    await this.animate(duration, (t) => {
-      const pos = interpolatePosition(from, to, t, easing);
-      this.cursor.setPosition(pos.x, pos.y);
-      this.currentX = pos.x;
-      this.currentY = pos.y;
-    });
+  if (button === "right") {
+    return 2;
   }
+  return 0;
+}
 
-  private async executeClick(step: ClickStep): Promise<void> {
-    const { x, y, button, double: isDouble } = step.options;
+function isHtmlElement(doc: Document, value: Element | null): value is HTMLElement {
+  const view = doc.defaultView;
+  if (!view || !value) {
+    return false;
+  }
+  return value instanceof view.HTMLElement;
+}
 
-    // Move cursor to target if not already there
-    if (this.currentX !== x || this.currentY !== y) {
-      const from = { x: this.currentX, y: this.currentY };
-      const to = { x, y };
-      await this.animate(200, (t) => {
-        const pos = interpolatePosition(from, to, t, "ease");
-        this.cursor.setPosition(pos.x, pos.y);
-        this.currentX = pos.x;
-        this.currentY = pos.y;
-      });
-    }
+function isInputLike(doc: Document, value: HTMLElement): value is HTMLInputElement | HTMLTextAreaElement {
+  const view = doc.defaultView;
+  if (!view) {
+    return false;
+  }
+  return value instanceof view.HTMLInputElement || value instanceof view.HTMLTextAreaElement;
+}
 
-    this.cursor.animateClick();
-
-    const iframeDoc = this.iframe.contentDocument;
-    if (!iframeDoc) return;
-
-    const buttonCode = button === "right" ? 2 : button === "middle" ? 1 : 0;
-    const target = iframeDoc.elementFromPoint(x, y) ?? iframeDoc.body;
-    const eventInit: MouseEventInit = {
+function dispatchMouse(doc: Document, target: Element, type: string, x: number, y: number, button: number): void {
+  const MouseEventCtor = doc.defaultView?.MouseEvent ?? MouseEvent;
+  target.dispatchEvent(
+    new MouseEventCtor(type, {
       bubbles: true,
       cancelable: true,
       clientX: x,
       clientY: y,
-      button: buttonCode,
+      button,
+    }),
+  );
+}
+
+function dispatchKeyboard(doc: Document, target: Element, type: string, key: string): void {
+  const KeyboardEventCtor = doc.defaultView?.KeyboardEvent ?? KeyboardEvent;
+  target.dispatchEvent(
+    new KeyboardEventCtor(type, {
+      bubbles: true,
+      cancelable: true,
+      key,
+    }),
+  );
+}
+
+function applyCharacter(doc: Document, target: HTMLElement, char: string): void {
+  if (isInputLike(doc, target)) {
+    target.value += char;
+    const InputEventCtor = doc.defaultView?.InputEvent ?? InputEvent;
+    target.dispatchEvent(
+      new InputEventCtor("input", {
+        bubbles: true,
+        cancelable: false,
+        data: char,
+        inputType: "insertText",
+      }),
+    );
+    return;
+  }
+
+  if (target.isContentEditable) {
+    target.textContent = `${target.textContent ?? ""}${char}`;
+    const EventCtor = doc.defaultView?.Event ?? Event;
+    target.dispatchEvent(new EventCtor("input", { bubbles: true, cancelable: false }));
+    return;
+  }
+
+  target.textContent = `${target.textContent ?? ""}${char}`;
+}
+
+function withAlpha(color: string): string {
+  if (/^#([A-Fa-f0-9]{6})$/.test(color)) {
+    return `${color}40`;
+  }
+  if (/^#([A-Fa-f0-9]{3})$/.test(color)) {
+    const [, raw] = /^#([A-Fa-f0-9]{3})$/.exec(color) ?? [];
+    if (raw) {
+      return `#${raw[0]}${raw[0]}${raw[1]}${raw[1]}${raw[2]}${raw[2]}40`;
+    }
+  }
+  return color;
+}
+
+function getCursorPosition(cursor: HTMLElement): { x: number; y: number } {
+  return {
+    x: Number(cursor.dataset.walkrCursorX ?? 0),
+    y: Number(cursor.dataset.walkrCursorY ?? 0),
+  };
+}
+
+function getStepCursorOverride(step: Step): Partial<CursorConfig> | undefined {
+  if (!step.options || typeof step.options !== "object") {
+    return undefined;
+  }
+
+  const value = (step.options as { cursor?: Partial<CursorConfig> }).cursor;
+  if (!value || typeof value !== "object") {
+    return undefined;
+  }
+
+  return value;
+}
+
+export function getViewportState(wrapper: HTMLElement): ViewportState {
+  const state = readTransformState(wrapper);
+  return {
+    zoom: state.zoom,
+    panX: state.panX,
+    panY: state.panY,
+  };
+}
+
+export async function resetViewport(
+  wrapper: HTMLElement,
+  options: {
+    duration?: number;
+    easing?: string;
+    defaultLevel?: number;
+  } = {},
+): Promise<void> {
+  await animateTransformState(
+    wrapper,
+    {
+      panX: 0,
+      panY: 0,
+      zoom: Math.max(0.05, options.defaultLevel ?? 1),
+      originX: 50,
+      originY: 50,
+    },
+    options.duration ?? DEFAULT_PAN_DURATION,
+    options.easing,
+  );
+}
+
+export function initializeViewport(wrapper: HTMLElement): void {
+  writeTransformState(wrapper, {
+    panX: 0,
+    panY: 0,
+    zoom: 1,
+    originX: 50,
+    originY: 50,
+  });
+}
+
+export function sleep(ms: number): Promise<void> {
+  const duration = Math.max(0, ms);
+  if (duration === 0) {
+    return Promise.resolve();
+  }
+
+  return new Promise<void>((resolve) => {
+    const start = performance.now();
+
+    const tick = (now: number): void => {
+      if (now - start >= duration) {
+        resolve();
+        return;
+      }
+      requestAnimationFrame(tick);
     };
 
-    target.dispatchEvent(new MouseEvent("mousedown", eventInit));
-    target.dispatchEvent(new MouseEvent("mouseup", eventInit));
-    target.dispatchEvent(new MouseEvent("click", eventInit));
+    requestAnimationFrame(tick);
+  });
+}
 
-    if (isDouble) {
-      target.dispatchEvent(new MouseEvent("mousedown", eventInit));
-      target.dispatchEvent(new MouseEvent("mouseup", eventInit));
-      target.dispatchEvent(new MouseEvent("click", eventInit));
-      target.dispatchEvent(new MouseEvent("dblclick", eventInit));
+async function executeMoveTo(step: MoveToStep, cursor: HTMLElement): Promise<void> {
+  const duration = Math.max(0, step.options.duration ?? step.duration ?? DEFAULT_MOVE_DURATION);
+  const easing = step.options.easing ?? "easeInOut";
+  await moveCursorTo(cursor, step.options.x, step.options.y, duration, easing);
+}
+
+async function executeClick(
+  step: ClickStep,
+  cursor: HTMLElement,
+  iframe: HTMLIFrameElement,
+  context?: StepExecutionContext,
+): Promise<void> {
+  await moveCursorTo(cursor, step.options.x, step.options.y, 120, "easeOut");
+  const clickColor = context?.getCursorConfig?.().clickColor ?? "#ef4444";
+  showClickRipple(cursor, step.options.x, step.options.y, clickColor);
+
+  const doc = getFrameDocument(iframe);
+  if (!doc) {
+    return;
+  }
+
+  const target = doc.elementFromPoint(step.options.x, step.options.y);
+  if (!target) {
+    return;
+  }
+
+  const button = getButtonCode(step.options.button);
+
+  dispatchMouse(doc, target, "pointerdown", step.options.x, step.options.y, button);
+  dispatchMouse(doc, target, "mousedown", step.options.x, step.options.y, button);
+  dispatchMouse(doc, target, "pointerup", step.options.x, step.options.y, button);
+  dispatchMouse(doc, target, "mouseup", step.options.x, step.options.y, button);
+  dispatchMouse(doc, target, "click", step.options.x, step.options.y, button);
+
+  if (step.options.double) {
+    await sleep(80);
+    dispatchMouse(doc, target, "click", step.options.x, step.options.y, button);
+    dispatchMouse(doc, target, "dblclick", step.options.x, step.options.y, button);
+  }
+}
+
+async function executeType(step: TypeStep, iframe: HTMLIFrameElement): Promise<void> {
+  const doc = getFrameDocument(iframe);
+  if (!doc) {
+    return;
+  }
+
+  let target: HTMLElement | null = null;
+
+  if (step.options.selector) {
+    const selected = doc.querySelector(step.options.selector);
+    if (isHtmlElement(doc, selected)) {
+      target = selected;
     }
   }
 
-  private async executeType(step: TypeStep): Promise<void> {
-    const { text, delay = 50, selector } = step.options;
-    const iframeDoc = this.iframe.contentDocument;
-    if (!iframeDoc) return;
+  if (!target && isHtmlElement(doc, doc.activeElement)) {
+    target = doc.activeElement;
+  }
 
-    let target: Element | null = null;
-    if (selector) {
-      target = iframeDoc.querySelector(selector);
-    } else {
-      target = iframeDoc.activeElement;
-    }
+  if (!target && isHtmlElement(doc, doc.body)) {
+    target = doc.body;
+  }
 
-    if (target && "focus" in target) {
-      (target as HTMLElement).focus();
-    }
+  if (!target) {
+    return;
+  }
 
-    for (const char of text) {
-      if (this.aborted) return;
-      if (this.paused) await this.waitForResume();
+  target.focus();
 
-      const eventTarget = target ?? iframeDoc.body;
+  const delay = Math.max(0, step.options.delay ?? DEFAULT_TYPE_DELAY);
 
-      eventTarget.dispatchEvent(
-        new KeyboardEvent("keydown", { key: char, bubbles: true }),
-      );
-      eventTarget.dispatchEvent(
-        new KeyboardEvent("keypress", { key: char, bubbles: true }),
-      );
+  for (const char of step.options.text) {
+    dispatchKeyboard(doc, target, "keydown", char);
+    dispatchKeyboard(doc, target, "keypress", char);
+    applyCharacter(doc, target, char);
+    dispatchKeyboard(doc, target, "keyup", char);
 
-      if (target && "value" in target) {
-        (target as HTMLInputElement).value += char;
-      }
-
-      eventTarget.dispatchEvent(
-        new InputEvent("input", {
-          data: char,
-          inputType: "insertText",
-          bubbles: true,
-        }),
-      );
-      eventTarget.dispatchEvent(
-        new KeyboardEvent("keyup", { key: char, bubbles: true }),
-      );
-
-      if (delay > 0) {
-        await new Promise<void>((resolve) => setTimeout(resolve, delay));
-      }
+    if (delay > 0) {
+      await sleep(delay);
     }
   }
 
-  private async executeScroll(step: ScrollStep): Promise<void> {
-    const { x, y, smooth } = step.options;
-    const iframeWin = this.iframe.contentWindow;
-    if (!iframeWin) return;
+  if (isInputLike(doc, target)) {
+    const EventCtor = doc.defaultView?.Event ?? Event;
+    target.dispatchEvent(new EventCtor("change", { bubbles: true }));
+  }
+}
 
-    if (smooth === false || step.duration <= 0) {
-      iframeWin.scrollTo(x, y);
+async function executeScroll(
+  step: ScrollStep,
+  cursor: HTMLElement,
+  iframe: HTMLIFrameElement,
+  context?: StepExecutionContext,
+): Promise<void> {
+  const showIndicator = context?.showScrollIndicator ?? showScrollIndicator;
+  const hideIndicator = context?.hideScrollIndicator ?? hideScrollIndicator;
+
+  showIndicator(cursor);
+
+  try {
+    const win = getFrameWindow(iframe);
+    if (!win) {
       return;
     }
 
-    const duration = step.duration || 500;
-    const startX = iframeWin.scrollX;
-    const startY = iframeWin.scrollY;
-
-    await this.animate(duration, (t) => {
-      const cx = startX + (x - startX) * t;
-      const cy = startY + (y - startY) * t;
-      iframeWin.scrollTo(cx, cy);
-    });
-  }
-
-  private async executeWait(step: WaitStep): Promise<void> {
-    await new Promise<void>((resolve) =>
-      setTimeout(resolve, step.options.ms),
-    );
-  }
-
-  private async executeZoom(step: ZoomStep): Promise<void> {
-    const { level, x, y, easing } = step.options;
-    const duration = step.duration || 500;
-
-    const container = this.iframe.parentElement;
-    if (!container) return;
-
-    const currentTransform = container.style.transform;
-    const scaleMatch = currentTransform.match(/scale\(([\d.]+)\)/);
-    const startScale = scaleMatch ? parseFloat(scaleMatch[1]) : 1;
-
-    // Use provided origin, or fall back to cursor position
-    const originX = x ?? this.currentX;
-    const originY = y ?? this.currentY;
-
-    const easeFn = getEasingFunction(easing ?? "ease");
-
-    await this.animate(duration, (t) => {
-      const et = easeFn(t);
-      const currentScale = startScale + (level - startScale) * et;
-      this.cursor.setZoom(currentScale, originX, originY);
-    });
-  }
-
-  private async executePan(step: PanStep): Promise<void> {
-    const { x, y, easing } = step.options;
-    const duration = step.duration || 500;
-
-    const container = this.iframe.parentElement;
-    if (!container) return;
-
-    const currentTransform = container.style.transform;
-    const translateMatch = currentTransform.match(
-      /translate\(([-\d.]+)px,\s*([-\d.]+)px\)/,
-    );
-    const startX = translateMatch ? parseFloat(translateMatch[1]) : 0;
-    const startY = translateMatch ? parseFloat(translateMatch[2]) : 0;
-
-    const easeFn = getEasingFunction(easing ?? "ease");
-
-    // Preserve any existing scale
-    const scaleMatch = currentTransform.match(/scale\(([\d.]+)\)/);
-    const scale = scaleMatch ? parseFloat(scaleMatch[1]) : 1;
-
-    await this.animate(duration, (t) => {
-      const et = easeFn(t);
-      const cx = startX + (x - startX) * et;
-      const cy = startY + (y - startY) * et;
-      container.style.transform =
-        `translate(${cx}px, ${cy}px) scale(${scale})`;
-    });
-  }
-
-  private async executeHighlight(step: HighlightStep): Promise<void> {
-    const { selector, color = "rgba(255, 59, 48, 0.5)" } = step.options;
-    const holdDuration = step.duration || 2000;
-
-    const iframeDoc = this.iframe.contentDocument;
-    if (!iframeDoc) return;
-
-    const target = iframeDoc.querySelector(selector);
-    if (!target) return;
-
-    const rect = target.getBoundingClientRect();
-    const container = this.iframe.parentElement;
-    if (!container) return;
-
-    // Backdrop
-    const backdrop = document.createElement("div");
-    backdrop.style.position = "absolute";
-    backdrop.style.top = "0";
-    backdrop.style.left = "0";
-    backdrop.style.width = "100%";
-    backdrop.style.height = "100%";
-    backdrop.style.backgroundColor = "rgba(0,0,0,0.3)";
-    backdrop.style.pointerEvents = "none";
-    backdrop.style.zIndex = "9998";
-    backdrop.style.opacity = "0";
-    backdrop.style.transition = "opacity 200ms ease";
-
-    // Highlight ring
-    const ring = document.createElement("div");
-    ring.style.position = "absolute";
-    ring.style.left = `${rect.left - 4}px`;
-    ring.style.top = `${rect.top - 4}px`;
-    ring.style.width = `${rect.width + 8}px`;
-    ring.style.height = `${rect.height + 8}px`;
-    ring.style.border = `3px solid ${color}`;
-    ring.style.borderRadius = "4px";
-    ring.style.pointerEvents = "none";
-    ring.style.zIndex = "9999";
-    ring.style.opacity = "0";
-    ring.style.transition = "opacity 200ms ease";
-
-    container.appendChild(backdrop);
-    container.appendChild(ring);
-
-    // Fade in
-    requestAnimationFrame(() => {
-      backdrop.style.opacity = "1";
-      ring.style.opacity = "1";
+    win.scrollTo({
+      left: step.options.x,
+      top: step.options.y,
+      behavior: step.options.smooth ? "smooth" : "auto",
     });
 
-    // Hold
-    await new Promise<void>((resolve) =>
-      setTimeout(resolve, holdDuration),
-    );
-
-    // Fade out
-    backdrop.style.opacity = "0";
-    ring.style.opacity = "0";
-    await new Promise<void>((resolve) => setTimeout(resolve, 200));
-
-    backdrop.remove();
-    ring.remove();
+    if (step.options.smooth) {
+      await sleep(Math.max(180, step.duration));
+    }
+  } finally {
+    hideIndicator(cursor);
   }
 }
+
+async function executeWait(step: WaitStep): Promise<void> {
+  await sleep(step.options.ms);
+}
+
+async function executeHighlight(step: HighlightStep, iframe: HTMLIFrameElement): Promise<void> {
+  const doc = getFrameDocument(iframe);
+  const duration = Math.max(0, step.options.duration ?? step.duration ?? DEFAULT_HIGHLIGHT_DURATION);
+
+  if (!doc) {
+    await sleep(duration);
+    return;
+  }
+
+  const target = doc.querySelector(step.options.selector);
+  if (!isHtmlElement(doc, target)) {
+    await sleep(duration);
+    return;
+  }
+
+  const color = step.options.color ?? "#f59e0b";
+  const previous = {
+    outline: target.style.outline,
+    outlineOffset: target.style.outlineOffset,
+    boxShadow: target.style.boxShadow,
+    transition: target.style.transition,
+  };
+
+  const highlightTransition = "outline-color 120ms ease-out, box-shadow 120ms ease-out";
+  target.style.transition = previous.transition
+    ? `${previous.transition}, ${highlightTransition}`
+    : highlightTransition;
+  target.style.outline = `2px solid ${color}`;
+  target.style.outlineOffset = "2px";
+  target.style.boxShadow = `0 0 0 6px ${withAlpha(color)}`;
+
+  await sleep(duration);
+
+  target.style.outline = previous.outline;
+  target.style.outlineOffset = previous.outlineOffset;
+  target.style.boxShadow = previous.boxShadow;
+  target.style.transition = previous.transition;
+}
+
+async function executeZoom(
+  step: ZoomStep,
+  cursor: HTMLElement,
+  iframe: HTMLIFrameElement,
+  context?: StepExecutionContext,
+): Promise<void> {
+  const wrapper = iframe.parentElement;
+  if (!(wrapper instanceof HTMLElement)) {
+    return;
+  }
+
+  const state = readTransformState(wrapper);
+  const duration = Math.max(0, step.duration || DEFAULT_ZOOM_DURATION);
+  const cursorPosition = getCursorPosition(cursor);
+
+  let originX = typeof step.options.x === "number" ? step.options.x : state.originX;
+  let originY = typeof step.options.y === "number" ? step.options.y : state.originY;
+  let nextPanX = state.panX;
+  let nextPanY = state.panY;
+
+  if (step.options.follow) {
+    const wrapperRect = wrapper.getBoundingClientRect();
+    if (wrapperRect.width > 0 && wrapperRect.height > 0) {
+      originX = ((cursorPosition.x / wrapperRect.width) * 100);
+      originY = ((cursorPosition.y / wrapperRect.height) * 100);
+    } else {
+      originX = 50;
+      originY = 50;
+    }
+
+    const centerX = wrapperRect.width / 2;
+    const centerY = wrapperRect.height / 2;
+    nextPanX = state.panX + (centerX - cursorPosition.x);
+    nextPanY = state.panY + (centerY - cursorPosition.y);
+  }
+
+  const nextState: ViewportTransformState = {
+    panX: nextPanX,
+    panY: nextPanY,
+    zoom: Math.max(0.05, step.options.level),
+    originX: clamp(originX, 0, 100),
+    originY: clamp(originY, 0, 100),
+  };
+
+  await animateTransformState(
+    wrapper,
+    nextState,
+    duration,
+    step.options.easing ?? context?.zoomDefaults?.easing,
+  );
+}
+
+async function executePan(step: PanStep, iframe: HTMLIFrameElement): Promise<void> {
+  const wrapper = iframe.parentElement;
+  if (!(wrapper instanceof HTMLElement)) {
+    return;
+  }
+
+  const state = readTransformState(wrapper);
+  const duration = Math.max(0, step.options.duration ?? step.duration ?? DEFAULT_PAN_DURATION);
+
+  await animateTransformState(
+    wrapper,
+    {
+      ...state,
+      panX: step.options.x,
+      panY: step.options.y,
+    },
+    duration,
+    step.options.easing,
+  );
+}
+
+async function executeSequence(
+  step: SequenceStep,
+  cursor: HTMLElement,
+  iframe: HTMLIFrameElement,
+  context?: StepExecutionContext,
+): Promise<void> {
+  for (const childStep of step.options.steps) {
+    await executeStep(childStep, cursor, iframe, context);
+  }
+}
+
+async function executeParallel(
+  step: ParallelStep,
+  cursor: HTMLElement,
+  iframe: HTMLIFrameElement,
+  context?: StepExecutionContext,
+): Promise<void> {
+  await Promise.all(step.options.steps.map((childStep) => executeStep(childStep, cursor, iframe, context)));
+}
+
+export async function executeStep(
+  step: Step,
+  cursor: HTMLElement,
+  iframe: HTMLIFrameElement,
+  context?: StepExecutionContext,
+): Promise<void> {
+  const cursorOverride = getStepCursorOverride(step);
+  const previousCursorConfig =
+    cursorOverride && context?.getCursorConfig ? { ...context.getCursorConfig() } : undefined;
+
+  if (cursorOverride && context?.setCursorConfig) {
+    context.setCursorConfig(cursorOverride);
+  }
+
+  try {
+    switch (step.type) {
+      case "moveTo":
+        await executeMoveTo(step as MoveToStep, cursor);
+        return;
+      case "click":
+        await executeClick(step as ClickStep, cursor, iframe, context);
+        return;
+      case "type":
+        await executeType(step as TypeStep, iframe);
+        return;
+      case "scroll":
+        await executeScroll(step as ScrollStep, cursor, iframe, context);
+        return;
+      case "wait":
+        await executeWait(step as WaitStep);
+        return;
+      case "highlight":
+        await executeHighlight(step as HighlightStep, iframe);
+        return;
+      case "zoom":
+        await executeZoom(step as ZoomStep, cursor, iframe, context);
+        return;
+      case "pan":
+        await executePan(step as PanStep, iframe);
+        return;
+      case "sequence":
+        await executeSequence(step as SequenceStep, cursor, iframe, context);
+        return;
+      case "parallel":
+        await executeParallel(step as ParallelStep, cursor, iframe, context);
+        return;
+      default:
+        return;
+    }
+  } finally {
+    if (previousCursorConfig && context?.setCursorConfig) {
+      context.setCursorConfig(previousCursorConfig);
+    }
+  }
+}
+
+export type { EngineState };

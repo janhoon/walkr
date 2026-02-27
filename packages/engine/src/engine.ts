@@ -1,6 +1,13 @@
-import { createCursor, hideCursor, showCursor } from "./cursor.js";
-import { executeStep } from "./executor.js";
+import { createCursor, hideCursor, showCursor, updateCursorConfig } from "./cursor.js";
+import {
+  executeStep,
+  getViewportState,
+  initializeViewport,
+  resetViewport,
+  type ViewportState,
+} from "./executor.js";
 import type {
+  CursorConfig,
   EngineOptions,
   EngineState,
   EventHandler,
@@ -34,11 +41,34 @@ export class WalkrEngine {
 
   private runId = 0;
 
+  private activeCursorConfig: CursorConfig = {};
+
   constructor(options: EngineOptions = {}) {
     this.options = options;
+    this.activeCursorConfig = options.cursor ?? {};
 
     if (options.container) {
       this.mount(options.container);
+    }
+  }
+
+  setCursorConfig(config: Partial<CursorConfig>): void {
+    this.activeCursorConfig = { ...this.activeCursorConfig, ...config };
+    if (this.cursor) {
+      updateCursorConfig(this.cursor, this.activeCursorConfig);
+    }
+  }
+
+  getViewportState(): ViewportState {
+    if (this.stage) {
+      return getViewportState(this.stage);
+    }
+    return { zoom: 1, panX: 0, panY: 0 };
+  }
+
+  async resetViewport(options?: { duration?: number; easing?: string }): Promise<void> {
+    if (this.stage) {
+      await resetViewport(this.stage, options);
     }
   }
 
@@ -58,9 +88,7 @@ export class WalkrEngine {
     stage.style.overflow = "hidden";
     stage.style.transformOrigin = "50% 50%";
     stage.style.willChange = "transform";
-    stage.dataset.walkrPanX = "0";
-    stage.dataset.walkrPanY = "0";
-    stage.dataset.walkrScale = "1";
+    initializeViewport(stage);
 
     const iframe = document.createElement("iframe");
     iframe.style.position = "absolute";
@@ -76,7 +104,7 @@ export class WalkrEngine {
     overlay.style.pointerEvents = "none";
     overlay.style.zIndex = "1";
 
-    const cursor = createCursor(this.options.cursor);
+    const cursor = createCursor(this.activeCursorConfig);
     hideCursor(cursor);
     overlay.appendChild(cursor);
 
@@ -116,6 +144,14 @@ export class WalkrEngine {
       throw new Error("WalkrEngine must be mounted before play().");
     }
 
+    // Merge walkthrough cursor config with engine options cursor config
+    if (walkthrough.cursor) {
+      this.activeCursorConfig = { ...this.options.cursor, ...walkthrough.cursor };
+      updateCursorConfig(this.cursor, this.activeCursorConfig);
+    }
+
+    const zoomDefaults = walkthrough.zoom;
+
     const runId = ++this.runId;
     this.paused = false;
     this.flushPauseResolvers();
@@ -144,7 +180,15 @@ export class WalkrEngine {
       }
 
       const step = walkthrough.steps[index];
-      await executeStep(step, this.cursor, this.iframe);
+      const cursorRef = this.cursor;
+      await executeStep(step, cursorRef, this.iframe, {
+        getCursorConfig: () => ({ ...this.activeCursorConfig }),
+        setCursorConfig: (config) => {
+          this.activeCursorConfig = { ...this.activeCursorConfig, ...config };
+          updateCursorConfig(cursorRef, this.activeCursorConfig);
+        },
+        zoomDefaults,
+      });
 
       if (runId !== this.runId) {
         return;
