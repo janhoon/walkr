@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import type { Step, Walkthrough } from "../../../core/src/types";
+import type { Step, Walkthrough } from "@walkr/core";
 import { DEFAULT_DEMO_WALKTHROUGH } from "../constants";
 import type { PlaybackMode, SelectedStep, StudioState } from "../types";
 

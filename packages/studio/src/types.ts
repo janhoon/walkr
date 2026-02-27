@@ -1,4 +1,4 @@
-import type { Step } from '@walkr/core'
+import type { Step, Walkthrough } from '@walkr/core'
 
 export interface WalkthroughDef {
   url: string
@@ -8,11 +8,20 @@ export interface WalkthroughDef {
 
 export type PlaybackStatus = 'idle' | 'playing' | 'paused' | 'done'
 
+export type PlaybackMode = 'stopped' | 'playing' | 'paused'
+
+export interface SelectedStep {
+  index: number
+  step: Step
+}
+
 export interface StudioState {
-  walkthrough: WalkthroughDef | null
-  selectedStepIndex: number | null
+  walkthrough: Walkthrough | null
+  selectedStep: SelectedStep | null
   playheadTime: number      // ms from start
-  playbackStatus: PlaybackStatus
-  currentStepIndex: number
-  totalDuration: number     // sum of all step durations
+  mode: PlaybackMode
+  loop: boolean
+  // Legacy fields (kept for compatibility)
+  currentStepIndex?: number
+  totalDuration?: number
 }

@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 
-import type { Step } from "../../../core/src/types";
+import type { Step } from "@walkr/core";
 
 import { COLOR_MAP } from "../constants";
 

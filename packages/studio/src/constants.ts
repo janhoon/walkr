@@ -1,4 +1,4 @@
-import type { StepType, Walkthrough } from "../../core/src/types";
+import type { StepType, Walkthrough } from "@walkr/core";
 
 export const COLOR_MAP: Record<StepType, string> = {
   moveTo: "#3b82f6",
