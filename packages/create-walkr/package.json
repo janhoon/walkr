@@ -1,0 +1,9 @@
+{
+  "name": "create-walkr",
+  "version": "0.1.0",
+  "description": "Scaffold a new Walkr project",
+  "type": "module",
+  "bin": {
+    "create-walkr": "./src/index.js"
+  }
+}
