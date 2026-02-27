@@ -76,6 +76,10 @@ export interface WaitStepOptions extends StepCursorOverride {
 export interface HighlightOptions extends StepCursorOverride {
   color?: string;
   duration?: number;
+  spotlight?: boolean;
+  backdropOpacity?: number;
+  borderRadius?: number;
+  padding?: number;
 }
 
 export interface HighlightStepOptions extends HighlightOptions {

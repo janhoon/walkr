@@ -229,17 +229,21 @@ function applyCharacter(doc: Document, target: HTMLElement, char: string): void 
   target.textContent = `${target.textContent ?? ""}${char}`;
 }
 
-function withAlpha(color: string): string {
+function withHexAlpha(color: string, alpha: string): string {
   if (/^#([A-Fa-f0-9]{6})$/.test(color)) {
-    return `${color}40`;
+    return `${color}${alpha}`;
   }
   if (/^#([A-Fa-f0-9]{3})$/.test(color)) {
     const [, raw] = /^#([A-Fa-f0-9]{3})$/.exec(color) ?? [];
     if (raw) {
-      return `#${raw[0]}${raw[0]}${raw[1]}${raw[1]}${raw[2]}${raw[2]}40`;
+      return `#${raw[0]}${raw[0]}${raw[1]}${raw[1]}${raw[2]}${raw[2]}${alpha}`;
     }
   }
   return color;
+}
+
+function withAlpha(color: string): string {
+  return withHexAlpha(color, "40");
 }
 
 function getCursorPosition(cursor: HTMLElement): { x: number; y: number } {
@@ -464,6 +468,55 @@ async function executeHighlight(step: HighlightStep, iframe: HTMLIFrameElement):
   }
 
   const color = step.options.color ?? "#f59e0b";
+
+  if (step.options.spotlight) {
+    const hostDocument = iframe.ownerDocument;
+    const hostBody = hostDocument?.body;
+    if (!hostDocument || !hostBody) {
+      await sleep(duration);
+      return;
+    }
+
+    const frameBox = iframe.getBoundingClientRect();
+    const targetBox = target.getBoundingClientRect();
+    const scaleX = iframe.clientWidth > 0 ? frameBox.width / iframe.clientWidth : 1;
+    const scaleY = iframe.clientHeight > 0 ? frameBox.height / iframe.clientHeight : 1;
+
+    const padding = Math.max(0, step.options.padding ?? 8);
+    const radius = Math.max(0, step.options.borderRadius ?? 8);
+    const backdropOpacity = clamp(step.options.backdropOpacity ?? 0.6, 0, 1);
+
+    const spotlight = hostDocument.createElement("div");
+    const overlay = hostDocument.createElement("div");
+
+    overlay.style.position = "fixed";
+    overlay.style.inset = "0";
+    overlay.style.zIndex = "999990";
+    overlay.style.pointerEvents = "none";
+    overlay.style.background = "transparent";
+
+    spotlight.style.position = "fixed";
+    spotlight.style.left = `${frameBox.left + (targetBox.left * scaleX) - padding}px`;
+    spotlight.style.top = `${frameBox.top + (targetBox.top * scaleY) - padding}px`;
+    spotlight.style.width = `${Math.max(0, (targetBox.width * scaleX) + (padding * 2))}px`;
+    spotlight.style.height = `${Math.max(0, (targetBox.height * scaleY) + (padding * 2))}px`;
+    spotlight.style.zIndex = "999991";
+    spotlight.style.pointerEvents = "none";
+    spotlight.style.borderRadius = `${radius}px`;
+    spotlight.style.outline = `3px solid ${color}`;
+    spotlight.style.boxShadow = `0 0 0 9999px rgba(0, 0, 0, ${backdropOpacity}), 0 0 24px 4px ${withHexAlpha(color, "44")}`;
+
+    overlay.appendChild(spotlight);
+    hostBody.appendChild(overlay);
+
+    try {
+      await sleep(duration);
+    } finally {
+      overlay.remove();
+    }
+    return;
+  }
+
   const previous = {
     outline: target.style.outline,
     outlineOffset: target.style.outlineOffset,

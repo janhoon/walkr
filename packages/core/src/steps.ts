@@ -92,7 +92,16 @@ export function highlight(
   selector: string,
   options: HighlightOptions = {},
 ): HighlightStep {
-  const stepOptions: HighlightStepOptions = { selector, ...options };
+  const stepOptions: HighlightStepOptions = {
+    selector,
+    color: options.color,
+    duration: options.duration,
+    spotlight: options.spotlight,
+    backdropOpacity: options.backdropOpacity,
+    borderRadius: options.borderRadius,
+    padding: options.padding,
+    cursor: options.cursor,
+  };
   return createStep("highlight", stepOptions, options.duration ?? 0);
 }
 
