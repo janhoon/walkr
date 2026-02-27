@@ -1,94 +1,102 @@
-import type { PlaybackMode } from "../types";
+import React from 'react'
+import type { PlaybackStatus } from '../types'
 
 interface PlaybackControlsProps {
-  mode: PlaybackMode;
-  currentStep: number;
-  totalSteps: number;
-  playheadTime: number;
-  loop: boolean;
-  onPlay: () => void;
-  onPause: () => void;
-  onStepForward: () => void;
-  onStepBackward: () => void;
-  onToggleLoop: () => void;
+  status: PlaybackStatus
+  currentStepIndex: number
+  totalSteps: number
+  onPlay: () => void
+  onPause: () => void
+  onStepBack: () => void
+  onStepForward: () => void
+  onReset: () => void
+  onLoop: (loop: boolean) => void
+  loop: boolean
 }
 
-const formatMs = (value: number): string => {
-  const rounded = Math.max(0, Math.round(value));
-  const minutes = Math.floor(rounded / 60000);
-  const seconds = Math.floor((rounded % 60000) / 1000);
-  const ms = rounded % 1000;
-  return `${minutes}:${seconds.toString().padStart(2, "0")}.${ms.toString().padStart(3, "0")}`;
-};
+const btnStyle: React.CSSProperties = {
+  background: 'transparent',
+  color: '#a0a0a0',
+  border: 'none',
+  cursor: 'pointer',
+  fontSize: 16,
+  padding: '4px 8px',
+  borderRadius: 4,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+}
 
-const buttonStyle: React.CSSProperties = {
-  all: "unset",
-  cursor: "pointer",
-  borderRadius: 8,
-  border: "1px solid #2c3e55",
-  color: "#e2e8f0",
-  background: "#0f1f32",
-  padding: "8px 10px",
+const playBtnStyle: React.CSSProperties = {
+  background: '#3b82f6',
+  color: 'white',
+  border: 'none',
+  cursor: 'pointer',
+  borderRadius: 6,
+  width: 36,
+  height: 28,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
   fontSize: 14,
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  minWidth: 42,
-};
+}
 
-export const PlaybackControls = ({
-  mode,
-  currentStep,
+export function PlaybackControls({
+  status,
+  currentStepIndex,
   totalSteps,
-  playheadTime,
-  loop,
   onPlay,
   onPause,
+  onStepBack,
   onStepForward,
-  onStepBackward,
-  onToggleLoop,
-}: PlaybackControlsProps) => (
-  <aside
-    style={{
-      background: "#0f172a",
-      border: "1px solid #223146",
-      borderRadius: 14,
-      padding: 12,
-      display: "flex",
-      flexDirection: "column",
-      gap: 14,
-      minWidth: 220,
-    }}
-  >
-    <div style={{ fontSize: 12, color: "#8fa5c2" }}>Playback</div>
-    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-      <button type="button" onClick={onStepBackward} style={buttonStyle} title="Step backward">
+  onReset,
+  onLoop,
+  loop,
+}: PlaybackControlsProps) {
+  return (
+    <div
+      style={{
+        height: 44,
+        background: '#1c1c1c',
+        borderTop: '1px solid #2a2a2a',
+        borderBottom: '1px solid #2a2a2a',
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        padding: '0 16px',
+        flexShrink: 0,
+      }}
+    >
+      <button style={btnStyle} onClick={onReset} title="Reset">
         ⏮
       </button>
+      <button style={btnStyle} onClick={onStepBack} title="Step back">
+        ⏪
+      </button>
       <button
-        type="button"
-        onClick={mode === "playing" ? onPause : onPlay}
-        style={{ ...buttonStyle, minWidth: 64, fontWeight: 700 }}
+        style={playBtnStyle}
+        onClick={status === 'playing' ? onPause : onPlay}
+        title={status === 'playing' ? 'Pause' : 'Play'}
       >
-        {mode === "playing" ? "⏸" : "▶"}
+        {status === 'playing' ? '⏸' : '▶'}
       </button>
-      <button type="button" onClick={onStepForward} style={buttonStyle} title="Step forward">
-        ⏭
+      <button style={btnStyle} onClick={onStepForward} title="Step forward">
+        ⏩
       </button>
       <button
-        type="button"
-        onClick={onToggleLoop}
         style={{
-          ...buttonStyle,
-          borderColor: loop ? "#38bdf8" : buttonStyle.border,
-          boxShadow: loop ? "0 0 0 2px rgba(56, 189, 248, 0.2)" : undefined,
+          ...btnStyle,
+          color: loop ? '#3b82f6' : '#a0a0a0',
         }}
-        title="Toggle loop"
+        onClick={() => onLoop(!loop)}
+        title="Loop"
       >
         🔁
       </button>
+      <span style={{ fontSize: 12, color: '#888', marginLeft: 'auto' }}>
+        Step {currentStepIndex + 1} / {totalSteps}
+      </span>
     </div>
-    <div style={{ color: "#cbd5e1", fontSize: 13 }}>{`Step ${currentStep}/${Math.max(totalSteps, 1)}`}</div>
-    <div style={{ color: "#8fa5c2", fontSize: 12 }}>{`Elapsed ${formatMs(playheadTime)}`}</div>
-  </aside>
-);
+  )
+}

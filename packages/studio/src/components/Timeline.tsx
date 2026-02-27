@@ -1,327 +1,315 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-
-import type { Step } from "../../../core/src/types";
-import { StepBlock } from "./StepBlock";
+import React, { useRef, useCallback, useState } from 'react'
+import type { Step } from '@walkr/core'
 
 interface TimelineProps {
-  steps: Step[];
-  totalDuration: number;
-  playheadTime: number;
-  selectedIndex: number | null;
-  onSelectStep: (index: number) => void;
-  onScrub: (time: number) => void;
-  onResizeStep: (index: number, newDuration: number) => void;
-  onReorderSteps: (fromIndex: number, toIndex: number) => void;
+  steps: Step[]
+  selectedStepIndex: number | null
+  currentStepIndex: number
+  playheadTime: number
+  totalDuration: number
+  onSelectStep: (index: number) => void
+  onSeek: (timeMs: number) => void
+  onUpdateDuration: (stepIndex: number, newDuration: number) => void
+  onReorderStep: (fromIndex: number, toIndex: number) => void
 }
 
-const MIN_BLOCK_WIDTH = 48;
-const PIXELS_PER_MS = 1;
-const BLOCK_GAP = 8;
-const TRACK_SIDE_PADDING = 4;
-const DRAG_THRESHOLD_PX = 6;
-
-const getBlockWidth = (duration: number): number => {
-  const rawWidth = duration * PIXELS_PER_MS;
-  return Math.max(rawWidth, MIN_BLOCK_WIDTH);
-};
-
-const clamp = (value: number, min: number, max: number): number => {
-  if (value < min) {
-    return min;
-  }
-
-  if (value > max) {
-    return max;
-  }
-
-  return value;
-};
-
-interface ReorderState {
-  fromIndex: number;
-  startX: number;
-  pointerId: number;
-  isDragging: boolean;
-  insertionIndex: number | null;
+const STEP_COLORS: Record<string, string> = {
+  moveTo: '#1d3a5c',
+  click: '#3b1d5c',
+  type: '#1d5c2a',
+  scroll: '#5c3b1d',
+  wait: '#333',
+  zoom: '#5c1d3b',
+  pan: '#1d5c5c',
+  highlight: '#5c5c1d',
 }
 
-export const Timeline = ({
+const STEP_BORDER_COLORS: Record<string, string> = {
+  moveTo: '#2a4f75',
+  click: '#4f2a75',
+  type: '#2a753f',
+  scroll: '#754f2a',
+  wait: '#444',
+  zoom: '#752a4f',
+  pan: '#2a7575',
+  highlight: '#75752a',
+}
+
+const SCALE = 0.1 // 1ms = 0.1px
+const MIN_BLOCK_WIDTH = 80
+
+function stepWidth(duration: number): number {
+  return Math.max(duration * SCALE, MIN_BLOCK_WIDTH)
+}
+
+export function Timeline({
   steps,
-  totalDuration,
+  selectedStepIndex,
+  currentStepIndex,
   playheadTime,
-  selectedIndex,
+  totalDuration,
   onSelectStep,
-  onScrub,
-  onResizeStep,
-  onReorderSteps,
-}: TimelineProps) => {
-  const trackRef = useRef<HTMLDivElement | null>(null);
-  const reorderStateRef = useRef<ReorderState | null>(null);
-  const cleanupReorderRef = useRef<(() => void) | null>(null);
+  onSeek,
+  onUpdateDuration,
+  onReorderStep,
+}: TimelineProps) {
+  const trackRef = useRef<HTMLDivElement>(null)
+  const [resizing, setResizing] = useState<{ index: number; startX: number; startDuration: number } | null>(null)
+  const [resizePreview, setResizePreview] = useState<number | null>(null)
+  const [dragIndex, setDragIndex] = useState<number | null>(null)
+  const [dropTarget, setDropTarget] = useState<number | null>(null)
+  const [draggingPlayhead, setDraggingPlayhead] = useState(false)
 
-  const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
-  const [dropIndicatorX, setDropIndicatorX] = useState<number | null>(null);
+  const totalWidth = steps.reduce((sum, s) => sum + stepWidth(s.duration), 0)
 
-  const widths = useMemo(() => steps.map((step) => getBlockWidth(step.duration)), [steps]);
+  const handlePlayheadMouseDown = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation()
+    setDraggingPlayhead(true)
 
-  const starts = useMemo(() => {
-    let cursor = TRACK_SIDE_PADDING;
-    return widths.map((width) => {
-      const start = cursor;
-      cursor += width + BLOCK_GAP;
-      return start;
-    });
-  }, [widths]);
-
-  const contentWidth = useMemo(() => {
-    if (widths.length === 0) {
-      return TRACK_SIDE_PADDING * 2;
+    const onMove = (ev: MouseEvent) => {
+      if (!trackRef.current) return
+      const rect = trackRef.current.getBoundingClientRect()
+      const x = Math.max(0, Math.min(ev.clientX - rect.left, rect.width))
+      const ratio = x / totalWidth
+      onSeek(Math.round(ratio * totalDuration))
     }
 
-    const totalStepWidth = widths.reduce((sum, width) => sum + width, 0);
-    return TRACK_SIDE_PADDING * 2 + totalStepWidth + BLOCK_GAP * (widths.length - 1);
-  }, [widths]);
-
-  const timelinePixelWidth = Math.max(contentWidth - TRACK_SIDE_PADDING * 2, 0);
-
-  const playheadX = useMemo(() => {
-    if (totalDuration <= 0 || timelinePixelWidth <= 0) {
-      return TRACK_SIDE_PADDING;
+    const onUp = () => {
+      setDraggingPlayhead(false)
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
     }
 
-    return clamp(
-      TRACK_SIDE_PADDING + (playheadTime / totalDuration) * timelinePixelWidth,
-      TRACK_SIDE_PADDING,
-      TRACK_SIDE_PADDING + timelinePixelWidth,
-    );
-  }, [playheadTime, totalDuration, timelinePixelWidth]);
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+  }, [totalDuration, totalWidth, onSeek])
 
-  const getInsertionIndex = (contentX: number): number => {
-    for (let index = 0; index < widths.length; index += 1) {
-      const midpoint = starts[index] + widths[index] / 2;
-      if (contentX < midpoint) {
-        return index;
-      }
+  const handleResizeStart = useCallback((e: React.MouseEvent, index: number, duration: number) => {
+    e.stopPropagation()
+    e.preventDefault()
+    const startX = e.clientX
+    setResizing({ index, startX, startDuration: duration })
+
+    const onMove = (ev: MouseEvent) => {
+      const dx = ev.clientX - startX
+      const newDuration = Math.max(50, Math.round(duration + dx / SCALE))
+      setResizePreview(newDuration)
     }
 
-    return widths.length;
-  };
-
-  const getDropIndicatorPosition = (insertionIndex: number): number => {
-    if (widths.length === 0) {
-      return TRACK_SIDE_PADDING;
+    const onUp = (ev: MouseEvent) => {
+      const dx = ev.clientX - startX
+      const newDuration = Math.max(50, Math.round(duration + dx / SCALE))
+      onUpdateDuration(index, newDuration)
+      setResizing(null)
+      setResizePreview(null)
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
     }
 
-    if (insertionIndex <= 0) {
-      return starts[0];
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+  }, [onUpdateDuration])
+
+  const handleDragStart = useCallback((e: React.DragEvent, index: number) => {
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/plain', String(index))
+    setDragIndex(index)
+  }, [])
+
+  const handleDragOver = useCallback((e: React.DragEvent, index: number) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    setDropTarget(index)
+  }, [])
+
+  const handleDrop = useCallback((e: React.DragEvent, toIndex: number) => {
+    e.preventDefault()
+    const fromIndex = parseInt(e.dataTransfer.getData('text/plain'), 10)
+    if (!isNaN(fromIndex) && fromIndex !== toIndex) {
+      onReorderStep(fromIndex, toIndex)
     }
+    setDragIndex(null)
+    setDropTarget(null)
+  }, [onReorderStep])
 
-    if (insertionIndex >= widths.length) {
-      const last = widths.length - 1;
-      return starts[last] + widths[last] + BLOCK_GAP / 2;
-    }
+  const handleDragEnd = useCallback(() => {
+    setDragIndex(null)
+    setDropTarget(null)
+  }, [])
 
-    return starts[insertionIndex] - BLOCK_GAP / 2;
-  };
+  const handleTrackClick = useCallback((e: React.MouseEvent) => {
+    if (!trackRef.current) return
+    const rect = trackRef.current.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const ratio = x / totalWidth
+    onSeek(Math.round(ratio * totalDuration))
+  }, [totalDuration, totalWidth, onSeek])
 
-  const clearReorderInteraction = (): void => {
-    cleanupReorderRef.current?.();
-    cleanupReorderRef.current = null;
-    reorderStateRef.current = null;
-    setDraggingIndex(null);
-    setDropIndicatorX(null);
-  };
+  const playheadX = totalDuration > 0 ? (playheadTime / totalDuration) * totalWidth : 0
 
-  const scrubFromClientX = (clientX: number): void => {
-    if (!trackRef.current || totalDuration <= 0 || timelinePixelWidth <= 0) {
-      return;
-    }
-
-    const bounds = trackRef.current.getBoundingClientRect();
-    const localX = clamp(clientX - bounds.left + trackRef.current.scrollLeft - TRACK_SIDE_PADDING, 0, timelinePixelWidth);
-    const ratio = timelinePixelWidth === 0 ? 0 : localX / timelinePixelWidth;
-    onScrub(ratio * totalDuration);
-  };
-
-  const startScrub = (event: React.PointerEvent<HTMLDivElement>): void => {
-    if (event.button !== 0) {
-      return;
-    }
-
-    event.preventDefault();
-
-    scrubFromClientX(event.clientX);
-
-    const onMove = (moveEvent: PointerEvent): void => {
-      scrubFromClientX(moveEvent.clientX);
-    };
-
-    const onEnd = (): void => {
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onEnd);
-      window.removeEventListener("pointercancel", onEnd);
-    };
-
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onEnd);
-    window.addEventListener("pointercancel", onEnd);
-  };
-
-  const startReorder = (index: number, event: React.PointerEvent<HTMLButtonElement>): void => {
-    if (event.button !== 0) {
-      return;
-    }
-
-    event.preventDefault();
-    event.stopPropagation();
-
-    reorderStateRef.current = {
-      fromIndex: index,
-      startX: event.clientX,
-      pointerId: event.pointerId,
-      isDragging: false,
-      insertionIndex: null,
-    };
-
-    setDraggingIndex(index);
-
-    const onMove = (moveEvent: PointerEvent): void => {
-      const reorderState = reorderStateRef.current;
-      if (!reorderState || moveEvent.pointerId !== reorderState.pointerId || !trackRef.current) {
-        return;
-      }
-
-      if (!reorderState.isDragging && Math.abs(moveEvent.clientX - reorderState.startX) < DRAG_THRESHOLD_PX) {
-        return;
-      }
-
-      reorderState.isDragging = true;
-
-      const bounds = trackRef.current.getBoundingClientRect();
-      const contentX = clamp(moveEvent.clientX - bounds.left + trackRef.current.scrollLeft, 0, contentWidth);
-      const insertionIndex = getInsertionIndex(contentX);
-
-      reorderState.insertionIndex = insertionIndex;
-      setDropIndicatorX(getDropIndicatorPosition(insertionIndex));
-    };
-
-    const onEnd = (): void => {
-      const reorderState = reorderStateRef.current;
-
-      clearReorderInteraction();
-
-      if (!reorderState) {
-        return;
-      }
-
-      if (!reorderState.isDragging || reorderState.insertionIndex === null) {
-        onSelectStep(index);
-        return;
-      }
-
-      const rawToIndex = reorderState.insertionIndex > reorderState.fromIndex ? reorderState.insertionIndex - 1 : reorderState.insertionIndex;
-      const toIndex = clamp(rawToIndex, 0, steps.length - 1);
-
-      if (toIndex !== reorderState.fromIndex) {
-        onReorderSteps(reorderState.fromIndex, toIndex);
-      }
-    };
-
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onEnd);
-    window.addEventListener("pointercancel", onEnd);
-
-    cleanupReorderRef.current = () => {
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onEnd);
-      window.removeEventListener("pointercancel", onEnd);
-    };
-  };
-
-  useEffect(() => () => {
-    clearReorderInteraction();
-  }, []);
+  // Time markers
+  let cumulativeMs = 0
+  const stepOffsets = steps.map((s) => {
+    const offset = cumulativeMs
+    cumulativeMs += s.duration
+    return offset
+  })
 
   return (
     <div
       style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: 10,
-        border: "1px solid #243244",
-        background: "#0e1725",
-        borderRadius: 12,
-        padding: 12,
+        height: 120,
+        background: '#141414',
+        borderTop: '1px solid #2a2a2a',
+        display: 'flex',
+        flexShrink: 0,
       }}
     >
-      <div style={{ fontSize: 12, color: "#8fa5c2" }}>Timeline</div>
+      {/* Left column: time markers */}
       <div
-        ref={trackRef}
-        onPointerDown={startScrub}
         style={{
-          position: "relative",
-          display: "flex",
-          gap: BLOCK_GAP,
-          alignItems: "stretch",
-          overflowX: "auto",
-          padding: "8px 4px 20px",
-          cursor: "ew-resize",
-          userSelect: "none",
+          width: 60,
+          borderRight: '1px solid #2a2a2a',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          fontSize: 10,
+          color: '#555',
+          flexShrink: 0,
         }}
       >
-        {steps.map((step, index) => (
-          <StepBlock
-            key={step.id}
-            step={step}
-            index={index}
-            width={widths[index]}
-            selected={selectedIndex === index}
-            dragging={draggingIndex === index}
-            onClick={() => onSelectStep(index)}
-            onPointerDown={(event) => startReorder(index, event)}
-            onResizeDuration={(newDuration) => onResizeStep(index, newDuration)}
-          />
-        ))}
+        <div>{formatTime(playheadTime)}</div>
+        <div style={{ marginTop: 4, color: '#444' }}>{formatTime(totalDuration)}</div>
+      </div>
 
-        {dropIndicatorX !== null ? (
+      {/* Main track area */}
+      <div
+        style={{
+          flex: 1,
+          overflowX: 'auto',
+          overflowY: 'hidden',
+          position: 'relative',
+        }}
+      >
+        <div
+          ref={trackRef}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            height: '100%',
+            padding: '24px 8px',
+            gap: 4,
+            minWidth: totalWidth + 16,
+            position: 'relative',
+            cursor: 'pointer',
+          }}
+          onClick={handleTrackClick}
+        >
+          {/* Step blocks */}
+          {steps.map((step, i) => {
+            const w = resizing?.index === i && resizePreview !== null
+              ? stepWidth(resizePreview)
+              : stepWidth(step.duration)
+            const isSelected = selectedStepIndex === i
+            const isCurrent = currentStepIndex === i
+            const isDragTarget = dropTarget === i
+
+            return (
+              <div
+                key={step.id}
+                draggable
+                onDragStart={(e) => handleDragStart(e, i)}
+                onDragOver={(e) => handleDragOver(e, i)}
+                onDrop={(e) => handleDrop(e, i)}
+                onDragEnd={handleDragEnd}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onSelectStep(i)
+                }}
+                style={{
+                  width: w,
+                  height: 72,
+                  background: STEP_COLORS[step.type] ?? '#333',
+                  border: `1px solid ${STEP_BORDER_COLORS[step.type] ?? '#444'}`,
+                  borderRadius: 6,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  cursor: 'grab',
+                  position: 'relative',
+                  flexShrink: 0,
+                  userSelect: 'none',
+                  boxShadow: isSelected
+                    ? '0 0 0 2px #3b82f6'
+                    : isCurrent
+                      ? '0 0 0 2px #10b981'
+                      : 'none',
+                  opacity: dragIndex === i ? 0.5 : 1,
+                  borderLeft: isDragTarget ? '3px solid #3b82f6' : undefined,
+                }}
+              >
+                <span style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', color: '#e8e8e8' }}>
+                  {step.type}
+                </span>
+                <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>
+                  {resizing?.index === i && resizePreview !== null ? `${resizePreview}ms` : `${step.duration}ms`}
+                </span>
+
+                {/* Resize handle */}
+                <div
+                  onMouseDown={(e) => handleResizeStart(e, i, step.duration)}
+                  style={{
+                    position: 'absolute',
+                    right: 0,
+                    top: 0,
+                    bottom: 0,
+                    width: 4,
+                    cursor: 'col-resize',
+                    borderRadius: '0 6px 6px 0',
+                  }}
+                />
+              </div>
+            )
+          })}
+
+          {/* Playhead */}
           <div
+            onMouseDown={handlePlayheadMouseDown}
             style={{
-              position: "absolute",
-              left: dropIndicatorX,
-              top: 6,
-              bottom: 10,
+              position: 'absolute',
+              left: 8 + playheadX,
+              top: 0,
+              bottom: 0,
               width: 2,
-              background: "#f97316",
-              pointerEvents: "none",
+              background: '#ef4444',
+              cursor: 'ew-resize',
+              zIndex: 10,
+              pointerEvents: 'auto',
             }}
-          />
-        ) : null}
-
-        <div
-          style={{
-            position: "absolute",
-            left: playheadX,
-            top: 4,
-            bottom: 8,
-            width: 2,
-            background: "#38bdf8",
-            pointerEvents: "none",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            left: playheadX - 6,
-            top: 0,
-            width: 14,
-            height: 14,
-            borderRadius: "50%",
-            background: "#38bdf8",
-            boxShadow: "0 0 0 2px #0f172a",
-            pointerEvents: "none",
-          }}
-        />
+          >
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: -4,
+                width: 10,
+                height: 10,
+                background: '#ef4444',
+                borderRadius: '50%',
+              }}
+            />
+          </div>
+        </div>
       </div>
     </div>
-  );
-};
+  )
+}
+
+function formatTime(ms: number): string {
+  const s = ms / 1000
+  const mins = Math.floor(s / 60)
+  const secs = (s % 60).toFixed(1)
+  return mins > 0 ? `${mins}:${secs.padStart(4, '0')}` : `${secs}s`
+}

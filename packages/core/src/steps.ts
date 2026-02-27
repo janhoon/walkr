@@ -28,11 +28,11 @@ import type {
 
 let stepCounter = 0;
 
-export function createStep<TType extends StepType, TOptions>(
-  type: TType,
-  options: TOptions,
-  duration = 0,
-): Step<TType, TOptions> {
+export function createStep<
+  TType extends StepType,
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+  TOptions extends {},
+>(type: TType, options: TOptions, duration = 0): Step<TType, TOptions> {
   stepCounter += 1;
   return {
     id: `${type}_${stepCounter}`,
