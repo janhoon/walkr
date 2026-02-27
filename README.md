@@ -1,8 +1,10 @@
 # 🚶 Walkr
 
-**Code-first product demo tool**
+**Create polished web product demos, programmatically.**
 
-Script website interactions as animated cursor walkthroughs with a TypeScript-first API, Studio editor, and export pipeline.
+Walkr lets you script interactive walkthroughs of any website — animated cursor movements, clicks, typing, highlights — and export them as videos or embeddable players. Think screen recording, but deterministic, editable, and pixel-perfect every time. The name? Walk + through → **walkr**.
+
+Write a short TypeScript script, point it at your app, and get a production-ready product demo you can embed in your landing page, docs, or sales deck.
 
 ## Status
 
