@@ -145,12 +145,8 @@ function applyCursorVisual(cursor: HTMLElement, config: ResolvedCursorConfig): v
 }
 
 function setCursorPosition(cursor: HTMLElement, x: number, y: number): void {
-  const parentRect = cursor.parentElement?.getBoundingClientRect();
-  const viewportX = (parentRect?.left ?? 0) + x;
-  const viewportY = (parentRect?.top ?? 0) + y;
-
-  cursor.style.left = `${viewportX}px`;
-  cursor.style.top = `${viewportY}px`;
+  cursor.style.left = `${x}px`;
+  cursor.style.top = `${y}px`;
   cursor.dataset.walkrCursorX = String(x);
   cursor.dataset.walkrCursorY = String(y);
 }
@@ -180,7 +176,7 @@ export function createCursor(config: CursorConfig = {}): HTMLElement {
   const cursor = document.createElement("div");
   cursor.dataset.walkrCursorX = "0";
   cursor.dataset.walkrCursorY = "0";
-  cursor.style.position = "fixed";
+  cursor.style.position = "absolute";
   cursor.style.left = "-9999px";
   cursor.style.top = "-9999px";
   cursor.style.opacity = "1";
@@ -291,19 +287,15 @@ export function hideScrollIndicator(cursor: HTMLElement): void {
 }
 
 export function showClickRipple(cursor: HTMLElement, x: number, y: number, color: string): void {
-  const root = cursor.ownerDocument.body;
-  if (!root) {
+  const parent = cursor.parentElement;
+  if (!parent) {
     return;
   }
 
-  const parentRect = cursor.parentElement?.getBoundingClientRect();
-  const viewportX = (parentRect?.left ?? 0) + x;
-  const viewportY = (parentRect?.top ?? 0) + y;
-
   const ripple = document.createElement("div");
-  ripple.style.position = "fixed";
-  ripple.style.left = `${viewportX}px`;
-  ripple.style.top = `${viewportY}px`;
+  ripple.style.position = "absolute";
+  ripple.style.left = `${x}px`;
+  ripple.style.top = `${y}px`;
   ripple.style.width = "14px";
   ripple.style.height = "14px";
   ripple.style.marginLeft = "-7px";
@@ -313,7 +305,7 @@ export function showClickRipple(cursor: HTMLElement, x: number, y: number, color
   ripple.style.pointerEvents = "none";
   ripple.style.zIndex = "99998";
 
-  root.appendChild(ripple);
+  parent.appendChild(ripple);
 
   const animation = ripple.animate(
     [

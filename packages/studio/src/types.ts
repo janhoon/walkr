@@ -2,6 +2,7 @@ import type { Step } from '@walkr/core'
 
 export interface WalkthroughDef {
   url: string
+  originalUrl?: string
   title?: string
   steps: Step[]
 }

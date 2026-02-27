@@ -1,5 +1,5 @@
 import { pathToFileURL } from "node:url";
-import type { Walkthrough } from "../../core/src/types.js";
+import type { Walkthrough } from "@walkr/core";
 
 export interface ExportOptions {
   format?: "mp4" | "gif" | "webm" | "embed";
@@ -56,6 +56,7 @@ export async function exportCommand(
   ) => Promise<{ outputPath: string; duration: number; frameCount: number }>;
 
   try {
+    // @ts-expect-error — @walkr/playwright is an optional peer dep, resolved at runtime
     const mod = (await import("@walkr/playwright")) as {
       captureWalkthrough: typeof captureWalkthrough;
     };

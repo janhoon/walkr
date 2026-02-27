@@ -1,7 +1,7 @@
-import React, { useState, useRef, useCallback } from 'react'
+import React, { useState, useRef, useCallback, useEffect } from 'react'
 import type { Step } from '@walkr/core'
+import { WalkrEngine } from '@walkr/engine'
 import type { WalkthroughDef, PlaybackStatus } from './types'
-import { PreviewPane } from './components/PreviewPane'
 import { PlaybackControls } from './components/PlaybackControls'
 import { Timeline } from './components/Timeline'
 import { StepPanel } from './components/StepPanel'
@@ -22,13 +22,59 @@ const DEMO_WALKTHROUGH: WalkthroughDef = {
 }
 
 export function App() {
-  const [walkthrough, setWalkthrough] = useState<WalkthroughDef | null>(DEMO_WALKTHROUGH)
+  const [walkthrough, setWalkthrough] = useState<WalkthroughDef | null>(null)
   const [selectedStepIndex, setSelectedStepIndex] = useState<number | null>(null)
   const [playbackStatus, setPlaybackStatus] = useState<PlaybackStatus>('idle')
   const [currentStepIndex, setCurrentStepIndex] = useState(0)
   const [playheadTime, setPlayheadTime] = useState(0)
   const [loop, setLoop] = useState(false)
-  const iframeRef = useRef<HTMLIFrameElement>(null!)
+
+  const containerRef = useRef<HTMLDivElement>(null)
+  const engineRef = useRef<WalkrEngine | null>(null)
+
+  // On mount, try to load walkthrough.json written by `walkr dev`; fall back to built-in demo
+  useEffect(() => {
+    fetch('/walkthrough.json')
+      .then((res) => {
+        if (!res.ok) throw new Error('not found')
+        return res.json() as Promise<WalkthroughDef>
+      })
+      .then((data) => {
+        if (data?.url && Array.isArray(data.steps)) {
+          setWalkthrough(data)
+        } else {
+          setWalkthrough(DEMO_WALKTHROUGH)
+        }
+      })
+      .catch(() => setWalkthrough(DEMO_WALKTHROUGH))
+  }, [])
+
+  // Initialize engine when container is ready
+  useEffect(() => {
+    if (!containerRef.current) return
+
+    const engine = new WalkrEngine({
+      container: containerRef.current,
+      cursor: walkthrough?.cursor,
+    })
+
+    engine.on('step', (_event, state) => {
+      setCurrentStepIndex(state.currentStep)
+      // Approximate playhead from step index
+      setPlayheadTime((prev) => prev) // keep in sync via step events
+    })
+
+    engine.on('complete', () => {
+      setPlaybackStatus('idle')
+    })
+
+    engineRef.current = engine
+
+    return () => {
+      engine.unmount()
+      engineRef.current = null
+    }
+  }, [walkthrough?.cursor])
 
   const steps = walkthrough?.steps ?? []
   const totalDuration = steps.reduce((sum, s) => sum + s.duration, 0)
@@ -84,7 +130,6 @@ export function App() {
     const clamped = Math.max(0, Math.min(timeMs, totalDuration))
     setPlayheadTime(clamped)
 
-    // Find which step this time falls within
     let accumulated = 0
     for (let i = 0; i < steps.length; i++) {
       accumulated += steps[i].duration
@@ -96,10 +141,35 @@ export function App() {
     setCurrentStepIndex(Math.max(0, steps.length - 1))
   }, [steps, totalDuration])
 
-  const handlePlay = useCallback(() => setPlaybackStatus('playing'), [])
-  const handlePause = useCallback(() => setPlaybackStatus('paused'), [])
+  const handlePlay = useCallback(() => {
+    const engine = engineRef.current
+    if (!engine || !walkthrough) return
+
+    if (playbackStatus === 'paused') {
+      engine.resume()
+      setPlaybackStatus('playing')
+    } else {
+      setPlaybackStatus('playing')
+      setCurrentStepIndex(0)
+      setPlayheadTime(0)
+      engine.play(walkthrough).catch(() => {
+        setPlaybackStatus('idle')
+      })
+    }
+  }, [walkthrough, playbackStatus])
+
+  const handlePause = useCallback(() => {
+    engineRef.current?.pause()
+    setPlaybackStatus('paused')
+  }, [])
 
   const handleReset = useCallback(() => {
+    // Unmount and remount to reset
+    const engine = engineRef.current
+    if (engine && containerRef.current) {
+      engine.unmount()
+      engine.mount(containerRef.current)
+    }
     setPlaybackStatus('idle')
     setCurrentStepIndex(0)
     setPlayheadTime(0)
@@ -108,7 +178,6 @@ export function App() {
   const handleStepBack = useCallback(() => {
     const newIndex = Math.max(0, currentStepIndex - 1)
     setCurrentStepIndex(newIndex)
-    // Calculate playhead time for start of this step
     let time = 0
     for (let i = 0; i < newIndex; i++) {
       time += steps[i].duration
@@ -169,8 +238,44 @@ export function App() {
 
       {/* Main content area */}
       <div style={{ flex: 1, display: 'flex', minHeight: 0 }}>
-        {/* Preview pane */}
-        <PreviewPane url={walkthrough?.url ?? null} iframeRef={iframeRef} />
+        {/* Engine preview container */}
+        <div style={{ flex: 1, background: '#1a1a1a', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+          <div style={{
+            height: 32,
+            display: 'flex',
+            alignItems: 'center',
+            padding: '0 12px',
+            gap: 8,
+            fontSize: 12,
+            color: '#888',
+            borderBottom: '1px solid #333',
+            flexShrink: 0,
+          }}>
+            <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {walkthrough?.originalUrl ?? walkthrough?.url ?? 'No URL'}
+            </span>
+            {walkthrough?.url && (
+              <a
+                href={walkthrough.originalUrl ?? walkthrough.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: '#888', textDecoration: 'none', fontSize: 14 }}
+                title="Open in browser"
+              >
+                &#8599;
+              </a>
+            )}
+          </div>
+          <div
+            ref={containerRef}
+            style={{
+              flex: 1,
+              position: 'relative',
+              overflow: 'hidden',
+              background: '#000',
+            }}
+          />
+        </div>
 
         {/* Step panel */}
         <StepPanel

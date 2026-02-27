@@ -3,7 +3,7 @@ import type { Walkthrough, WalkthroughOptions } from "./types.js";
 export const VERSION = "0.1.0";
 
 export function walkr(options: WalkthroughOptions): Walkthrough {
-  const { url, steps, title, description, zoom, cursor } = options;
+  const { url, steps, title, description, zoom, cursor, viewport } = options;
   return {
     url,
     steps: [...steps],
@@ -11,6 +11,7 @@ export function walkr(options: WalkthroughOptions): Walkthrough {
     description,
     zoom,
     cursor,
+    viewport,
   };
 }
 

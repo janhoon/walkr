@@ -470,17 +470,14 @@ async function executeHighlight(step: HighlightStep, iframe: HTMLIFrameElement):
   const color = step.options.color ?? "#f59e0b";
 
   if (step.options.spotlight) {
+    const stage = iframe.parentElement;
     const hostDocument = iframe.ownerDocument;
-    const hostBody = hostDocument?.body;
-    if (!hostDocument || !hostBody) {
+    if (!stage || !hostDocument) {
       await sleep(duration);
       return;
     }
 
-    const frameBox = iframe.getBoundingClientRect();
     const targetBox = target.getBoundingClientRect();
-    const scaleX = iframe.clientWidth > 0 ? frameBox.width / iframe.clientWidth : 1;
-    const scaleY = iframe.clientHeight > 0 ? frameBox.height / iframe.clientHeight : 1;
 
     const padding = Math.max(0, step.options.padding ?? 8);
     const radius = Math.max(0, step.options.borderRadius ?? 8);
@@ -489,17 +486,17 @@ async function executeHighlight(step: HighlightStep, iframe: HTMLIFrameElement):
     const spotlight = hostDocument.createElement("div");
     const overlay = hostDocument.createElement("div");
 
-    overlay.style.position = "fixed";
+    overlay.style.position = "absolute";
     overlay.style.inset = "0";
     overlay.style.zIndex = "999990";
     overlay.style.pointerEvents = "none";
     overlay.style.background = "transparent";
 
-    spotlight.style.position = "fixed";
-    spotlight.style.left = `${frameBox.left + (targetBox.left * scaleX) - padding}px`;
-    spotlight.style.top = `${frameBox.top + (targetBox.top * scaleY) - padding}px`;
-    spotlight.style.width = `${Math.max(0, (targetBox.width * scaleX) + (padding * 2))}px`;
-    spotlight.style.height = `${Math.max(0, (targetBox.height * scaleY) + (padding * 2))}px`;
+    spotlight.style.position = "absolute";
+    spotlight.style.left = `${targetBox.left - padding}px`;
+    spotlight.style.top = `${targetBox.top - padding}px`;
+    spotlight.style.width = `${Math.max(0, targetBox.width + (padding * 2))}px`;
+    spotlight.style.height = `${Math.max(0, targetBox.height + (padding * 2))}px`;
     spotlight.style.zIndex = "999991";
     spotlight.style.pointerEvents = "none";
     spotlight.style.borderRadius = `${radius}px`;
@@ -507,7 +504,7 @@ async function executeHighlight(step: HighlightStep, iframe: HTMLIFrameElement):
     spotlight.style.boxShadow = `0 0 0 9999px rgba(0, 0, 0, ${backdropOpacity}), 0 0 24px 4px ${withHexAlpha(color, "44")}`;
 
     overlay.appendChild(spotlight);
-    hostBody.appendChild(overlay);
+    stage.appendChild(overlay);
 
     try {
       await sleep(duration);

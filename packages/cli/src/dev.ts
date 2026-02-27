@@ -1,7 +1,12 @@
 import { spawn } from "node:child_process";
-import { watch } from "./watch.js";
+import { writeFileSync, mkdirSync, rmSync } from "node:fs";
+import { resolve, dirname } from "node:path";
+import { loadScriptWalkthrough, watchScript } from "./watch.js";
 
-const STUDIO_PORT = 5173;
+import type { Walkthrough } from "@walkr/core";
+
+const STUDIO_PORT = 5174;
+const PROXY_PREFIX = "/__target__";
 
 function openBrowser(url: string): void {
   const start =
@@ -14,22 +19,69 @@ function openBrowser(url: string): void {
   spawn(start, [url], { detached: true, stdio: "ignore" }).unref();
 }
 
+function rewriteWalkthroughUrl(walkthrough: Walkthrough, targetOrigin: string): Walkthrough & { originalUrl: string } {
+  return {
+    ...walkthrough,
+    originalUrl: walkthrough.url,
+    url: walkthrough.url.replace(targetOrigin, PROXY_PREFIX),
+  };
+}
+
+function writeWalkthroughJson(path: string, walkthrough: Walkthrough, targetOrigin: string): void {
+  const proxied = targetOrigin ? rewriteWalkthroughUrl(walkthrough, targetOrigin) : walkthrough;
+  writeFileSync(path, JSON.stringify(proxied, null, 2));
+}
+
 export async function devCommand(scriptPath: string): Promise<void> {
-  const resolvedScript = new URL(
-    scriptPath.startsWith("/") ? scriptPath : `../../${scriptPath}`,
-    import.meta.url,
-  ).pathname;
+  const resolvedScript = resolve(process.cwd(), scriptPath);
 
   // Resolve the studio package path (sibling in monorepo)
   const studioRoot = new URL("../../studio", import.meta.url).pathname;
 
+  // Write loaded walkthrough JSON to Studio's public dir so it can fetch on startup
+  const walkthroughJsonPath = resolve(studioRoot, "public", "walkthrough.json");
+  mkdirSync(dirname(walkthroughJsonPath), { recursive: true });
+
   console.log(`\nWalkr Studio starting…`);
   console.log(`Script: ${scriptPath}\n`);
+
+  // Load the script first (awaited) to extract the target origin before Vite starts
+  const initialWalkthrough = await loadScriptWalkthrough(resolvedScript);
+  let targetOrigin = "";
+  try {
+    targetOrigin = new URL(initialWalkthrough.url).origin;
+  } catch {
+    console.error(`[walkr] Invalid walkthrough URL: ${initialWalkthrough.url}`);
+  }
+
+  console.log(`Target origin: ${targetOrigin}`);
+  writeWalkthroughJson(walkthroughJsonPath, initialWalkthrough, targetOrigin);
+
+  // Write proxy target file so the Vite config can read it (survives Vite restarts)
+  const proxyTargetPath = resolve(studioRoot, ".walkr-proxy-target");
+  writeFileSync(proxyTargetPath, targetOrigin);
+
+  // Watch for subsequent script changes
+  const stopWatcher = watchScript(resolvedScript, () => {
+    void (async () => {
+      try {
+        const walkthrough = await loadScriptWalkthrough(resolvedScript);
+        console.log("Script reloaded, writing walkthrough.json…");
+        writeWalkthroughJson(walkthroughJsonPath, walkthrough, targetOrigin);
+      } catch (error) {
+        console.error(`[walkr] Failed to reload script`, error);
+      }
+    })();
+  });
 
   const vite = spawn("npx", ["vite", "--port", String(STUDIO_PORT)], {
     cwd: studioRoot,
     stdio: ["ignore", "pipe", "pipe"],
     shell: false,
+    env: {
+      ...process.env,
+      WALKR_PROXY_TARGET: targetOrigin,
+    },
   });
 
   let ready = false;
@@ -49,13 +101,10 @@ export async function devCommand(scriptPath: string): Promise<void> {
   vite.stdout.on("data", onData);
   vite.stderr.on("data", onData);
 
-  const stopWatcher = watch(resolvedScript, () => {
-    console.log("Script changed, reloading…");
-  });
-
   const cleanup = (): void => {
     console.log("\nShutting down…");
     stopWatcher();
+    try { rmSync(proxyTargetPath, { force: true }); } catch {}
     vite.kill("SIGTERM");
     process.exit(0);
   };

@@ -2,7 +2,7 @@ import { watch as fsWatch } from "node:fs";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
-import type { Walkthrough } from "../../core/src/types.js";
+import type { Walkthrough } from "@walkr/core";
 
 const WATCH_DEBOUNCE_MS = 200;
 
@@ -15,7 +15,7 @@ const isWalkthrough = (value: unknown): value is Walkthrough => {
   return typeof maybeWalkthrough.url === "string" && Array.isArray(maybeWalkthrough.steps);
 };
 
-const loadScriptWalkthrough = async (scriptPath: string): Promise<Walkthrough> => {
+export const loadScriptWalkthrough = async (scriptPath: string): Promise<Walkthrough> => {
   const scriptUrl = pathToFileURL(scriptPath);
   scriptUrl.searchParams.set("t", String(Date.now()));
 

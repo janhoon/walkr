@@ -3,3 +3,5 @@ dist
 .turbo
 .DS_Store
 *.tsbuildinfo
+.walkr-proxy-target
+packages/studio/public/walkthrough.json

@@ -1,0 +1,8 @@
+{
+  "name": "@walkr/example-ace-demo",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@walkr/core": "workspace:*"
+  }
+}

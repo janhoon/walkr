@@ -12,6 +12,7 @@ import type {
   EngineState,
   EventHandler,
   PlaybackEvent,
+  Viewport,
   Walkthrough,
 } from "./types.js";
 
@@ -25,6 +26,12 @@ export class WalkrEngine {
   private iframe: HTMLIFrameElement | null = null;
 
   private cursor: HTMLElement | null = null;
+
+  private scaler: HTMLElement | null = null;
+
+  private resizeObserver: ResizeObserver | null = null;
+
+  private activeViewport: Viewport | null = null;
 
   private readonly handlers = new Map<PlaybackEvent, Set<EventHandler>>();
 
@@ -73,7 +80,7 @@ export class WalkrEngine {
   }
 
   mount(container: HTMLElement): void {
-    if (this.container === container && this.stage && this.iframe && this.cursor) {
+    if (this.container === container && this.stage && this.iframe && this.cursor && this.activeViewport === (this.options.viewport ?? null)) {
       return;
     }
 
@@ -110,11 +117,50 @@ export class WalkrEngine {
 
     stage.appendChild(iframe);
     stage.appendChild(overlay);
-    container.appendChild(stage);
+
+    if (this.activeViewport) {
+      const scaler = document.createElement("div");
+      scaler.style.width = `${this.activeViewport.width}px`;
+      scaler.style.height = `${this.activeViewport.height}px`;
+      scaler.style.position = "absolute";
+      scaler.style.top = "0";
+      scaler.style.left = "0";
+      scaler.style.transformOrigin = "0 0";
+      scaler.style.overflow = "hidden";
+
+      scaler.appendChild(stage);
+      container.appendChild(scaler);
+      this.scaler = scaler;
+
+      this.resizeObserver = new ResizeObserver(() => {
+        this.applyViewportScale();
+      });
+      this.resizeObserver.observe(container);
+      this.applyViewportScale();
+    } else {
+      container.appendChild(stage);
+    }
 
     this.stage = stage;
     this.iframe = iframe;
     this.cursor = cursor;
+  }
+
+  private applyViewportScale(): void {
+    if (!this.scaler || !this.container || !this.activeViewport) {
+      return;
+    }
+
+    const containerW = this.container.clientWidth;
+    const containerH = this.container.clientHeight;
+    const designW = this.activeViewport.width;
+    const designH = this.activeViewport.height;
+
+    const scale = Math.min(containerW / designW, containerH / designH);
+    const offsetX = (containerW - designW * scale) / 2;
+    const offsetY = (containerH - designH * scale) / 2;
+
+    this.scaler.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
   }
 
   unmount(): void {
@@ -122,7 +168,15 @@ export class WalkrEngine {
     this.paused = false;
     this.flushPauseResolvers();
 
-    if (this.stage) {
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+      this.resizeObserver = null;
+    }
+
+    if (this.scaler) {
+      this.scaler.remove();
+      this.scaler = null;
+    } else if (this.stage) {
       this.stage.remove();
     }
 
@@ -140,6 +194,23 @@ export class WalkrEngine {
   }
 
   async play(walkthrough: Walkthrough): Promise<void> {
+    if (!this.container) {
+      throw new Error("WalkrEngine must be mounted before play().");
+    }
+
+    // Resolve viewport: walkthrough takes precedence over engine options
+    const nextViewport = walkthrough.viewport ?? this.options.viewport ?? null;
+    const viewportChanged =
+      nextViewport?.width !== this.activeViewport?.width ||
+      nextViewport?.height !== this.activeViewport?.height;
+
+    if (viewportChanged) {
+      this.activeViewport = nextViewport;
+      const container = this.container;
+      this.unmount();
+      this.mount(container);
+    }
+
     if (!this.iframe || !this.cursor) {
       throw new Error("WalkrEngine must be mounted before play().");
     }

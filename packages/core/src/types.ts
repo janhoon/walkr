@@ -1,3 +1,8 @@
+export interface Viewport {
+  width: number;
+  height: number;
+}
+
 export type MouseButton = "left" | "right" | "middle";
 
 export type StepType =
@@ -118,7 +123,7 @@ export interface ParallelStepOptions extends StepCursorOverride {
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface Step<
   TType extends StepType = StepType,
-  TOptions extends {} = Record<string, unknown>,
+  TOptions extends {} = {},
 > {
   id: string;
   type: TType;
@@ -144,6 +149,7 @@ export interface Walkthrough {
   description?: string;
   zoom?: ZoomDefaults;
   cursor?: CursorConfig;
+  viewport?: Viewport;
 }
 
 export interface WalkthroughOptions {
@@ -153,4 +159,5 @@ export interface WalkthroughOptions {
   description?: string;
   zoom?: ZoomDefaults;
   cursor?: CursorConfig;
+  viewport?: Viewport;
 }
