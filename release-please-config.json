@@ -13,9 +13,9 @@
       "release-type": "node",
       "component": "cli"
     },
-    "packages/playwright": {
+    "packages/recorder": {
       "release-type": "node",
-      "component": "playwright"
+      "component": "recorder"
     },
     "packages/studio": {
       "release-type": "node",

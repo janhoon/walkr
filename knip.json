@@ -9,10 +9,9 @@
       "project": ["src/**/*.ts"]
     },
     "packages/cli": {
-      "project": ["src/**/*.ts"],
-      "ignoreDependencies": ["@walkrstudio/playwright"]
+      "project": ["src/**/*.ts"]
     },
-    "packages/playwright": {
+    "packages/recorder": {
       "project": ["src/**/*.ts"]
     },
     "packages/studio": {

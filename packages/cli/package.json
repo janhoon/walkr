@@ -22,7 +22,7 @@
   "dependencies": {
     "@walkrstudio/studio": "workspace:^",
     "@walkrstudio/core": "workspace:^",
-    "@walkrstudio/playwright": "workspace:^"
+    "@walkrstudio/recorder": "workspace:^"
   },
   "devDependencies": {
     "@types/node": "^22.15.3"

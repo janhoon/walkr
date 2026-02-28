@@ -52,7 +52,106 @@ const DEMO_WALKTHROUGH: WalkthroughDef = {
   ],
 };
 
+const isRecordMode = new URLSearchParams(window.location.search).get("mode") === "record";
+
+declare global {
+  interface Window {
+    __walkrPlay?: () => void;
+    __walkrIsComplete?: () => boolean;
+  }
+}
+
+function RecordMode() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const engineRef = useRef<WalkrEngine | null>(null);
+  const walkthroughRef = useRef<WalkthroughDef | null>(null);
+  const [walkthrough, setWalkthrough] = useState<WalkthroughDef | null>(null);
+  const completeRef = useRef(false);
+
+  // Load walkthrough
+  useEffect(() => {
+    fetch("/walkthrough.json")
+      .then((res) => {
+        if (!res.ok) throw new Error("not found");
+        return res.json() as Promise<WalkthroughDef>;
+      })
+      .then((data) => {
+        if (data?.url && Array.isArray(data.steps)) {
+          setWalkthrough(data);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Expose record API on window (stable across React re-renders)
+  useEffect(() => {
+    window.__walkrPlay = () => {
+      const engine = engineRef.current;
+      const wt = walkthroughRef.current;
+      if (!engine || !wt) return;
+      completeRef.current = false;
+      engine.play(wt).catch(() => {});
+    };
+
+    window.__walkrIsComplete = () => completeRef.current;
+
+    return () => {
+      delete window.__walkrPlay;
+      delete window.__walkrIsComplete;
+    };
+  }, []);
+
+  // Init engine
+  useEffect(() => {
+    if (!containerRef.current || !walkthrough) return;
+
+    walkthroughRef.current = walkthrough;
+
+    const engine = new WalkrEngine({
+      container: containerRef.current,
+      cursor: walkthrough.cursor,
+    });
+
+    engine.on("step", () => {
+      console.log("__WALKR_RECORD_STEPPING__");
+    });
+
+    engine.on("complete", () => {
+      completeRef.current = true;
+      console.log("__WALKR_RECORD_COMPLETE__");
+    });
+
+    engineRef.current = engine;
+    console.log("__WALKR_RECORD_READY__");
+
+    return () => {
+      engine.unmount();
+      engineRef.current = null;
+    };
+  }, [walkthrough]);
+
+  return (
+    <div
+      ref={containerRef}
+      style={{
+        width: "100vw",
+        height: "100vh",
+        position: "relative",
+        overflow: "hidden",
+        background: "#000",
+      }}
+    />
+  );
+}
+
 export function App() {
+  if (isRecordMode) {
+    return <RecordMode />;
+  }
+  return <StudioApp />;
+}
+
+function StudioApp() {
   const [walkthrough, setWalkthrough] = useState<WalkthroughDef | null>(null);
   const [selectedStepIndex, setSelectedStepIndex] = useState<number | null>(null);
   const [playbackStatus, setPlaybackStatus] = useState<PlaybackStatus>("idle");

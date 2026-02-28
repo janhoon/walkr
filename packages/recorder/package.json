@@ -1,6 +1,6 @@
 {
-  "name": "@walkrstudio/playwright",
-  "version": "0.2.1",
+  "name": "@walkrstudio/recorder",
+  "version": "0.1.0",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -14,13 +14,13 @@
     "access": "public"
   },
   "dependencies": {
-    "@walkrstudio/core": "workspace:^"
+    "@walkrstudio/core": "workspace:^",
+    "@walkrstudio/studio": "workspace:^",
+    "ws": "^8.18.0"
   },
   "devDependencies": {
-    "@types/node": "^22.0.0"
-  },
-  "peerDependencies": {
-    "@playwright/test": "^1.50.0"
+    "@types/node": "^22.0.0",
+    "@types/ws": "^8.5.14"
   },
   "files": [
     "dist"

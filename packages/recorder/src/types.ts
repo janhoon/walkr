@@ -1,4 +1,4 @@
-export interface CaptureOptions {
+export interface RecordOptions {
   width?: number;
   height?: number;
   fps?: number;
@@ -7,7 +7,7 @@ export interface CaptureOptions {
   onProgress?: (percent: number) => void;
 }
 
-export interface CaptureResult {
+export interface RecordResult {
   outputPath: string;
   duration: number;
   frameCount: number;

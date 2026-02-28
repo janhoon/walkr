@@ -5,7 +5,7 @@ import * as path from "node:path";
 
 import type { Walkthrough } from "@walkrstudio/core";
 import { buildEmbedHtml } from "./embed.js";
-import type { CaptureOptions, CaptureResult } from "./types.js";
+import type { RecordOptions, RecordResult } from "./types.js";
 
 const DEFAULT_FPS = 30;
 const DEFAULT_FORMAT = "mp4";
@@ -15,7 +15,7 @@ const isFiniteNumber = (value: unknown): value is number =>
 
 const shellEscape = (value: string): string => `"${value.replace(/["\\$`]/g, "\\$&")}"`;
 
-const getDefaultOutput = (format: CaptureOptions["format"]): string => {
+const getDefaultOutput = (format: RecordOptions["format"]): string => {
   if (format === "gif") {
     return "output.gif";
   }
@@ -73,8 +73,8 @@ const runFfmpeg = async (
 
 export async function encodeFrames(
   frames: Buffer[],
-  options: CaptureOptions & { walkthrough?: Walkthrough },
-): Promise<CaptureResult> {
+  options: RecordOptions & { walkthrough?: Walkthrough },
+): Promise<RecordResult> {
   const format = options.format ?? DEFAULT_FORMAT;
   const fps = isFiniteNumber(options.fps) ? Math.max(1, Math.round(options.fps)) : DEFAULT_FPS;
   const outputPath = path.resolve(options.output ?? getDefaultOutput(format));
@@ -106,12 +106,12 @@ export async function encodeFrames(
   try {
     await Promise.all(
       frames.map((frame, index) => {
-        const frameName = `frame-${String(index + 1).padStart(4, "0")}.png`;
+        const frameName = `frame-${String(index + 1).padStart(4, "0")}.jpg`;
         return fs.writeFile(path.join(tempDir, frameName), frame);
       }),
     );
 
-    const inputPattern = path.join(tempDir, "frame-%04d.png");
+    const inputPattern = path.join(tempDir, "frame-%04d.jpg");
     const escapedInput = shellEscape(inputPattern);
     const escapedOutput = shellEscape(outputPath);
 

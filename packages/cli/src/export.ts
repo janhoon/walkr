@@ -1,4 +1,3 @@
-import { execFileSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
 import type { Walkthrough } from "@walkrstudio/core";
 
@@ -47,27 +46,26 @@ export async function exportCommand(scriptPath: string, options: ExportOptions):
   const walkthrough = await loadWalkthrough(scriptPath);
   console.log(`  Steps: ${walkthrough.steps.length}`);
 
-  // Dynamic import of @walkrstudio/playwright (peer dep — must be installed)
-  let captureWalkthrough: (
+  let recordWalkthrough: (
     wt: Walkthrough,
     opts: Record<string, unknown>,
   ) => Promise<{ outputPath: string; duration: number; frameCount: number }>;
 
   try {
-    const mod = (await import("@walkrstudio/playwright")) as {
-      captureWalkthrough: typeof captureWalkthrough;
+    const mod = (await import("@walkrstudio/recorder")) as {
+      recordWalkthrough: typeof recordWalkthrough;
     };
-    captureWalkthrough = mod.captureWalkthrough;
+    recordWalkthrough = mod.recordWalkthrough;
   } catch {
-    throw new Error(
-      "@walkrstudio/playwright is not installed. Run: pnpm add @walkrstudio/playwright",
-    );
+    throw new Error("@walkrstudio/recorder is not installed. Run: pnpm add @walkrstudio/recorder");
   }
 
-  const capture = async (): Promise<{ outputPath: string; duration: number; frameCount: number }> => {
-    console.log("Capturing frames…");
-    let lastPercent = -1;
-    return captureWalkthrough(walkthrough, {
+  console.log("Recording walkthrough…");
+  let lastPercent = -1;
+
+  let result: { outputPath: string; duration: number; frameCount: number };
+  try {
+    result = await recordWalkthrough(walkthrough, {
       format,
       output,
       width: options.width ?? 1920,
@@ -77,26 +75,21 @@ export async function exportCommand(scriptPath: string, options: ExportOptions):
         const rounded = Math.round(percent);
         if (rounded !== lastPercent && rounded % 5 === 0) {
           lastPercent = rounded;
-          process.stdout.write(`\r  Capturing frames… ${rounded}%`);
+          process.stdout.write(`\r  Recording… ${rounded}%`);
         }
       },
     });
-  };
-
-  let result: { outputPath: string; duration: number; frameCount: number };
-  try {
-    result = await capture();
   } catch (err) {
     const msg = err instanceof Error ? err.message : "";
-    if (msg.includes("Executable doesn't exist") || msg.includes("browserType.launch")) {
-      console.log("Playwright browsers not found, installing chromium…");
-      execFileSync("npx", ["playwright", "install", "--with-deps", "chromium"], {
-        stdio: "inherit",
-      });
-      result = await capture();
-    } else {
-      throw err;
+    if (msg.includes("Could not find Chromium")) {
+      throw new Error(
+        "Could not find Chromium. Install chromium or set the CHROMIUM_PATH environment variable.\n" +
+          "  Arch Linux: sudo pacman -S chromium\n" +
+          "  Ubuntu/Debian: sudo apt install chromium-browser\n" +
+          "  macOS: brew install --cask chromium",
+      );
     }
+    throw err;
   }
 
   process.stdout.write("\n");
