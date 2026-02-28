@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/janhoon/walkr/compare/studio-v0.2.0...studio-v0.2.1) (2026-02-28)
+
+
+### Bug Fixes
+
+* **studio:** rename to @walkrstudio/studio to match existing npm scope ([818945e](https://github.com/janhoon/walkr/commit/818945e0c520431f6ff73f8bce42904d201fe27f))
+
 ## [0.2.0](https://github.com/janhoon/walkr/compare/studio-v0.1.0...studio-v0.2.0) (2026-02-28)
 
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.3](https://github.com/janhoon/walkr/compare/cli-v0.2.2...cli-v0.2.3) (2026-02-28)
+
+
+### Bug Fixes
+
+* **studio:** rename to @walkrstudio/studio to match existing npm scope ([818945e](https://github.com/janhoon/walkr/commit/818945e0c520431f6ff73f8bce42904d201fe27f))
+
 ## [0.2.2](https://github.com/janhoon/walkr/compare/cli-v0.2.1...cli-v0.2.2) (2026-02-28)
 
 
