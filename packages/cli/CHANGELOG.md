@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.2](https://github.com/janhoon/walkr/compare/cli-v0.2.1...cli-v0.2.2) (2026-02-28)
+
+
+### Bug Fixes
+
+* **cli:** add studio as dependency and make it publishable ([dcbf1d3](https://github.com/janhoon/walkr/commit/dcbf1d344846fa5a3574fa126e4dd77e54c6e0d5))
+* **cli:** bundle core and playwright as regular dependencies ([d992e8b](https://github.com/janhoon/walkr/commit/d992e8bd4998b73c1ac86f2c9fe4efc5c7f7a9da))
+
 ## [0.2.1](https://github.com/janhoon/walkr/compare/cli-v0.2.0...cli-v0.2.1) (2026-02-28)
 
 

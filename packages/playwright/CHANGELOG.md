@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/janhoon/walkr/compare/playwright-v0.2.0...playwright-v0.2.1) (2026-02-28)
+
+
+### Bug Fixes
+
+* **cli:** bundle core and playwright as regular dependencies ([d992e8b](https://github.com/janhoon/walkr/commit/d992e8bd4998b73c1ac86f2c9fe4efc5c7f7a9da))
+
 ## [0.2.0](https://github.com/janhoon/walkr/compare/playwright-v0.1.0...playwright-v0.2.0) (2026-02-28)
 
 
