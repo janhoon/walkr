@@ -8,7 +8,6 @@ import type {
   ClickCoordsStep,
   ClickStep,
   CursorConfig,
-  EngineState,
   HighlightStep,
   MouseButton,
   MoveToCoordsStep,
@@ -42,7 +41,7 @@ type ViewportTransformState = ViewportState & {
   originY: number;
 };
 
-export interface StepExecutionContext {
+interface StepExecutionContext {
   getCursorConfig?: () => CursorConfig;
   setCursorConfig?: (config: Partial<CursorConfig>) => void;
   showScrollIndicator?: (cursor: HTMLElement) => void;
@@ -319,7 +318,7 @@ export function initializeViewport(wrapper: HTMLElement): void {
   });
 }
 
-export function sleep(ms: number): Promise<void> {
+function sleep(ms: number): Promise<void> {
   const duration = Math.max(0, ms);
   if (duration === 0) {
     return Promise.resolve();
@@ -775,5 +774,3 @@ export async function executeStep(
     }
   }
 }
-
-export type { EngineState };

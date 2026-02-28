@@ -3,13 +3,9 @@ import * as fs from "node:fs/promises";
 import * as os from "node:os";
 import * as path from "node:path";
 
-import type { Walkthrough } from "../../core/src/types.js";
+import type { Walkthrough } from "@walkr/core";
 import { buildEmbedHtml } from "./embed.js";
 import type { CaptureOptions, CaptureResult } from "./types.js";
-
-interface InternalCaptureOptions extends CaptureOptions {
-  walkthrough?: Walkthrough;
-}
 
 const DEFAULT_FPS = 30;
 const DEFAULT_FORMAT = "mp4";
@@ -44,7 +40,7 @@ const runFfmpeg = async (
   const totalSeconds = frameCount / Math.max(1, fps);
 
   await new Promise<void>((resolve, reject) => {
-    const child = exec(command, { maxBuffer: 16 * 1024 * 1024 }, (error) => {
+    const child = exec(command, { maxBuffer: 16 * 1024 * 1024 }, (error: Error | null) => {
       if (error) {
         reject(error);
         return;
@@ -77,9 +73,8 @@ const runFfmpeg = async (
 
 export async function encodeFrames(
   frames: Buffer[],
-  options: CaptureOptions,
+  options: CaptureOptions & { walkthrough?: Walkthrough },
 ): Promise<CaptureResult> {
-  const internalOptions = options as InternalCaptureOptions;
   const format = options.format ?? DEFAULT_FORMAT;
   const fps = isFiniteNumber(options.fps) ? Math.max(1, Math.round(options.fps)) : DEFAULT_FPS;
   const outputPath = path.resolve(options.output ?? getDefaultOutput(format));
@@ -93,7 +88,7 @@ export async function encodeFrames(
     const html = buildEmbedHtml(
       frames,
       fps,
-      internalOptions.walkthrough ?? { url: "about:blank", steps: [] },
+      options.walkthrough ?? { url: "about:blank", steps: [] },
     );
     await fs.writeFile(outputPath, html, "utf8");
 

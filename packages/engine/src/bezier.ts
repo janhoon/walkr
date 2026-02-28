@@ -1,4 +1,4 @@
-export type Point = [number, number];
+type Point = [number, number];
 export type EasingFunction = (t: number) => number;
 
 function clamp(value: number): number {

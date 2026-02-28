@@ -21,7 +21,7 @@ const SCROLL_INDICATOR_SELECTOR = "[data-walkr-scroll-indicator]";
 
 const cursorAnimations = new WeakMap<HTMLElement, number>();
 
-export interface ResolvedCursorConfig {
+interface ResolvedCursorConfig {
   shape: "circle" | "arrow" | "dot" | "svg";
   color: string;
   size: number;
@@ -37,7 +37,7 @@ function clampSize(size: number | undefined): number {
   return Math.max(6, Math.round(size ?? DEFAULT_CURSOR_CONFIG.size));
 }
 
-export function resolveCursorConfig(config: Partial<CursorConfig> = {}): ResolvedCursorConfig {
+function resolveCursorConfig(config: Partial<CursorConfig> = {}): ResolvedCursorConfig {
   const shape = config.shape ?? DEFAULT_CURSOR_CONFIG.shape;
 
   return {

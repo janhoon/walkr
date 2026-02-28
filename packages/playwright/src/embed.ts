@@ -1,4 +1,4 @@
-import type { Walkthrough } from "../../core/src/types.js";
+import type { Walkthrough } from "@walkr/core";
 
 const escapeHtml = (value: string): string =>
   value

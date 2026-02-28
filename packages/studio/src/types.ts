@@ -1,19 +1,11 @@
-import type { Step } from "@walkr/core";
+import type { CursorConfig, Step } from "@walkr/core";
 
 export interface WalkthroughDef {
   url: string;
   originalUrl?: string;
   title?: string;
   steps: Step[];
+  cursor?: CursorConfig;
 }
 
 export type PlaybackStatus = "idle" | "playing" | "paused" | "done";
-
-export interface StudioState {
-  walkthrough: WalkthroughDef | null;
-  selectedStepIndex: number | null;
-  playheadTime: number; // ms from start
-  playbackStatus: PlaybackStatus;
-  currentStepIndex: number;
-  totalDuration: number; // sum of all step durations
-}
