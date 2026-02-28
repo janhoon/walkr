@@ -29,15 +29,15 @@ importers:
 
   packages/cli:
     dependencies:
-      '@walkr/studio':
-        specifier: workspace:^
-        version: link:../studio
       '@walkrstudio/core':
         specifier: workspace:^
         version: link:../core
       '@walkrstudio/playwright':
         specifier: workspace:^
         version: link:../playwright
+      '@walkrstudio/studio':
+        specifier: workspace:^
+        version: link:../studio
     devDependencies:
       '@types/node':
         specifier: ^22.15.3

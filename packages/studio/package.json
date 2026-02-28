@@ -1,5 +1,5 @@
 {
-  "name": "@walkr/studio",
+  "name": "@walkrstudio/studio",
   "version": "0.2.0",
   "type": "module",
   "main": "dist/index.js",

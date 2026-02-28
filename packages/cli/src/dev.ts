@@ -36,7 +36,7 @@ export async function devCommand(scriptPath: string): Promise<void> {
 
   // Resolve the studio package path from node_modules
   const require = createRequire(import.meta.url);
-  const studioRoot = dirname(require.resolve("@walkr/studio/package.json"));
+  const studioRoot = dirname(require.resolve("@walkrstudio/studio/package.json"));
 
   // Write loaded walkthrough JSON to Studio's public dir so it can fetch on startup
   const walkthroughJsonPath = resolve(studioRoot, "public", "walkthrough.json");
