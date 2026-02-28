@@ -1,5 +1,6 @@
 import { spawn } from "node:child_process";
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import { dirname, resolve } from "node:path";
 import type { Walkthrough } from "@walkrstudio/core";
 import { loadScriptWalkthrough, watchScript } from "./watch.js";
@@ -33,8 +34,9 @@ function writeWalkthroughJson(path: string, walkthrough: Walkthrough, targetOrig
 export async function devCommand(scriptPath: string): Promise<void> {
   const resolvedScript = resolve(process.cwd(), scriptPath);
 
-  // Resolve the studio package path (sibling in monorepo)
-  const studioRoot = new URL("../../studio", import.meta.url).pathname;
+  // Resolve the studio package path from node_modules
+  const require = createRequire(import.meta.url);
+  const studioRoot = dirname(require.resolve("@walkr/studio/package.json"));
 
   // Write loaded walkthrough JSON to Studio's public dir so it can fetch on startup
   const walkthroughJsonPath = resolve(studioRoot, "public", "walkthrough.json");

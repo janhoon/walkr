@@ -1,24 +1,35 @@
 {
   "name": "@walkr/studio",
   "version": "0.1.0",
-  "private": true,
   "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "src",
+    "index.html",
+    "vite.config.ts",
+    "tsconfig.json"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@walkrstudio/core": "workspace:*",
-    "@walkrstudio/engine": "workspace:*",
+    "@vitejs/plugin-react": "^4.3.4",
+    "@walkrstudio/core": "workspace:^",
+    "@walkrstudio/engine": "workspace:^",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "vite": "^6.1.0"
   },
   "devDependencies": {
     "@types/react": "^18.3.1",
     "@types/react-dom": "^18.3.1",
-    "@vitejs/plugin-react": "^4.3.4",
-    "typescript": "^5.8.2",
-    "vite": "^6.1.0"
+    "typescript": "^5.8.2"
   }
 }
