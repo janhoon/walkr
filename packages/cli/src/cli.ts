@@ -1,4 +1,11 @@
 #!/usr/bin/env node
+import { register } from "node:module";
+
+// Register a custom ESM resolve hook so user walkthrough scripts can
+// import @walkrstudio/* packages from the CLI's node_modules, even
+// under strict package managers like pnpm.
+register("./resolve-hook.js", import.meta.url);
+
 import { devCommand } from "./dev.js";
 import { type ExportOptions, exportCommand } from "./export.js";
 
