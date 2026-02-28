@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.4](https://github.com/janhoon/walkr/compare/cli-v0.2.3...cli-v0.2.4) (2026-02-28)
+
+
+### Bug Fixes
+
+* **cli:** register ESM resolve hook for @walkrstudio/* packages ([49742ad](https://github.com/janhoon/walkr/commit/49742ad76f2aafe4ed5dc40b061c39d94db1d222))
+
 ## [0.2.3](https://github.com/janhoon/walkr/compare/cli-v0.2.2...cli-v0.2.3) (2026-02-28)
 
 
