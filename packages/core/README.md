@@ -1,132 +1,208 @@
-# 🚶 Walkr Core
+# @walkrstudio/core
 
-**Code-first product demo tool**
+TypeScript API for scripting cursor-driven product walkthroughs.
 
-`@walkr/core` is the TypeScript API for describing cursor-driven walkthroughs.
+`@walkrstudio/core` is a zero-dependency library that lets you describe a walkthrough as a sequence of steps: cursor movements, clicks, typing, highlights, scrolls, and camera controls. The output is a plain `Walkthrough` object consumed by the engine, CLI, or playwright packages.
 
 ## Install
 
 ```bash
-pnpm add @walkr/core
+npm install @walkrstudio/core
 ```
 
-## Quick Start
+## Quick start
+
+Create a file called `demo.ts`:
 
 ```ts
-import { walkr, moveTo, click, type, highlight, sequence } from "@walkr/core";
+import {
+  walkr,
+  moveTo,
+  click,
+  type,
+  highlight,
+  wait,
+  sequence,
+} from "@walkrstudio/core";
 
 export default walkr({
-  url: "https://example.com",
+  url: "https://your-app.com",
   title: "Sign up flow",
   steps: [
-    moveTo(640, 400, { duration: 800 }),
-    click(640, 400),
-    type("hello@example.com", { selector: "input[name=email]" }),
+    moveTo("#email-input", { duration: 600 }),
+    click("#email-input"),
+    type("hello@example.com", { selector: "#email-input", delay: 35 }),
+
+    moveTo(".submit-btn", { duration: 400 }),
     highlight(".submit-btn", { spotlight: true, color: "#22d3ee", duration: 1200 }),
-    sequence(
-      moveTo(800, 500),
-      click(800, 500),
-    ),
+    click(".submit-btn"),
+
+    wait(500),
   ],
 });
 ```
 
-## Step API
+Preview it with the CLI:
 
-| Function | Signature | Description | Duration behavior |
+```bash
+npx walkr dev demo.ts
+```
+
+## Step reference
+
+### Cursor movement
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `moveTo` | `moveTo(selector, options?)` | Move cursor to the center of a DOM element. |
+| `moveToCoords` | `moveToCoords(x, y, options?)` | Move cursor to absolute screen coordinates. |
+
+**Options** (`MoveToOptions`):
+
+| Option | Type | Default | Description |
 | --- | --- | --- | --- |
-| `moveTo` | `moveTo(x, y, options?)` | Move cursor to screen coordinates. | `options.duration ?? 0` |
-| `click` | `click(x, y, options?)` | Click at coordinates. Supports button/double-click. | `0` |
-| `type` | `type(text, options?)` | Type text, optionally into a selector. | `text.length * (options.delay ?? 0)` |
-| `scroll` | `scroll(x, y, options?)` | Scroll viewport to coordinates. | `0` |
-| `wait` | `wait(ms)` | Pause timeline. | `ms` |
-| `highlight` | `highlight(selector, options?)` | Highlight a target selector. | `options.duration ?? 0` |
-| `zoom` | `zoom(level, options?)` | Zoom viewport/camera. | `360` |
-| `pan` | `pan(x, y, options?)` | Pan viewport/camera. | `options.duration ?? 360` |
-| `sequence` | `sequence(...steps)` | Run child steps one after another. | Sum of child durations |
-| `parallel` | `parallel(...steps)` | Run child steps at same time. | Max child duration |
+| `duration` | `number` | `0` | Animation duration in ms. |
+| `easing` | `string` | — | CSS easing string (e.g. `"ease-in-out"`). |
+| `follow` | `boolean` | — | Keep following a moving target when supported by the runtime. |
+| `cursor` | `Partial<CursorConfig>` | — | Per-step cursor override. |
 
-## Options By Step
+### Click
 
-### `moveTo(x, y, options?)`
+| Function | Signature | Description |
+| --- | --- | --- |
+| `click` | `click(selector, options?)` | Click on a DOM element. |
+| `clickCoords` | `clickCoords(x, y, options?)` | Click at absolute screen coordinates. |
 
-| Option | Type | Default | Notes |
-| --- | --- | --- | --- |
-| `duration` | `number` | `0` | Movement duration in ms. |
-| `easing` | `string` | `undefined` | CSS easing string. |
-| `follow` | `boolean` | `undefined` | Keep following moving target if supported by runtime. |
-| `cursor` | `Partial<CursorConfig>` | `undefined` | Per-step cursor override. |
+**Options** (`ClickOptions`):
 
-### `click(x, y, options?)`
-
-| Option | Type | Default | Notes |
+| Option | Type | Default | Description |
 | --- | --- | --- | --- |
 | `button` | `"left" \| "right" \| "middle"` | `"left"` | Mouse button. |
-| `double` | `boolean` | `false` | Double-click if `true`. |
-| `cursor` | `Partial<CursorConfig>` | `undefined` | Per-step cursor override. |
+| `double` | `boolean` | `false` | Double-click. |
+| `cursor` | `Partial<CursorConfig>` | — | Per-step cursor override. |
 
-### `type(text, options?)`
+### Type
 
-| Option | Type | Default | Notes |
+```ts
+type("hello@example.com", { selector: "#email-input", delay: 35 })
+```
+
+| Option | Type | Default | Description |
 | --- | --- | --- | --- |
-| `delay` | `number` | `undefined` | Per-character delay in ms. |
-| `selector` | `string` | `undefined` | Target selector for runtime typing. |
-| `cursor` | `Partial<CursorConfig>` | `undefined` | Per-step cursor override. |
+| `delay` | `number` | — | Per-character delay in ms. |
+| `selector` | `string` | — | Target element to focus before typing. |
+| `cursor` | `Partial<CursorConfig>` | — | Per-step cursor override. |
 
-### `scroll(x, y, options?)`
+Duration is calculated as `text.length * (delay ?? 0)`.
 
-| Option | Type | Default | Notes |
+### Scroll
+
+```ts
+scroll(0, 700, { smooth: true })
+```
+
+| Option | Type | Default | Description |
 | --- | --- | --- | --- |
-| `smooth` | `boolean` | `undefined` | Smooth scrolling hint for runtime. |
-| `cursor` | `Partial<CursorConfig>` | `undefined` | Per-step cursor override. |
+| `smooth` | `boolean` | — | Smooth scrolling hint for the runtime. |
+| `cursor` | `Partial<CursorConfig>` | — | Per-step cursor override. |
 
-### `wait(ms)`
+### Wait
 
-`wait` only accepts the required `ms: number` value.
+```ts
+wait(500) // pause for 500ms
+```
 
-### `highlight(selector, options?)`
+No options — accepts a single `ms` value.
 
-| Option | Type | Default | Notes |
+### Highlight
+
+```ts
+highlight(".submit-btn", {
+  spotlight: true,
+  color: "#22d3ee",
+  duration: 1200,
+  backdropOpacity: 0.35,
+})
+```
+
+| Option | Type | Default | Description |
 | --- | --- | --- | --- |
-| `color` | `string` | `undefined` | Highlight color. |
-| `duration` | `number` | `undefined` | Highlight duration in ms. |
-| `spotlight` | `boolean` | `undefined` | Enable spotlight effect. |
-| `backdropOpacity` | `number` | `undefined` | Backdrop dim amount. |
-| `borderRadius` | `number` | `undefined` | Radius of highlight frame. |
-| `padding` | `number` | `undefined` | Padding around target. |
-| `cursor` | `Partial<CursorConfig>` | `undefined` | Per-step cursor override. |
+| `color` | `string` | — | Highlight border/glow color. |
+| `duration` | `number` | — | How long the highlight stays visible (ms). |
+| `spotlight` | `boolean` | — | Dim the rest of the page behind the target. |
+| `backdropOpacity` | `number` | — | Dim amount (0–1). |
+| `borderRadius` | `number` | — | Highlight frame radius in px. |
+| `padding` | `number` | — | Extra padding around the target in px. |
+| `cursor` | `Partial<CursorConfig>` | — | Per-step cursor override. |
 
-### `zoom(level, options?)`
+### Zoom
 
-| Option | Type | Default | Notes |
+```ts
+zoom(1.5, { x: 960, y: 540 })
+```
+
+| Option | Type | Default | Description |
 | --- | --- | --- | --- |
-| `x` | `number` | `undefined` | Zoom anchor X. |
-| `y` | `number` | `undefined` | Zoom anchor Y. |
+| `x` | `number` | — | Zoom anchor X coordinate. |
+| `y` | `number` | — | Zoom anchor Y coordinate. |
 | `easing` | `string` | `"cubic-bezier(0.42, 0, 0.58, 1)"` | Transition easing. |
-| `follow` | `boolean` | `undefined` | Follow target during zoom if runtime supports it. |
-| `cursor` | `Partial<CursorConfig>` | `undefined` | Per-step cursor override. |
+| `follow` | `boolean` | — | Follow target during zoom. |
+| `cursor` | `Partial<CursorConfig>` | — | Per-step cursor override. |
 
-### `pan(x, y, options?)`
+Default duration: 360 ms.
 
-| Option | Type | Default | Notes |
+### Pan
+
+```ts
+pan(960, 460, { duration: 500 })
+```
+
+| Option | Type | Default | Description |
 | --- | --- | --- | --- |
 | `duration` | `number` | `360` | Pan duration in ms. |
 | `easing` | `string` | `"cubic-bezier(0.42, 0, 0.58, 1)"` | Transition easing. |
-| `cursor` | `Partial<CursorConfig>` | `undefined` | Per-step cursor override. |
+| `cursor` | `Partial<CursorConfig>` | — | Per-step cursor override. |
 
-### `sequence(...steps)`
+### Clear cache
 
-| Option | Type | Default | Notes |
+```ts
+clearCache()
+```
+
+Clears browser state (cookies, cache) so the walkthrough starts from a clean slate. No options.
+
+### Composition
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `sequence` | `sequence(...steps)` | Run steps one after another. Duration = sum of children. |
+| `parallel` | `parallel(...steps)` | Run steps at the same time. Duration = max of children. |
+
+```ts
+parallel(
+  highlight(".btn", { spotlight: true, color: "#22d3ee", duration: 1200 }),
+  sequence(
+    wait(200),
+    moveTo(".btn", { duration: 500 }),
+  ),
+)
+```
+
+## Walkthrough options
+
+`walkr(options)` accepts:
+
+| Option | Type | Required | Description |
 | --- | --- | --- | --- |
-| `steps` | `Step[]` | required | Child steps run in order. |
+| `url` | `string` | yes | Target URL to load in the iframe/browser. |
+| `steps` | `Step[]` | yes | Timeline steps. |
+| `title` | `string` | no | Human-readable demo title. |
+| `description` | `string` | no | Description of the walkthrough. |
+| `viewport` | `Viewport` | no | Fixed viewport size (`{ width, height }`). |
+| `cursor` | `CursorConfig` | no | Global cursor config. |
+| `zoom` | `ZoomDefaults` | no | Default zoom level and easing. |
 
-### `parallel(...steps)`
-
-| Option | Type | Default | Notes |
-| --- | --- | --- | --- |
-| `steps` | `Step[]` | required | Child steps run concurrently. |
-
-## `CursorConfig`
+## Cursor config
 
 ```ts
 interface CursorConfig {
@@ -136,6 +212,7 @@ interface CursorConfig {
   shadow?: boolean;
   clickColor?: string;
   svgContent?: string;
+  offset?: { x: number; y: number };
 }
 ```
 
@@ -143,27 +220,17 @@ interface CursorConfig {
 | --- | --- | --- |
 | `shape` | `"circle" \| "arrow" \| "dot" \| "svg"` | Cursor style. |
 | `color` | `string` | Base cursor color. |
-| `size` | `number` | Cursor size in px. |
-| `shadow` | `boolean` | Enables drop shadow. |
-| `clickColor` | `string` | Click flash color. |
-| `svgContent` | `string` | Raw SVG markup when `shape: "svg"`. |
+| `size` | `number` | Cursor diameter in px. |
+| `shadow` | `boolean` | Enable drop shadow. |
+| `clickColor` | `string` | Flash color on click. |
+| `svgContent` | `string` | Raw SVG markup when `shape` is `"svg"`. |
+| `offset` | `{ x: number; y: number }` | Hotspot offset as a fraction of cursor size (0–1). Default: `{ x: 0.5, y: 0.5 }`. |
 
-## Walkthrough Options
+## Zoom defaults
 
-`walkr(options)` accepts:
-
-| Option | Type | Required | Description |
-| --- | --- | --- | --- |
-| `url` | `string` | yes | Target URL to load. |
-| `steps` | `Step[]` | yes | Timeline step list. |
-| `title` | `string` | no | Human-readable demo title. |
-| `description` | `string` | no | Optional demo description. |
-| `zoom` | `ZoomDefaults` | no | Global zoom defaults. |
-| `cursor` | `CursorConfig` | no | Global cursor config. |
-
-`ZoomDefaults`:
-
-| Field | Type | Description |
-| --- | --- | --- |
-| `defaultLevel` | `number` | Default zoom level. |
-| `easing` | `string` | Default zoom easing. |
+```ts
+interface ZoomDefaults {
+  defaultLevel?: number;
+  easing?: string;
+}
+```

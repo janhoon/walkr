@@ -1,51 +1,64 @@
-# @walkr/cli
+# @walkrstudio/cli
 
-CLI for running Walkr demos in Studio and exporting media.
+CLI for previewing and exporting Walkr walkthroughs.
 
 ## Install
 
 ```bash
-npm install -g @walkr/cli
+npm install -g @walkrstudio/cli
 ```
 
-Or run without global install:
+Or run without a global install:
 
 ```bash
-npx walkr
+npx walkr <command>
 ```
 
 ## Commands
 
 ### `walkr dev <script>`
 
-Opens Walkr Studio with live reload.
+Opens Walkr Studio with live reload. Write your walkthrough script, and the preview updates every time you save.
 
 ```bash
 walkr dev demo.ts
 ```
 
+This starts a Vite dev server on port 5174, loads your script, proxies the target website, and opens the Studio UI in your browser.
+
 ### `walkr export <script> [options]`
 
-Exports a walkthrough to `mp4`, `gif`, `webm`, or `embed`.
+Exports a walkthrough to video or a self-contained HTML embed.
 
 ```bash
-walkr export demo.ts --format mp4 --output demo.mp4
+# MP4 (default)
+walkr export demo.ts
+
+# GIF
+walkr export demo.ts --format gif --output demo.gif
+
+# Self-contained HTML embed
+walkr export demo.ts --format embed --output demo.html
 ```
 
-### `walkr --help`
+**Options:**
 
-Shows command help and examples.
-
-## `walkr export` options
-
-| Option | Type | Default | Description |
+| Flag | Type | Default | Description |
 | --- | --- | --- | --- |
 | `--format` | `mp4 \| gif \| webm \| embed` | `mp4` | Output format. |
-| `--output` | `string` | `output.<ext>` | Output path. For `embed`, extension is `.html`. |
+| `--output` | `string` | `output.<ext>` | Output file path. |
 | `--width` | `number` | `1920` | Render width in px. |
 | `--height` | `number` | `1080` | Render height in px. |
 
-## Example `demo.ts`
+### `walkr --help`
+
+Shows command usage and examples.
+
+### `walkr --version`
+
+Prints the current version.
+
+## Example walkthrough script
 
 ```ts
 import {
@@ -54,18 +67,17 @@ import {
   click,
   type,
   highlight,
-  scroll,
   wait,
-  sequence,
-  parallel,
+  scroll,
   zoom,
   pan,
-} from "@walkr/core";
+  sequence,
+  parallel,
+} from "@walkrstudio/core";
 
 export default walkr({
-  url: "https://example.com",
-  title: "Walkr CLI demo",
-  description: "A complete scripted walkthrough for local preview/export",
+  url: "https://your-app.com",
+  title: "Product demo",
   cursor: {
     shape: "circle",
     color: "#22d3ee",
@@ -74,9 +86,10 @@ export default walkr({
     clickColor: "#0ea5e9",
   },
   steps: [
-    moveTo(620, 380, { duration: 700 }),
-    click(620, 380),
-    type("hello@example.com", { selector: "input[name=email]", delay: 35 }),
+    moveTo("#email-input", { duration: 600 }),
+    click("#email-input"),
+    type("hello@example.com", { selector: "#email-input", delay: 35 }),
+
     parallel(
       highlight(".submit-btn", {
         spotlight: true,
@@ -86,10 +99,11 @@ export default walkr({
       }),
       sequence(
         wait(200),
-        moveTo(810, 505, { duration: 500 }),
+        moveTo(".submit-btn", { duration: 500 }),
       ),
     ),
-    click(810, 505),
+    click(".submit-btn"),
+
     sequence(
       wait(300),
       scroll(0, 700, { smooth: true }),
@@ -103,6 +117,7 @@ export default walkr({
 
 ## Requirements
 
-- Node.js `>=18`
-- `pnpm`
-- `@walkr/playwright` installed in your project for `walkr export`
+- Node.js >= 18
+- `@walkrstudio/core` — defines the walkthrough
+- `@walkrstudio/playwright` — required for `walkr export` (peer dependency)
+- `ffmpeg` — required on your system PATH for video encoding (mp4/gif/webm)
