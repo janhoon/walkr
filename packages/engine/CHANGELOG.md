@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/janhoon/walkr/compare/engine-v0.2.0...engine-v0.2.1) (2026-02-28)
+
+
+### Bug Fixes
+
+* **engine:** normalize core dependency to workspace:^ for caret-range publishing ([8597ad7](https://github.com/janhoon/walkr/commit/8597ad712208fc50501315b9c36bfdb46d185fbb))
+
 ## [0.2.0](https://github.com/janhoon/walkr/compare/engine-v0.1.0...engine-v0.2.0) (2026-02-28)
 
 
