@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/janhoon/walkr/compare/cli-v0.2.0...cli-v0.2.1) (2026-02-28)
+
+
+### Bug Fixes
+
+* **cli:** make @walkrstudio/core a peer dependency for proper installation ([f4bf785](https://github.com/janhoon/walkr/commit/f4bf7858e01c93d24a9dd43a3a857e4b3280dcb7))
+
 ## [0.2.0](https://github.com/janhoon/walkr/compare/cli-v0.1.0...cli-v0.2.0) (2026-02-28)
 
 
