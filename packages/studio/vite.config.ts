@@ -39,6 +39,7 @@ if (!proxyTarget) {
   }
 }
 const PREFIX = "/__target__";
+const targetPort = proxyTarget ? new URL(proxyTarget).port || "80" : "";
 
 /**
  * Rewrite absolute paths in proxied text responses so that sub-resource
@@ -117,7 +118,16 @@ export default defineConfig({
                   proxyRes.on("data", (chunk: Buffer) => chunks.push(chunk));
                   proxyRes.on("end", () => {
                     const raw = Buffer.concat(chunks).toString("utf-8");
-                    const rewritten = rewriteAbsolutePaths(raw, contentType);
+                    let rewritten = rewriteAbsolutePaths(raw, contentType);
+
+                    // Redirect the target's HMR WebSocket to its own Vite
+                    // server instead of the Studio's (avoids token mismatch).
+                    if (_req.url?.includes("/@vite/client")) {
+                      rewritten = rewritten.replace(
+                        /hmrPort\s*=\s*null/,
+                        `hmrPort = ${targetPort}`,
+                      );
+                    }
                     const headers = { ...proxyRes.headers };
                     delete headers["content-length"];
                     delete headers["content-encoding"];
