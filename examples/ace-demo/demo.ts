@@ -25,10 +25,17 @@ export default walkr({
   },
 
   steps: [
-    // ── Scene 1: Login ──────────────────────────────────────────────
-    // Wait for the page to settle
+    // ── Scene 0: Dismiss analytics preferences ────────────────────
+    // Wait for the page and the analytics popup to appear
     wait(1200),
 
+    // Click "Allow analytics" to dismiss the popup
+    moveTo('[data-testid="cookie-accept-btn"]', { duration: 500 }),
+    click('[data-testid="cookie-accept-btn"]'),
+
+    wait(600),
+
+    // ── Scene 1: Login ──────────────────────────────────────────────
     // Move to email field and type credentials
     moveTo('[data-testid="email-input"]', { duration: 600 }),
     click('[data-testid="email-input"]'),

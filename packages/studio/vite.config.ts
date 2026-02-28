@@ -51,20 +51,27 @@ const targetPort = proxyTarget ? new URL(proxyTarget).port || "80" : "";
 function rewriteAbsolutePaths(content: string, contentType: string): string {
   // HTML: targeted attribute rewriting + conservative general patterns
   if (contentType.includes("html")) {
-    return (
-      content
-        // HTML attributes: src="/x", href="/x", action="/x", etc.
-        .replace(
-          /((?:src|href|action|poster|formaction|icon|manifest|ping|background)\s*=\s*)(["'])\/(?!\/|__target__)/gi,
-          `$1$2${PREFIX}/`,
-        )
-        // Inline style url()
-        .replace(/\burl\(\s*["']?\/(?!\/|__target__)/g, (m) => m.replace("/", `${PREFIX}/`))
-        // Quoted deep paths (contain /): "/assets/chunk.js" → "/__target__/assets/chunk.js"
-        .replace(/(["'`])\/(?!\/|__target__)([a-zA-Z@._][\w@._-]*\/)/g, `$1${PREFIX}/$2`)
-        // Quoted root files with extension: "/favicon.ico" → "/__target__/favicon.ico"
-        .replace(/(["'`])\/(?!\/|__target__)([a-zA-Z@._][\w@._-]+\.\w{2,})/g, `$1${PREFIX}/$2`)
-    );
+    let html = content
+      // HTML attributes: src="/x", href="/x", action="/x", etc.
+      .replace(
+        /((?:src|href|action|poster|formaction|icon|manifest|ping|background)\s*=\s*)(["'])\/(?!\/|__target__)/gi,
+        `$1$2${PREFIX}/`,
+      )
+      // Inline style url()
+      .replace(/\burl\(\s*["']?\/(?!\/|__target__)/g, (m) => m.replace("/", `${PREFIX}/`))
+      // Quoted deep paths (contain /): "/assets/chunk.js" → "/__target__/assets/chunk.js"
+      .replace(/(["'`])\/(?!\/|__target__)([a-zA-Z@._][\w@._-]*\/)/g, `$1${PREFIX}/$2`)
+      // Quoted root files with extension: "/favicon.ico" → "/__target__/favicon.ico"
+      .replace(/(["'`])\/(?!\/|__target__)([a-zA-Z@._][\w@._-]+\.\w{2,})/g, `$1${PREFIX}/$2`);
+
+    // Inject <base> so client-side routers (Vue Router, React Router, etc.)
+    // resolve routes relative to the proxy prefix instead of "/".
+    // Existing <base> tags are already rewritten by the href regex above.
+    if (!/<base\b/i.test(html)) {
+      html = html.replace(/(<head[^>]*>)/i, `$1<base href="${PREFIX}/">`);
+    }
+
+    return html;
   }
 
   // CSS: url() and @import
