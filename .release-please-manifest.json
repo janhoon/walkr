@@ -1,7 +1,7 @@
 {
   "packages/core": "0.2.0",
   "packages/engine": "0.2.1",
-  "packages/cli": "0.2.4",
+  "packages/cli": "0.2.5",
   "packages/playwright": "0.2.1",
   "packages/studio": "0.2.1",
   "packages/create-walkrstudio": "0.1.0"
