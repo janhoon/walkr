@@ -1,45 +1,45 @@
-import React from 'react'
-import type { PlaybackStatus } from '../types'
+import type React from "react";
+import type { PlaybackStatus } from "../types";
 
 interface PlaybackControlsProps {
-  status: PlaybackStatus
-  currentStepIndex: number
-  totalSteps: number
-  onPlay: () => void
-  onPause: () => void
-  onStepBack: () => void
-  onStepForward: () => void
-  onReset: () => void
-  onLoop: (loop: boolean) => void
-  loop: boolean
+  status: PlaybackStatus;
+  currentStepIndex: number;
+  totalSteps: number;
+  onPlay: () => void;
+  onPause: () => void;
+  onStepBack: () => void;
+  onStepForward: () => void;
+  onReset: () => void;
+  onLoop: (loop: boolean) => void;
+  loop: boolean;
 }
 
 const btnStyle: React.CSSProperties = {
-  background: 'transparent',
-  color: '#a0a0a0',
-  border: 'none',
-  cursor: 'pointer',
+  background: "transparent",
+  color: "#a0a0a0",
+  border: "none",
+  cursor: "pointer",
   fontSize: 16,
-  padding: '4px 8px',
+  padding: "4px 8px",
   borderRadius: 4,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-}
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+};
 
 const playBtnStyle: React.CSSProperties = {
-  background: '#3b82f6',
-  color: 'white',
-  border: 'none',
-  cursor: 'pointer',
+  background: "#3b82f6",
+  color: "white",
+  border: "none",
+  cursor: "pointer",
   borderRadius: 6,
   width: 36,
   height: 28,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
   fontSize: 14,
-}
+};
 
 export function PlaybackControls({
   status,
@@ -57,46 +57,48 @@ export function PlaybackControls({
     <div
       style={{
         height: 44,
-        background: '#1c1c1c',
-        borderTop: '1px solid #2a2a2a',
-        borderBottom: '1px solid #2a2a2a',
-        display: 'flex',
-        flexDirection: 'row',
-        alignItems: 'center',
+        background: "#1c1c1c",
+        borderTop: "1px solid #2a2a2a",
+        borderBottom: "1px solid #2a2a2a",
+        display: "flex",
+        flexDirection: "row",
+        alignItems: "center",
         gap: 8,
-        padding: '0 16px',
+        padding: "0 16px",
         flexShrink: 0,
       }}
     >
-      <button style={btnStyle} onClick={onReset} title="Reset">
+      <button type="button" style={btnStyle} onClick={onReset} title="Reset">
         ⏮
       </button>
-      <button style={btnStyle} onClick={onStepBack} title="Step back">
+      <button type="button" style={btnStyle} onClick={onStepBack} title="Step back">
         ⏪
       </button>
       <button
+        type="button"
         style={playBtnStyle}
-        onClick={status === 'playing' ? onPause : onPlay}
-        title={status === 'playing' ? 'Pause' : 'Play'}
+        onClick={status === "playing" ? onPause : onPlay}
+        title={status === "playing" ? "Pause" : "Play"}
       >
-        {status === 'playing' ? '⏸' : '▶'}
+        {status === "playing" ? "⏸" : "▶"}
       </button>
-      <button style={btnStyle} onClick={onStepForward} title="Step forward">
+      <button type="button" style={btnStyle} onClick={onStepForward} title="Step forward">
         ⏩
       </button>
       <button
+        type="button"
         style={{
           ...btnStyle,
-          color: loop ? '#3b82f6' : '#a0a0a0',
+          color: loop ? "#3b82f6" : "#a0a0a0",
         }}
         onClick={() => onLoop(!loop)}
         title="Loop"
       >
         🔁
       </button>
-      <span style={{ fontSize: 12, color: '#888', marginLeft: 'auto' }}>
+      <span style={{ fontSize: 12, color: "#888", marginLeft: "auto" }}>
         Step {currentStepIndex + 1} / {totalSteps}
       </span>
     </div>
-  )
+  );
 }

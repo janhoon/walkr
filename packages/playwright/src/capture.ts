@@ -47,7 +47,12 @@ const getRenderableStepCount = (steps: Step[]): number => {
 };
 
 const applyCursorPosition = async (
-  page: { evaluate: (cb: (point: { x: number; y: number }) => void, arg: { x: number; y: number }) => Promise<void> },
+  page: {
+    evaluate: (
+      cb: (point: { x: number; y: number }) => void,
+      arg: { x: number; y: number },
+    ) => Promise<void>;
+  },
   x: number,
   y: number,
 ): Promise<void> => {
@@ -82,7 +87,16 @@ const applyCursorPosition = async (
   );
 };
 
-const highlightSelector = async (page: { evaluate: (cb: (payload: { selector: string; color: string }) => void, arg: { selector: string; color: string }) => Promise<void> }, selector: string, color: string): Promise<void> => {
+const highlightSelector = async (
+  page: {
+    evaluate: (
+      cb: (payload: { selector: string; color: string }) => void,
+      arg: { selector: string; color: string },
+    ) => Promise<void>;
+  },
+  selector: string,
+  color: string,
+): Promise<void> => {
   await page.evaluate(
     (payload) => {
       const previous = document.getElementById("walkr-playwright-highlight");
@@ -120,7 +134,9 @@ const highlightSelector = async (page: { evaluate: (cb: (payload: { selector: st
   );
 };
 
-const clearHighlight = async (page: { evaluate: (cb: () => void) => Promise<void> }): Promise<void> => {
+const clearHighlight = async (page: {
+  evaluate: (cb: () => void) => Promise<void>;
+}): Promise<void> => {
   await page.evaluate(() => {
     const overlay = document.getElementById("walkr-playwright-highlight");
     overlay?.remove();
@@ -132,12 +148,19 @@ export async function captureWalkthrough(
   options: CaptureOptions = {},
 ): Promise<CaptureResult> {
   const internalOptions = options as InternalCaptureOptions;
-  const width = isFiniteNumber(options.width) ? Math.max(1, Math.round(options.width)) : DEFAULT_WIDTH;
-  const height = isFiniteNumber(options.height) ? Math.max(1, Math.round(options.height)) : DEFAULT_HEIGHT;
+  const width = isFiniteNumber(options.width)
+    ? Math.max(1, Math.round(options.width))
+    : DEFAULT_WIDTH;
+  const height = isFiniteNumber(options.height)
+    ? Math.max(1, Math.round(options.height))
+    : DEFAULT_HEIGHT;
   const fps = isFiniteNumber(options.fps) ? Math.max(1, Math.round(options.fps)) : DEFAULT_FPS;
   const frameIntervalMs = 1000 / fps;
 
-  const totalDurationMs = walkthrough.steps.reduce((total, step) => total + getStepDuration(step), 0);
+  const totalDurationMs = walkthrough.steps.reduce(
+    (total, step) => total + getStepDuration(step),
+    0,
+  );
   const estimatedFrameCount = Math.max(
     1,
     Math.ceil(totalDurationMs / frameIntervalMs),
@@ -283,7 +306,7 @@ export async function captureWalkthrough(
           return;
         }
         const double = Boolean((step.options as { double?: unknown }).double ?? false);
-        const button = ((step.options as { button?: "left" | "middle" | "right" }).button ?? "left");
+        const button = (step.options as { button?: "left" | "middle" | "right" }).button ?? "left";
 
         await page.mouse.move(center.x, center.y);
         await applyCursorPosition(page, center.x, center.y);
@@ -303,7 +326,7 @@ export async function captureWalkthrough(
         const x = Number((step.options as { x?: unknown }).x ?? cursorX);
         const y = Number((step.options as { y?: unknown }).y ?? cursorY);
         const double = Boolean((step.options as { double?: unknown }).double ?? false);
-        const button = ((step.options as { button?: "left" | "middle" | "right" }).button ?? "left");
+        const button = (step.options as { button?: "left" | "middle" | "right" }).button ?? "left";
 
         await page.mouse.move(x, y);
         await applyCursorPosition(page, x, y);

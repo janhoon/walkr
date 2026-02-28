@@ -1,0 +1,30 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "workspaces": {
+    "packages/core": {
+      "project": ["src/**/*.ts"]
+    },
+    "packages/engine": {
+      "entry": ["src/player.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/cli": {
+      "project": ["src/**/*.ts"]
+    },
+    "packages/playwright": {
+      "project": ["src/**/*.ts"]
+    },
+    "packages/studio": {
+      "project": ["src/**/*.{ts,tsx}"],
+      "vite": true
+    },
+    "packages/create-walkr": {
+      "project": ["src/**/*.js"]
+    },
+    "examples/ace-demo": {
+      "entry": ["demo.ts"],
+      "project": ["**/*.ts"]
+    }
+  },
+  "ignore": ["**/*.d.ts"]
+}

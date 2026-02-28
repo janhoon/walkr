@@ -15,7 +15,7 @@ export function walkr(options: WalkthroughOptions): Walkthrough {
   };
 }
 
-export * from "./types.js";
-export type { CursorConfig } from "./types.js";
-export * from "./steps.js";
 export * from "./composers.js";
+export * from "./steps.js";
+export type { CursorConfig } from "./types.js";
+export * from "./types.js";

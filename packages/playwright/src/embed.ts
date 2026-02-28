@@ -10,11 +10,7 @@ const escapeHtml = (value: string): string =>
 
 const escapeComment = (value: string): string => value.replaceAll("--", "- -");
 
-export function buildEmbedHtml(
-  frames: Buffer[],
-  fps: number,
-  walkthrough: Walkthrough,
-): string {
+export function buildEmbedHtml(frames: Buffer[], fps: number, walkthrough: Walkthrough): string {
   const rawTitle = walkthrough.title ?? "Walkr Capture";
   const title = escapeHtml(rawTitle);
   const commentTitle = escapeComment(rawTitle);
@@ -188,7 +184,7 @@ body {
   align-items: center;
   gap: 10px;
 }
-input[type=\"range\"] {
+input[type="range"] {
   width: 100%;
   accent-color: #22d3ee;
 }

@@ -1,13 +1,7 @@
 /**
  * Cubic bezier interpolation between four control points.
  */
-export function cubicBezier(
-  p0: number,
-  p1: number,
-  p2: number,
-  p3: number,
-  t: number,
-): number {
+export function cubicBezier(p0: number, p1: number, p2: number, p3: number, t: number): number {
   const mt = 1 - t;
   const mt2 = mt * mt;
   const t2 = t * t;
@@ -84,7 +78,7 @@ const EASINGS: Record<string, (t: number) => number> = {
  * Falls back to 'ease' for unknown names.
  */
 export function getEasingFunction(easing: string): (t: number) => number {
-  return EASINGS[easing] ?? EASINGS["ease"];
+  return EASINGS[easing] ?? EASINGS.ease;
 }
 
 /**

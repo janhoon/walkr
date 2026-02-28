@@ -50,15 +50,15 @@ function buildPackageJson(projectName) {
     type: "module",
     scripts: {
       dev: "npx walkr dev demo.ts",
-      export: "npx walkr export demo.ts --format mp4 --output output.mp4"
+      export: "npx walkr export demo.ts --format mp4 --output output.mp4",
     },
     dependencies: {
-      "@walkr/core": "^0.1.0"
+      "@walkr/core": "^0.1.0",
     },
     devDependencies: {
       "@tsconfig/node18": "^18.2.4",
-      typescript: "^5.8.2"
-    }
+      typescript: "^5.8.2",
+    },
   };
 }
 
@@ -88,12 +88,12 @@ function tsconfigSource() {
         moduleResolution: "NodeNext",
         target: "ES2022",
         strict: true,
-        noEmit: true
+        noEmit: true,
       },
-      include: ["demo.ts"]
+      include: ["demo.ts"],
     },
     null,
-    2
+    2,
   );
 }
 
@@ -122,12 +122,12 @@ async function scaffoldProject(projectName) {
     writeFile(
       path.join(targetDir, "package.json"),
       `${JSON.stringify(buildPackageJson(projectName), null, 2)}\n`,
-      "utf8"
+      "utf8",
     ),
     writeFile(path.join(targetDir, "demo.ts"), demoSource(), "utf8"),
     writeFile(path.join(targetDir, "tsconfig.json"), `${tsconfigSource()}\n`, "utf8"),
     writeFile(path.join(targetDir, ".gitignore"), "node_modules\ndist\n*.log\noutput.*\n", "utf8"),
-    writeFile(path.join(targetDir, "README.md"), readmeSource(projectName), "utf8")
+    writeFile(path.join(targetDir, "README.md"), readmeSource(projectName), "utf8"),
   ]);
 
   console.log(`✨ Created walkr project: ${projectName}`);

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { devCommand } from "./dev.js";
-import { exportCommand, type ExportOptions } from "./export.js";
+import { type ExportOptions, exportCommand } from "./export.js";
 
 export const VERSION = "0.1.0";
 

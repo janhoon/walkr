@@ -5,17 +5,18 @@
     "node": ">=18"
   },
   "scripts": {
+    "check": "biome check . && pnpm -r type-check && pnpm -r --if-present test && knip",
     "build": "pnpm -r build",
-    "lint": "pnpm -r lint",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
     "type-check": "pnpm -r type-check",
+    "knip": "knip",
     "dev": "pnpm -r --parallel --if-present dev"
   },
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^8.24.0",
-    "@typescript-eslint/parser": "^8.24.0",
-    "eslint": "^9.20.1",
-    "eslint-config-prettier": "^10.0.1",
-    "prettier": "^3.5.2",
+    "@biomejs/biome": "^2.0.0",
+    "knip": "^5.0.0",
     "typescript": "^5.8.2"
   }
 }

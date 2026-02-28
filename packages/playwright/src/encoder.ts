@@ -68,9 +68,8 @@ const runFfmpeg = async (
       const seconds = Number(match[3]);
       const elapsedSeconds = hours * 3600 + minutes * 60 + seconds;
 
-      const percent = totalSeconds > 0
-        ? Math.max(0, Math.min(100, (elapsedSeconds / totalSeconds) * 100))
-        : 100;
+      const percent =
+        totalSeconds > 0 ? Math.max(0, Math.min(100, (elapsedSeconds / totalSeconds) * 100)) : 100;
       onProgress(percent);
     });
   });
@@ -91,7 +90,11 @@ export async function encodeFrames(
   }
 
   if (format === "embed") {
-    const html = buildEmbedHtml(frames, fps, internalOptions.walkthrough ?? { url: "about:blank", steps: [] });
+    const html = buildEmbedHtml(
+      frames,
+      fps,
+      internalOptions.walkthrough ?? { url: "about:blank", steps: [] },
+    );
     await fs.writeFile(outputPath, html, "utf8");
 
     options.onProgress?.(100);
@@ -125,7 +128,7 @@ export async function encodeFrames(
         "-y",
         `-r ${fps}`,
         `-i ${escapedInput}`,
-        "-vf \"fps=15,scale=1280:-1:flags=lanczos\"",
+        '-vf "fps=15,scale=1280:-1:flags=lanczos"',
         escapedOutput,
       ].join(" ");
     } else if (format === "webm") {

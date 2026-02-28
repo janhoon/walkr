@@ -52,7 +52,10 @@ export const watchScript = (scriptPath: string, callback: () => void): (() => vo
   };
 };
 
-export const watch = (scriptPath: string, onChange: (walkthrough: Walkthrough) => void): (() => void) => {
+export const watch = (
+  scriptPath: string,
+  onChange: (walkthrough: Walkthrough) => void,
+): (() => void) => {
   const absolutePath = resolve(scriptPath);
 
   const reload = async (): Promise<void> => {

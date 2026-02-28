@@ -1,11 +1,4 @@
-import {
-  walkr,
-  moveTo,
-  click,
-  type,
-  wait,
-  highlight,
-} from "@walkr/core";
+import { click, highlight, moveTo, type, wait, walkr } from "@walkr/core";
 
 /**
  * Ace Observability demo walkthrough.
@@ -72,7 +65,9 @@ export default walkr({
     wait(600),
 
     // Select the Victoria org from the dropdown
-    moveTo('[data-testid="org-dropdown-item-265c1068-660e-4c3c-affd-aa78a4362562"]', { duration: 400 }),
+    moveTo('[data-testid="org-dropdown-item-265c1068-660e-4c3c-affd-aa78a4362562"]', {
+      duration: 400,
+    }),
     click('[data-testid="org-dropdown-item-265c1068-660e-4c3c-affd-aa78a4362562"]'),
 
     // Wait for org switch + page reload

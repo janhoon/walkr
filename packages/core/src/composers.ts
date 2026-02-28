@@ -15,9 +15,6 @@ export function sequence(...steps: Step[]): SequenceStep {
 
 export function parallel(...steps: Step[]): ParallelStep {
   const stepOptions: ParallelStepOptions = { steps: [...steps] };
-  const duration = steps.reduce(
-    (maxDuration, step) => Math.max(maxDuration, step.duration),
-    0,
-  );
+  const duration = steps.reduce((maxDuration, step) => Math.max(maxDuration, step.duration), 0);
   return createStep("parallel", stepOptions, duration);
 }

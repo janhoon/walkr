@@ -1,10 +1,10 @@
 import {
   createEasingFromCssCubicBezier,
   cubicBezier,
+  type EasingFunction,
   easeInOut,
   easeOut,
   linear,
-  type EasingFunction,
 } from "./bezier.js";
 import type { CursorConfig } from "./types.js";
 

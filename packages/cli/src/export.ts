@@ -11,7 +11,7 @@ export interface ExportOptions {
 function isWalkthrough(value: unknown): value is Walkthrough {
   if (!value || typeof value !== "object") return false;
   const v = value as Record<string, unknown>;
-  return typeof v["url"] === "string" && Array.isArray(v["steps"]);
+  return typeof v.url === "string" && Array.isArray(v.steps);
 }
 
 async function loadWalkthrough(scriptPath: string): Promise<Walkthrough> {
@@ -30,10 +30,7 @@ async function loadWalkthrough(scriptPath: string): Promise<Walkthrough> {
   return wt;
 }
 
-export async function exportCommand(
-  scriptPath: string,
-  options: ExportOptions,
-): Promise<void> {
+export async function exportCommand(scriptPath: string, options: ExportOptions): Promise<void> {
   const format = options.format ?? "mp4";
   const ext = format === "embed" ? "html" : format;
   const output = options.output ?? `output.${ext}`;
@@ -56,15 +53,12 @@ export async function exportCommand(
   ) => Promise<{ outputPath: string; duration: number; frameCount: number }>;
 
   try {
-    // @ts-expect-error — @walkr/playwright is an optional peer dep, resolved at runtime
     const mod = (await import("@walkr/playwright")) as {
       captureWalkthrough: typeof captureWalkthrough;
     };
     captureWalkthrough = mod.captureWalkthrough;
   } catch {
-    throw new Error(
-      "@walkr/playwright is not installed. Run: pnpm add @walkr/playwright",
-    );
+    throw new Error("@walkr/playwright is not installed. Run: pnpm add @walkr/playwright");
   }
 
   console.log("Capturing frames…");

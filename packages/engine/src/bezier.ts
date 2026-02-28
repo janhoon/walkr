@@ -5,13 +5,7 @@ function clamp(value: number): number {
   return Math.min(1, Math.max(0, value));
 }
 
-export function cubicBezier(
-  t: number,
-  p0: Point,
-  p1: Point,
-  p2: Point,
-  p3: Point,
-): Point {
+export function cubicBezier(t: number, p0: Point, p1: Point, p2: Point, p3: Point): Point {
   const clampedT = clamp(t);
   const oneMinusT = 1 - clampedT;
   const oneMinusTSquared = oneMinusT * oneMinusT;

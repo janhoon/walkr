@@ -93,7 +93,7 @@ export const useStudio = (): UseStudioResult => {
     loop: false,
   });
 
-  const steps = useMemo(() => state.walkthrough?.steps ?? [], [state.walkthrough]);
+  const _steps = useMemo(() => state.walkthrough?.steps ?? [], [state.walkthrough]);
 
   const selectStep = useCallback((index: number) => {
     setState((previous) => {
@@ -194,7 +194,10 @@ export const useStudio = (): UseStudioResult => {
         return previous;
       }
 
-      const currentIndex = previous.selectedStep?.index ?? findStepIndexAtTime(previous.walkthrough.steps, previous.playheadTime) ?? -1;
+      const currentIndex =
+        previous.selectedStep?.index ??
+        findStepIndexAtTime(previous.walkthrough.steps, previous.playheadTime) ??
+        -1;
       const nextIndex = clamp(currentIndex + 1, 0, previous.walkthrough.steps.length - 1);
 
       return {
@@ -212,7 +215,10 @@ export const useStudio = (): UseStudioResult => {
         return previous;
       }
 
-      const currentIndex = previous.selectedStep?.index ?? findStepIndexAtTime(previous.walkthrough.steps, previous.playheadTime) ?? 0;
+      const currentIndex =
+        previous.selectedStep?.index ??
+        findStepIndexAtTime(previous.walkthrough.steps, previous.playheadTime) ??
+        0;
       const nextIndex = clamp(currentIndex - 1, 0, previous.walkthrough.steps.length - 1);
 
       return {

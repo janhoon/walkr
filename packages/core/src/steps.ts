@@ -1,17 +1,17 @@
 import type {
+  ClickCoordsStep,
+  ClickCoordsStepOptions,
   ClickOptions,
   ClickStep,
   ClickStepOptions,
-  ClickCoordsStepOptions,
-  ClickCoordsStep,
   HighlightOptions,
   HighlightStep,
   HighlightStepOptions,
+  MoveToCoordsStep,
+  MoveToCoordsStepOptions,
   MoveToOptions,
   MoveToStep,
   MoveToStepOptions,
-  MoveToCoordsStep,
-  MoveToCoordsStepOptions,
   PanOptions,
   PanStep,
   PanStepOptions,
@@ -31,6 +31,7 @@ import type {
 } from "./types.js";
 
 let stepCounter = 0;
+const DEFAULT_CLICK_DURATION = 50;
 const DEFAULT_ZOOM_DURATION = 360;
 const DEFAULT_PAN_DURATION = 360;
 const DEFAULT_EASING = "cubic-bezier(0.42, 0, 0.58, 1)";
@@ -49,47 +50,33 @@ export function createStep<
   };
 }
 
-export function moveTo(
-  selector: string,
-  options: MoveToOptions = {},
-): MoveToStep {
+export function moveTo(selector: string, options: MoveToOptions = {}): MoveToStep {
   const stepOptions: MoveToStepOptions = { selector, ...options };
   return createStep("moveTo", stepOptions, options.duration ?? 0);
 }
 
-export function moveToCoords(
-  x: number,
-  y: number,
-  options: MoveToOptions = {},
-): MoveToCoordsStep {
+export function moveToCoords(x: number, y: number, options: MoveToOptions = {}): MoveToCoordsStep {
   const stepOptions: MoveToCoordsStepOptions = { x, y, ...options };
   return createStep("moveToCoords", stepOptions, options.duration ?? 0);
 }
 
-export function click(
-  selector: string,
-  options: ClickOptions = {},
-): ClickStep {
+export function click(selector: string, options: ClickOptions = {}): ClickStep {
   const stepOptions: ClickStepOptions = {
     selector,
     button: options.button ?? "left",
     double: options.double ?? false,
   };
-  return createStep("click", stepOptions, 0);
+  return createStep("click", stepOptions, DEFAULT_CLICK_DURATION);
 }
 
-export function clickCoords(
-  x: number,
-  y: number,
-  options: ClickOptions = {},
-): ClickCoordsStep {
+export function clickCoords(x: number, y: number, options: ClickOptions = {}): ClickCoordsStep {
   const stepOptions: ClickCoordsStepOptions = {
     x,
     y,
     button: options.button ?? "left",
     double: options.double ?? false,
   };
-  return createStep("clickCoords", stepOptions, 0);
+  return createStep("clickCoords", stepOptions, DEFAULT_CLICK_DURATION);
 }
 
 export function type(text: string, options: TypeOptions = {}): TypeStep {
@@ -98,11 +85,7 @@ export function type(text: string, options: TypeOptions = {}): TypeStep {
   return createStep("type", stepOptions, duration);
 }
 
-export function scroll(
-  x: number,
-  y: number,
-  options: ScrollOptions = {},
-): ScrollStep {
+export function scroll(x: number, y: number, options: ScrollOptions = {}): ScrollStep {
   const stepOptions: ScrollStepOptions = { x, y, ...options };
   return createStep("scroll", stepOptions, 0);
 }
@@ -112,10 +95,7 @@ export function wait(ms: number): WaitStep {
   return createStep("wait", stepOptions, ms);
 }
 
-export function highlight(
-  selector: string,
-  options: HighlightOptions = {},
-): HighlightStep {
+export function highlight(selector: string, options: HighlightOptions = {}): HighlightStep {
   const stepOptions: HighlightStepOptions = {
     selector,
     color: options.color,

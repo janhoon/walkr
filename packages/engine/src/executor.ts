@@ -5,14 +5,14 @@ import {
   showScrollIndicator,
 } from "./cursor.js";
 import type {
-  ClickStep,
   ClickCoordsStep,
+  ClickStep,
   CursorConfig,
   EngineState,
   HighlightStep,
   MouseButton,
-  MoveToStep,
   MoveToCoordsStep,
+  MoveToStep,
   PanStep,
   ParallelStep,
   ScrollStep,
@@ -174,7 +174,10 @@ function isHtmlElement(doc: Document, value: Element | null): value is HTMLEleme
   return value instanceof view.HTMLElement;
 }
 
-function isInputLike(doc: Document, value: HTMLElement): value is HTMLInputElement | HTMLTextAreaElement {
+function isInputLike(
+  doc: Document,
+  value: HTMLElement,
+): value is HTMLInputElement | HTMLTextAreaElement {
   const view = doc.defaultView;
   if (!view) {
     return false;
@@ -182,7 +185,14 @@ function isInputLike(doc: Document, value: HTMLElement): value is HTMLInputEleme
   return value instanceof view.HTMLInputElement || value instanceof view.HTMLTextAreaElement;
 }
 
-function dispatchMouse(doc: Document, target: Element, type: string, x: number, y: number, button: number): void {
+function dispatchMouse(
+  doc: Document,
+  target: Element,
+  type: string,
+  x: number,
+  y: number,
+  button: number,
+): void {
   const MouseEventCtor = doc.defaultView?.MouseEvent ?? MouseEvent;
   target.dispatchEvent(
     new MouseEventCtor(type, {
@@ -330,10 +340,7 @@ export function sleep(ms: number): Promise<void> {
   });
 }
 
-function resolveElementCenter(
-  doc: Document,
-  selector: string,
-): { x: number; y: number } | null {
+function resolveElementCenter(doc: Document, selector: string): { x: number; y: number } | null {
   const el = doc.querySelector(selector);
   if (!el) {
     return null;
@@ -526,7 +533,10 @@ async function executeWait(step: WaitStep): Promise<void> {
 
 async function executeHighlight(step: HighlightStep, iframe: HTMLIFrameElement): Promise<void> {
   const doc = getFrameDocument(iframe);
-  const duration = Math.max(0, step.options.duration ?? step.duration ?? DEFAULT_HIGHLIGHT_DURATION);
+  const duration = Math.max(
+    0,
+    step.options.duration ?? step.duration ?? DEFAULT_HIGHLIGHT_DURATION,
+  );
 
   if (!doc) {
     await sleep(duration);
@@ -567,8 +577,8 @@ async function executeHighlight(step: HighlightStep, iframe: HTMLIFrameElement):
     spotlight.style.position = "absolute";
     spotlight.style.left = `${targetBox.left - padding}px`;
     spotlight.style.top = `${targetBox.top - padding}px`;
-    spotlight.style.width = `${Math.max(0, targetBox.width + (padding * 2))}px`;
-    spotlight.style.height = `${Math.max(0, targetBox.height + (padding * 2))}px`;
+    spotlight.style.width = `${Math.max(0, targetBox.width + padding * 2)}px`;
+    spotlight.style.height = `${Math.max(0, targetBox.height + padding * 2)}px`;
     spotlight.style.zIndex = "999991";
     spotlight.style.pointerEvents = "none";
     spotlight.style.borderRadius = `${radius}px`;
@@ -632,8 +642,8 @@ async function executeZoom(
   if (step.options.follow) {
     const wrapperRect = wrapper.getBoundingClientRect();
     if (wrapperRect.width > 0 && wrapperRect.height > 0) {
-      originX = ((cursorPosition.x / wrapperRect.width) * 100);
-      originY = ((cursorPosition.y / wrapperRect.height) * 100);
+      originX = (cursorPosition.x / wrapperRect.width) * 100;
+      originY = (cursorPosition.y / wrapperRect.height) * 100;
     } else {
       originX = 50;
       originY = 50;
@@ -699,7 +709,9 @@ async function executeParallel(
   iframe: HTMLIFrameElement,
   context?: StepExecutionContext,
 ): Promise<void> {
-  await Promise.all(step.options.steps.map((childStep) => executeStep(childStep, cursor, iframe, context)));
+  await Promise.all(
+    step.options.steps.map((childStep) => executeStep(childStep, cursor, iframe, context)),
+  );
 }
 
 export async function executeStep(

@@ -1,25 +1,23 @@
 import { spawn } from "node:child_process";
-import { writeFileSync, mkdirSync, rmSync } from "node:fs";
-import { resolve, dirname } from "node:path";
-import { loadScriptWalkthrough, watchScript } from "./watch.js";
-
+import { mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
 import type { Walkthrough } from "@walkr/core";
+import { loadScriptWalkthrough, watchScript } from "./watch.js";
 
 const STUDIO_PORT = 5174;
 const PROXY_PREFIX = "/__target__";
 
 function openBrowser(url: string): void {
   const start =
-    process.platform === "darwin"
-      ? "open"
-      : process.platform === "win32"
-        ? "start"
-        : "xdg-open";
+    process.platform === "darwin" ? "open" : process.platform === "win32" ? "start" : "xdg-open";
 
   spawn(start, [url], { detached: true, stdio: "ignore" }).unref();
 }
 
-function rewriteWalkthroughUrl(walkthrough: Walkthrough, targetOrigin: string): Walkthrough & { originalUrl: string } {
+function rewriteWalkthroughUrl(
+  walkthrough: Walkthrough,
+  targetOrigin: string,
+): Walkthrough & { originalUrl: string } {
   return {
     ...walkthrough,
     originalUrl: walkthrough.url,
@@ -104,7 +102,9 @@ export async function devCommand(scriptPath: string): Promise<void> {
   const cleanup = (): void => {
     console.log("\nShutting down…");
     stopWatcher();
-    try { rmSync(proxyTargetPath, { force: true }); } catch {}
+    try {
+      rmSync(proxyTargetPath, { force: true });
+    } catch {}
     vite.kill("SIGTERM");
     process.exit(0);
   };

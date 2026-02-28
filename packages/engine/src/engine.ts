@@ -80,7 +80,13 @@ export class WalkrEngine {
   }
 
   mount(container: HTMLElement): void {
-    if (this.container === container && this.stage && this.iframe && this.cursor && this.activeViewport === (this.options.viewport ?? null)) {
+    if (
+      this.container === container &&
+      this.stage &&
+      this.iframe &&
+      this.cursor &&
+      this.activeViewport === (this.options.viewport ?? null)
+    ) {
       return;
     }
 
@@ -266,7 +272,8 @@ export class WalkrEngine {
       }
 
       this.state.currentStep = index + 1;
-      this.state.progress = this.state.totalSteps > 0 ? this.state.currentStep / this.state.totalSteps : 1;
+      this.state.progress =
+        this.state.totalSteps > 0 ? this.state.currentStep / this.state.totalSteps : 1;
       this.emit("step");
     }
 

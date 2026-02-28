@@ -7,10 +7,12 @@
   "peerDependencies": {
     "@playwright/test": "^1.50.0"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "lint": "eslint src --ext .ts",
+    "lint": "biome check src",
     "type-check": "tsc -p tsconfig.json --noEmit",
     "dev": "tsc -p tsconfig.json --watch"
   }

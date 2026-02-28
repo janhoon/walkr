@@ -130,11 +130,8 @@ export interface ParallelStepOptions extends StepCursorOverride {
   steps: Step[];
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface Step<
-  TType extends StepType = StepType,
-  TOptions extends {} = {},
-> {
+// biome-ignore lint/complexity/noBannedTypes: {} is intentional — constrains TOptions to any object shape
+export interface Step<TType extends StepType = StepType, TOptions extends {} = {}> {
   id: string;
   type: TType;
   options: TOptions;

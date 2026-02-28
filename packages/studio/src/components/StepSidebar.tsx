@@ -74,7 +74,11 @@ export const StepSidebar = ({ selectedStep, onChangeOption }: StepSidebarProps) 
             return (
               <Fragment key={key}>
                 <label style={fieldLabelStyle}>{key}</label>
-                <select value={value} onChange={(event) => onChangeOption(key, event.target.value)} style={fieldStyle}>
+                <select
+                  value={value}
+                  onChange={(event) => onChangeOption(key, event.target.value)}
+                  style={fieldStyle}
+                >
                   <option value="left">left</option>
                   <option value="right">right</option>
                   <option value="middle">middle</option>

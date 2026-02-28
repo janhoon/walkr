@@ -1,24 +1,15 @@
 import type { Step } from "@walkr/core";
-import type {
-  EngineConfig,
-  PlaybackEvent,
-  PlaybackEventType,
-  PlaybackState,
-} from "./types.js";
 import { CursorOverlay } from "./cursor.js";
 import { StepExecutor } from "./executor.js";
+import type { EngineConfig, PlaybackEvent, PlaybackEventType, PlaybackState } from "./types.js";
 
 export class WalkrPlayer {
   private iframe: HTMLIFrameElement;
   private cursor: CursorOverlay;
   private executor: StepExecutor;
-  private container: HTMLElement;
   private viewport: HTMLElement;
   private _config: EngineConfig;
-  private listeners = new Map<
-    PlaybackEventType,
-    Set<(e: PlaybackEvent) => void>
-  >();
+  private listeners = new Map<PlaybackEventType, Set<(e: PlaybackEvent) => void>>();
   private state: PlaybackState = {
     currentStepIndex: 0,
     currentTime: 0,
@@ -62,14 +53,10 @@ export class WalkrPlayer {
     }
 
     // Create executor
-    this.executor = new StepExecutor(
-      this.cursor,
-      this.iframe,
-      (event: PlaybackEvent) => {
-        event.state = this.getState();
-        this.emit(event.type, event);
-      },
-    );
+    this.executor = new StepExecutor(this.cursor, this.iframe, (event: PlaybackEvent) => {
+      event.state = this.getState();
+      this.emit(event.type, event);
+    });
   }
 
   async play(): Promise<void> {
@@ -141,10 +128,7 @@ export class WalkrPlayer {
   }
 
   seek(stepIndex: number): void {
-    this.state.currentStepIndex = Math.max(
-      0,
-      Math.min(stepIndex, this._config.steps.length - 1),
-    );
+    this.state.currentStepIndex = Math.max(0, Math.min(stepIndex, this._config.steps.length - 1));
   }
 
   reset(): void {
@@ -161,10 +145,7 @@ export class WalkrPlayer {
     this.cursor.setPosition(0, 0);
   }
 
-  on(
-    event: PlaybackEventType,
-    handler: (e: PlaybackEvent) => void,
-  ): void {
+  on(event: PlaybackEventType, handler: (e: PlaybackEvent) => void): void {
     let handlers = this.listeners.get(event);
     if (!handlers) {
       handlers = new Set();
@@ -173,10 +154,7 @@ export class WalkrPlayer {
     handlers.add(handler);
   }
 
-  off(
-    event: PlaybackEventType,
-    handler: (e: PlaybackEvent) => void,
-  ): void {
+  off(event: PlaybackEventType, handler: (e: PlaybackEvent) => void): void {
     this.listeners.get(event)?.delete(handler);
   }
 
