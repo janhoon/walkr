@@ -32,13 +32,13 @@ importers:
       '@walkrstudio/core':
         specifier: workspace:^
         version: link:../core
+      '@walkrstudio/playwright':
+        specifier: workspace:^
+        version: link:../playwright
     devDependencies:
       '@types/node':
         specifier: ^22.15.3
         version: 22.19.13
-      '@walkrstudio/playwright':
-        specifier: workspace:*
-        version: link:../playwright
 
   packages/core: {}
 
@@ -60,7 +60,7 @@ importers:
         specifier: ^1.50.0
         version: 1.58.2
       '@walkrstudio/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
     devDependencies:
       '@types/node':

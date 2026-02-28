@@ -14,7 +14,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@walkrstudio/core": "workspace:*"
+    "@walkrstudio/core": "workspace:^"
   },
   "devDependencies": {
     "@types/node": "^22.0.0"

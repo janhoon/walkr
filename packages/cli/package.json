@@ -19,17 +19,11 @@
     "type-check": "tsc -p tsconfig.json --noEmit",
     "dev": "tsc -p tsconfig.json --watch"
   },
-  "peerDependencies": {
+  "dependencies": {
     "@walkrstudio/core": "workspace:^",
-    "@walkrstudio/playwright": "workspace:*"
-  },
-  "peerDependenciesMeta": {
-    "@walkrstudio/playwright": {
-      "optional": true
-    }
+    "@walkrstudio/playwright": "workspace:^"
   },
   "devDependencies": {
-    "@types/node": "^22.15.3",
-    "@walkrstudio/playwright": "workspace:*"
+    "@types/node": "^22.15.3"
   }
 }
