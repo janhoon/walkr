@@ -12,6 +12,7 @@ on:
           - packages/engine
           - packages/cli
           - packages/playwright
+          - packages/studio
           - packages/create-walkrstudio
 
 jobs:

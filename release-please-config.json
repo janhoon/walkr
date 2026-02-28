@@ -17,6 +17,10 @@
       "release-type": "node",
       "component": "playwright"
     },
+    "packages/studio": {
+      "release-type": "node",
+      "component": "studio"
+    },
     "packages/create-walkrstudio": {
       "release-type": "node",
       "component": "create-walkrstudio"
