@@ -356,11 +356,7 @@ export function App() {
           Load Script
         </button>
         <div ref={exportBtnRef} style={{ position: "relative", marginLeft: 8 }}>
-          <button
-            type="button"
-            onClick={() => setExportMenuOpen((o) => !o)}
-            style={headerBtnStyle}
-          >
+          <button type="button" onClick={() => setExportMenuOpen((o) => !o)} style={headerBtnStyle}>
             Export ▾
           </button>
           {exportMenuOpen && (

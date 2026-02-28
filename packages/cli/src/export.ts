@@ -58,7 +58,9 @@ export async function exportCommand(scriptPath: string, options: ExportOptions):
     };
     captureWalkthrough = mod.captureWalkthrough;
   } catch {
-    throw new Error("@walkrstudio/playwright is not installed. Run: pnpm add @walkrstudio/playwright");
+    throw new Error(
+      "@walkrstudio/playwright is not installed. Run: pnpm add @walkrstudio/playwright",
+    );
   }
 
   console.log("Capturing frames…");
