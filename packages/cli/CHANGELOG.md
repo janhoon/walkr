@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.5](https://github.com/janhoon/walkr/compare/cli-v0.2.4...cli-v0.2.5) (2026-02-28)
+
+
+### Bug Fixes
+
+* **cli:** auto-install Playwright browsers on first export ([6affc30](https://github.com/janhoon/walkr/commit/6affc302e490e378869dd508d54087b915f6aa52))
+
 ## [0.2.4](https://github.com/janhoon/walkr/compare/cli-v0.2.3...cli-v0.2.4) (2026-02-28)
 
 
