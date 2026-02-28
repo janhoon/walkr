@@ -1,16 +1,10 @@
 import {
   walkr,
   moveTo,
-  moveToCoords,
   click,
-  clickCoords,
   type,
   wait,
   highlight,
-  zoom,
-  scroll,
-  sequence,
-  parallel,
 } from "@walkr/core";
 
 /**
@@ -40,84 +34,83 @@ export default walkr({
   steps: [
     // ── Scene 1: Login ──────────────────────────────────────────────
     // Wait for the page to settle
-    wait(800),
+    wait(1200),
 
     // Move to email field and type credentials
-    moveTo("#email", { duration: 600 }),
-    click("#email"),
-    type("admin@admin.com", { selector: "#email", delay: 40 }),
+    moveTo('[data-testid="email-input"]', { duration: 600 }),
+    click('[data-testid="email-input"]'),
+    type("admin@admin.com", { selector: '[data-testid="email-input"]', delay: 40 }),
 
     wait(300),
 
     // Move to password field and type password
-    moveTo("#password", { duration: 400 }),
-    click("#password"),
-    type("Admin1234", { selector: "#password", delay: 50 }),
+    moveTo('[data-testid="password-input"]', { duration: 400 }),
+    click('[data-testid="password-input"]'),
+    type("Admin1234", { selector: '[data-testid="password-input"]', delay: 50 }),
 
     wait(300),
 
     // Highlight and click Sign in
-    highlight("button[type='submit']", {
+    highlight('[data-testid="login-submit-btn"]', {
       spotlight: true,
       color: "#10b981",
       duration: 1000,
       backdropOpacity: 0.3,
       padding: 8,
     }),
-    moveTo("button[type='submit']", { duration: 400 }),
-    click("button[type='submit']"),
+    moveTo('[data-testid="login-submit-btn"]', { duration: 400 }),
+    click('[data-testid="login-submit-btn"]'),
 
     // Wait for dashboard to load
     wait(1500),
 
     // ── Scene 2: Switch to Victoria org ─────────────────────────────
-    // Move to the org dropdown in the sidebar (no stable selector — uses coords)
-    moveToCoords(110, 73, { duration: 500 }),
-    clickCoords(110, 73),
+    // Open the org dropdown in the sidebar
+    moveTo('[data-testid="org-dropdown-btn"]', { duration: 500 }),
+    click('[data-testid="org-dropdown-btn"]'),
 
     wait(600),
 
-    // Scroll the org list to make Victoria visible, then click it
-    moveToCoords(345, 200, { duration: 300 }),
-    moveToCoords(345, 315, { duration: 400 }),
-    clickCoords(345, 315),
+    // Select the Victoria org from the dropdown
+    moveTo('[data-testid="org-dropdown-item-265c1068-660e-4c3c-affd-aa78a4362562"]', { duration: 400 }),
+    click('[data-testid="org-dropdown-item-265c1068-660e-4c3c-affd-aa78a4362562"]'),
 
     // Wait for org switch + page reload
     wait(1500),
 
     // ── Scene 3: Open AI Copilot ────────────────────────────────────
-    // Move to the AI toggle button (bottom-right corner)
-    moveTo("button[title='Toggle AI assistant']", { duration: 700 }),
+    // Move to the AI toggle button
+    moveTo('[data-testid="copilot-toggle-btn"]', { duration: 700 }),
 
     // Spotlight the AI button before clicking
-    highlight("button[title='Toggle AI assistant']", {
+    highlight('[data-testid="copilot-toggle-btn"]', {
       spotlight: true,
       color: "#10b981",
       duration: 800,
       backdropOpacity: 0.25,
       padding: 6,
     }),
-    click("button[title='Toggle AI assistant']"),
+    click('[data-testid="copilot-toggle-btn"]'),
 
     // Wait for the Copilot panel to slide open
     wait(800),
 
     // ── Scene 4: Ask the AI a question ──────────────────────────────
-    // Move to the chat input (inside AI panel — no stable selector)
-    moveToCoords(1738, 1017, { duration: 500 }),
-    clickCoords(1738, 1017),
+    // Move to the chat input
+    moveTo('[data-testid="copilot-chat-input"]', { duration: 500 }),
+    click('[data-testid="copilot-chat-input"]'),
 
     // Type the prompt
     type("give me a sample victoria metrics query and run it", {
-      selector: "textarea",
+      selector: '[data-testid="copilot-chat-input"]',
       delay: 35,
     }),
 
     wait(400),
 
-    // Click Send (inside AI panel — no stable selector)
-    moveToCoords(1889, 1017, { duration: 300 }),
-    clickCoords(1889, 1017),
+    // Click Send
+    moveTo('[data-testid="copilot-send-btn"]', { duration: 300 }),
+    click('[data-testid="copilot-send-btn"]'),
 
     // Let the response stream in
     wait(3000),
