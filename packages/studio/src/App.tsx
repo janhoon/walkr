@@ -66,14 +66,10 @@ export function App() {
       cursor: walkthrough?.cursor,
     })
 
-    engine.on('step', (_event, state) => {
-      setCurrentStepIndex(state.currentStep)
-      // Approximate playhead from step index
-      setPlayheadTime((prev) => prev) // keep in sync via step events
-    })
-
     engine.on('complete', () => {
       setPlaybackStatus('idle')
+      setPlayheadTime(0)
+      setCurrentStepIndex(0)
     })
 
     engineRef.current = engine
@@ -86,6 +82,55 @@ export function App() {
 
   const steps = walkthrough?.steps ?? []
   const totalDuration = steps.reduce((sum, s) => sum + s.duration, 0)
+
+  // Animate playhead forward while playing
+  const playheadRef = useRef(playheadTime)
+  playheadRef.current = playheadTime
+  const stepIndexRef = useRef(currentStepIndex)
+  stepIndexRef.current = currentStepIndex
+
+  useEffect(() => {
+    if (playbackStatus !== 'playing') return
+
+    let frameId = 0
+    let previousTime = performance.now()
+
+    const tick = (now: number) => {
+      const delta = now - previousTime
+      previousTime = now
+
+      let next = playheadRef.current + delta
+      if (next >= totalDuration) {
+        if (loop) {
+          next = next % totalDuration
+        } else {
+          next = totalDuration
+        }
+      }
+
+      setPlayheadTime(next)
+
+      // Derive step index from playhead position
+      let newIndex = steps.length - 1
+      let accumulated = 0
+      for (let i = 0; i < steps.length; i++) {
+        accumulated += steps[i].duration
+        if (next < accumulated || (next === 0 && accumulated === 0)) {
+          newIndex = i
+          break
+        }
+      }
+
+      if (newIndex !== stepIndexRef.current) {
+        setCurrentStepIndex(newIndex)
+      }
+
+      frameId = requestAnimationFrame(tick)
+    }
+
+    frameId = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(frameId)
+  }, [playbackStatus, totalDuration, loop, steps])
 
   const handleLoadScript = useCallback(() => {
     const input = document.createElement('input')

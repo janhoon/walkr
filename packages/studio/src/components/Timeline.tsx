@@ -145,7 +145,23 @@ export function Timeline({
     onSeek(Math.round(ratio * totalDuration))
   }, [totalDuration, totalWidth, onSeek])
 
-  const playheadX = totalDuration > 0 ? (playheadTime / totalDuration) * totalWidth : 0
+  // Compute playhead X by walking through steps, accounting for
+  // non-linear time-to-pixel mapping (MIN_BLOCK_WIDTH inflates 0ms steps)
+  let playheadX = 0
+  if (totalDuration > 0) {
+    let timeRemaining = playheadTime
+    for (let i = 0; i < steps.length; i++) {
+      const dur = steps[i].duration
+      const w = stepWidth(dur)
+      if (timeRemaining <= dur) {
+        // Playhead is within this step
+        playheadX += dur > 0 ? (timeRemaining / dur) * w : 0
+        break
+      }
+      playheadX += w + 4 // 4 = gap between blocks
+      timeRemaining -= dur
+    }
+  }
 
   // Time markers
   let cumulativeMs = 0
