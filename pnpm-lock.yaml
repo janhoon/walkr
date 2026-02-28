@@ -30,7 +30,7 @@ importers:
   packages/cli:
     dependencies:
       '@walkrstudio/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
     devDependencies:
       '@types/node':
