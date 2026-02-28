@@ -691,6 +691,52 @@ async function executePan(step: PanStep, iframe: HTMLIFrameElement): Promise<voi
   );
 }
 
+async function executeClearCache(iframe: HTMLIFrameElement): Promise<void> {
+  try {
+    const win = getFrameWindow(iframe);
+    if (win) {
+      win.localStorage.clear();
+      win.sessionStorage.clear();
+    }
+  } catch {
+    // Cross-origin or security restrictions — ignore.
+  }
+
+  try {
+    const doc = getFrameDocument(iframe);
+    if (doc) {
+      for (const cookie of doc.cookie.split(";")) {
+        const name = cookie.split("=")[0]?.trim();
+        if (name) {
+          doc.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+        }
+      }
+    }
+  } catch {
+    // Cross-origin or security restrictions — ignore.
+  }
+
+  // Reload the iframe and wait for it to finish loading.
+  const currentSrc = iframe.src;
+  if (currentSrc) {
+    await new Promise<void>((resolve) => {
+      let settled = false;
+
+      const finish = (): void => {
+        if (settled) return;
+        settled = true;
+        iframe.removeEventListener("load", finish);
+        iframe.removeEventListener("error", finish);
+        resolve();
+      };
+
+      iframe.addEventListener("load", finish);
+      iframe.addEventListener("error", finish);
+      iframe.src = currentSrc;
+    });
+  }
+}
+
 async function executeSequence(
   step: SequenceStep,
   cursor: HTMLElement,
@@ -764,6 +810,9 @@ export async function executeStep(
         return;
       case "parallel":
         await executeParallel(step as ParallelStep, cursor, iframe, context);
+        return;
+      case "clearCache":
+        await executeClearCache(iframe);
         return;
       default:
         return;

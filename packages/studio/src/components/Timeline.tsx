@@ -23,6 +23,7 @@ const STEP_COLORS: Record<string, string> = {
   zoom: "#5c1d3b",
   pan: "#1d5c5c",
   highlight: "#5c5c1d",
+  clearCache: "#5c2a1d",
 };
 
 const STEP_BORDER_COLORS: Record<string, string> = {
@@ -34,6 +35,7 @@ const STEP_BORDER_COLORS: Record<string, string> = {
   zoom: "#752a4f",
   pan: "#2a7575",
   highlight: "#75752a",
+  clearCache: "#753f2a",
 };
 
 const SCALE = 0.3; // 1ms = 0.3px

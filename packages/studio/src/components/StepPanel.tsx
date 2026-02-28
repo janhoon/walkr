@@ -18,6 +18,7 @@ const STEP_COLORS: Record<string, string> = {
   zoom: "#5c1d3b",
   pan: "#1d5c5c",
   highlight: "#5c5c1d",
+  clearCache: "#5c2a1d",
 };
 
 const labelStyle: React.CSSProperties = {
@@ -318,6 +319,13 @@ function renderStepFields(step: Step, updateOptions: (updates: Record<string, un
             onChange={(v) => updateOptions({ duration: v })}
           />
         </>
+      );
+
+    case "clearCache":
+      return (
+        <div style={{ fontSize: 12, color: "#888" }}>
+          Clears cookies, localStorage, and sessionStorage, then reloads the page.
+        </div>
       );
 
     default:

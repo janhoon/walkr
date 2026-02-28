@@ -17,7 +17,8 @@ export type StepType =
   | "zoom"
   | "pan"
   | "sequence"
-  | "parallel";
+  | "parallel"
+  | "clearCache";
 
 export interface CursorConfig {
   shape?: "circle" | "arrow" | "dot" | "svg";
@@ -130,6 +131,9 @@ export interface ParallelStepOptions extends StepCursorOverride {
   steps: Step[];
 }
 
+// biome-ignore lint/complexity/noBannedTypes: {} is intentional — no options needed
+export type ClearCacheStepOptions = {};
+
 // biome-ignore lint/complexity/noBannedTypes: {} is intentional — constrains TOptions to any object shape
 export interface Step<TType extends StepType = StepType, TOptions extends {} = {}> {
   id: string;
@@ -150,6 +154,7 @@ export type ZoomStep = Step<"zoom", ZoomStepOptions>;
 export type PanStep = Step<"pan", PanStepOptions>;
 export type SequenceStep = Step<"sequence", SequenceStepOptions>;
 export type ParallelStep = Step<"parallel", ParallelStepOptions>;
+export type ClearCacheStep = Step<"clearCache", ClearCacheStepOptions>;
 
 export interface Walkthrough {
   url: string;

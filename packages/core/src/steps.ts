@@ -1,4 +1,6 @@
 import type {
+  ClearCacheStep,
+  ClearCacheStepOptions,
   ClickCoordsStep,
   ClickCoordsStepOptions,
   ClickOptions,
@@ -34,6 +36,7 @@ let stepCounter = 0;
 const DEFAULT_CLICK_DURATION = 50;
 const DEFAULT_ZOOM_DURATION = 360;
 const DEFAULT_PAN_DURATION = 360;
+const DEFAULT_CLEAR_CACHE_DURATION = 50;
 const DEFAULT_EASING = "cubic-bezier(0.42, 0, 0.58, 1)";
 
 export function createStep<
@@ -127,6 +130,11 @@ export function pan(x: number, y: number, options: PanOptions = {}): PanStep {
     ...options,
   };
   return createStep("pan", stepOptions, stepOptions.duration ?? DEFAULT_PAN_DURATION);
+}
+
+export function clearCache(): ClearCacheStep {
+  const stepOptions: ClearCacheStepOptions = {};
+  return createStep("clearCache", stepOptions, DEFAULT_CLEAR_CACHE_DURATION);
 }
 
 export type { PanStepOptions, ZoomStepOptions };
