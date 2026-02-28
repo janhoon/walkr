@@ -7,7 +7,9 @@ export type MouseButton = "left" | "right" | "middle";
 
 export type StepType =
   | "moveTo"
+  | "moveToCoords"
   | "click"
+  | "clickCoords"
   | "type"
   | "scroll"
   | "wait"
@@ -42,6 +44,10 @@ export interface MoveToOptions extends StepCursorOverride {
 }
 
 export interface MoveToStepOptions extends MoveToOptions {
+  selector: string;
+}
+
+export interface MoveToCoordsStepOptions extends MoveToOptions {
   x: number;
   y: number;
 }
@@ -52,6 +58,10 @@ export interface ClickOptions extends StepCursorOverride {
 }
 
 export interface ClickStepOptions extends ClickOptions {
+  selector: string;
+}
+
+export interface ClickCoordsStepOptions extends ClickOptions {
   x: number;
   y: number;
 }
@@ -132,7 +142,9 @@ export interface Step<
 }
 
 export type MoveToStep = Step<"moveTo", MoveToStepOptions>;
+export type MoveToCoordsStep = Step<"moveToCoords", MoveToCoordsStepOptions>;
 export type ClickStep = Step<"click", ClickStepOptions>;
+export type ClickCoordsStep = Step<"clickCoords", ClickCoordsStepOptions>;
 export type TypeStep = Step<"type", TypeStepOptions>;
 export type ScrollStep = Step<"scroll", ScrollStepOptions>;
 export type WaitStep = Step<"wait", WaitStepOptions>;

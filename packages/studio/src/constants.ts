@@ -2,7 +2,9 @@ import type { StepType, Walkthrough } from "../../core/src/types";
 
 export const COLOR_MAP: Record<StepType, string> = {
   moveTo: "#3b82f6",
+  moveToCoords: "#2563eb",
   click: "#ef4444",
+  clickCoords: "#dc2626",
   type: "#22c55e",
   scroll: "#a855f7",
   wait: "#6b7280",
@@ -20,7 +22,7 @@ export const DEFAULT_DEMO_WALKTHROUGH: Walkthrough = {
   steps: [
     {
       id: "move-to-login",
-      type: "moveTo",
+      type: "moveToCoords",
       duration: 700,
       options: { x: 220, y: 160, easing: "easeInOut" },
     },
@@ -38,7 +40,7 @@ export const DEFAULT_DEMO_WALKTHROUGH: Walkthrough = {
     },
     {
       id: "click-submit",
-      type: "click",
+      type: "clickCoords",
       duration: 500,
       options: { x: 260, y: 315, button: "left" },
     },

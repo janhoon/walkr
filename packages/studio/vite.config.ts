@@ -1,8 +1,30 @@
 import { defineConfig } from 'vite'
+import type { Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
-import { readFileSync } from 'node:fs'
+import { readFileSync, watch as fsWatch } from 'node:fs'
 import { resolve } from 'node:path'
 import type { IncomingMessage, ServerResponse } from 'node:http'
+
+function walkthroughHmr(): Plugin {
+  const jsonPath = resolve(__dirname, 'public', 'walkthrough.json')
+  return {
+    name: 'walkr-walkthrough-hmr',
+    configureServer(server) {
+      let last = ''
+      const watcher = fsWatch(jsonPath, () => {
+        try {
+          const content = readFileSync(jsonPath, 'utf-8')
+          if (content === last) return
+          last = content
+          server.ws.send({ type: 'custom', event: 'walkthrough:update', data: JSON.parse(content) })
+        } catch {
+          // file may be mid-write
+        }
+      })
+      server.httpServer?.on('close', () => watcher.close())
+    },
+  }
+}
 
 let proxyTarget = process.env.WALKR_PROXY_TARGET ?? ''
 if (!proxyTarget) {
@@ -60,7 +82,7 @@ function isTextResponse(contentType: string): boolean {
 }
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), walkthroughHmr()],
   server: {
     port: 3000,
     proxy: proxyTarget

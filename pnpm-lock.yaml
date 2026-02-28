@@ -29,6 +29,9 @@ importers:
 
   examples/ace-demo:
     dependencies:
+      '@walkr/cli':
+        specifier: workspace:*
+        version: link:../../packages/cli
       '@walkr/core':
         specifier: workspace:*
         version: link:../../packages/core

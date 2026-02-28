@@ -37,6 +37,7 @@ export const watchScript = (scriptPath: string, callback: () => void): (() => vo
     }
 
     debounceTimer = setTimeout(() => {
+      console.log(`[walkr] File change detected: ${absolutePath}`);
       callback();
     }, WATCH_DEBOUNCE_MS);
   });

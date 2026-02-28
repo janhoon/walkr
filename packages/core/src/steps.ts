@@ -2,12 +2,16 @@ import type {
   ClickOptions,
   ClickStep,
   ClickStepOptions,
+  ClickCoordsStepOptions,
+  ClickCoordsStep,
   HighlightOptions,
   HighlightStep,
   HighlightStepOptions,
   MoveToOptions,
   MoveToStep,
   MoveToStepOptions,
+  MoveToCoordsStep,
+  MoveToCoordsStepOptions,
   PanOptions,
   PanStep,
   PanStepOptions,
@@ -46,26 +50,46 @@ export function createStep<
 }
 
 export function moveTo(
-  x: number,
-  y: number,
+  selector: string,
   options: MoveToOptions = {},
 ): MoveToStep {
-  const stepOptions: MoveToStepOptions = { x, y, ...options };
+  const stepOptions: MoveToStepOptions = { selector, ...options };
   return createStep("moveTo", stepOptions, options.duration ?? 0);
 }
 
-export function click(
+export function moveToCoords(
   x: number,
   y: number,
+  options: MoveToOptions = {},
+): MoveToCoordsStep {
+  const stepOptions: MoveToCoordsStepOptions = { x, y, ...options };
+  return createStep("moveToCoords", stepOptions, options.duration ?? 0);
+}
+
+export function click(
+  selector: string,
   options: ClickOptions = {},
 ): ClickStep {
   const stepOptions: ClickStepOptions = {
+    selector,
+    button: options.button ?? "left",
+    double: options.double ?? false,
+  };
+  return createStep("click", stepOptions, 0);
+}
+
+export function clickCoords(
+  x: number,
+  y: number,
+  options: ClickOptions = {},
+): ClickCoordsStep {
+  const stepOptions: ClickCoordsStepOptions = {
     x,
     y,
     button: options.button ?? "left",
     double: options.double ?? false,
   };
-  return createStep("click", stepOptions, 0);
+  return createStep("clickCoords", stepOptions, 0);
 }
 
 export function type(text: string, options: TypeOptions = {}): TypeStep {

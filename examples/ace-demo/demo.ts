@@ -1,11 +1,14 @@
 import {
   walkr,
   moveTo,
+  moveToCoords,
   click,
+  clickCoords,
   type,
   wait,
   highlight,
   zoom,
+  scroll,
   sequence,
   parallel,
 } from "@walkr/core";
@@ -40,68 +43,69 @@ export default walkr({
     wait(800),
 
     // Move to email field and type credentials
-    moveTo(960, 550, { duration: 600 }),
-    click(960, 550),
+    moveTo("#email", { duration: 600 }),
+    click("#email"),
     type("admin@admin.com", { selector: "#email", delay: 40 }),
 
     wait(300),
 
     // Move to password field and type password
-    moveTo(960, 638, { duration: 400 }),
-    click(960, 638),
+    moveTo("#password", { duration: 400 }),
+    click("#password"),
     type("Admin1234", { selector: "#password", delay: 50 }),
 
     wait(300),
 
     // Highlight and click Sign in
-    highlight("button[type='submit'], form button", {
+    highlight("button[type='submit']", {
       spotlight: true,
       color: "#10b981",
       duration: 1000,
       backdropOpacity: 0.3,
       padding: 8,
     }),
-    moveTo(960, 699, { duration: 400 }),
-    click(960, 699),
+    moveTo("button[type='submit']", { duration: 400 }),
+    click("button[type='submit']"),
 
     // Wait for dashboard to load
     wait(1500),
 
     // ── Scene 2: Switch to Victoria org ─────────────────────────────
-    // Move to the org dropdown in the sidebar
-    moveTo(110, 73, { duration: 500 }),
-    click(110, 73),
+    // Move to the org dropdown in the sidebar (no stable selector — uses coords)
+    moveToCoords(110, 73, { duration: 500 }),
+    clickCoords(110, 73),
 
     wait(600),
 
-    // Click "Victoria" in the dropdown
-    moveTo(345, 315, { duration: 400 }),
-    click(345, 315),
+    // Scroll the org list to make Victoria visible, then click it
+    moveToCoords(345, 200, { duration: 300 }),
+    moveToCoords(345, 315, { duration: 400 }),
+    clickCoords(345, 315),
 
     // Wait for org switch + page reload
     wait(1500),
 
     // ── Scene 3: Open AI Copilot ────────────────────────────────────
     // Move to the AI toggle button (bottom-right corner)
-    moveTo(1872, 1032, { duration: 700 }),
+    moveTo("button[title='Toggle AI assistant']", { duration: 700 }),
 
     // Spotlight the AI button before clicking
-    highlight("button:last-of-type", {
+    highlight("button[title='Toggle AI assistant']", {
       spotlight: true,
       color: "#10b981",
       duration: 800,
       backdropOpacity: 0.25,
       padding: 6,
     }),
-    click(1872, 1032),
+    click("button[title='Toggle AI assistant']"),
 
     // Wait for the Copilot panel to slide open
     wait(800),
 
     // ── Scene 4: Ask the AI a question ──────────────────────────────
-    // Move to the chat input
-    moveTo(1738, 1017, { duration: 500 }),
-    click(1738, 1017),
+    // Move to the chat input (inside AI panel — no stable selector)
+    moveToCoords(1738, 1017, { duration: 500 }),
+    clickCoords(1738, 1017),
 
     // Type the prompt
     type("give me a sample victoria metrics query and run it", {
@@ -111,9 +115,9 @@ export default walkr({
 
     wait(400),
 
-    // Click Send
-    moveTo(1889, 1017, { duration: 300 }),
-    click(1889, 1017),
+    // Click Send (inside AI panel — no stable selector)
+    moveToCoords(1889, 1017, { duration: 300 }),
+    clickCoords(1889, 1017),
 
     // Let the response stream in
     wait(3000),

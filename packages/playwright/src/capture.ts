@@ -222,6 +222,35 @@ export async function captureWalkthrough(
       }
 
       if (step.type === "moveTo") {
+        const selector = String((step.options as { selector?: unknown }).selector ?? "");
+        const center = selector
+          ? await page.evaluate((sel) => {
+              const el = document.querySelector(sel);
+              if (!el) return null;
+              const rect = el.getBoundingClientRect();
+              return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+            }, selector)
+          : null;
+        if (!center) {
+          await captureForDuration(durationMs || frameIntervalMs);
+          return;
+        }
+        const startX = cursorX;
+        const startY = cursorY;
+
+        await captureForDuration(durationMs, async (ratio) => {
+          const nextX = startX + (center.x - startX) * ratio;
+          const nextY = startY + (center.y - startY) * ratio;
+          await page.mouse.move(nextX, nextY);
+          await applyCursorPosition(page, nextX, nextY);
+          cursorX = nextX;
+          cursorY = nextY;
+        });
+
+        return;
+      }
+
+      if (step.type === "moveToCoords") {
         const targetX = Number((step.options as { x?: unknown }).x ?? cursorX);
         const targetY = Number((step.options as { y?: unknown }).y ?? cursorY);
         const startX = cursorX;
@@ -240,6 +269,37 @@ export async function captureWalkthrough(
       }
 
       if (step.type === "click") {
+        const selector = String((step.options as { selector?: unknown }).selector ?? "");
+        const center = selector
+          ? await page.evaluate((sel) => {
+              const el = document.querySelector(sel);
+              if (!el) return null;
+              const rect = el.getBoundingClientRect();
+              return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+            }, selector)
+          : null;
+        if (!center) {
+          await captureForDuration(durationMs || frameIntervalMs);
+          return;
+        }
+        const double = Boolean((step.options as { double?: unknown }).double ?? false);
+        const button = ((step.options as { button?: "left" | "middle" | "right" }).button ?? "left");
+
+        await page.mouse.move(center.x, center.y);
+        await applyCursorPosition(page, center.x, center.y);
+        cursorX = center.x;
+        cursorY = center.y;
+
+        await page.mouse.click(center.x, center.y, {
+          button,
+          clickCount: double ? 2 : 1,
+        });
+
+        await captureForDuration(durationMs || frameIntervalMs);
+        return;
+      }
+
+      if (step.type === "clickCoords") {
         const x = Number((step.options as { x?: unknown }).x ?? cursorX);
         const y = Number((step.options as { y?: unknown }).y ?? cursorY);
         const double = Boolean((step.options as { double?: unknown }).double ?? false);

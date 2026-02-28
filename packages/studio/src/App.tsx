@@ -32,7 +32,7 @@ export function App() {
   const containerRef = useRef<HTMLDivElement>(null)
   const engineRef = useRef<WalkrEngine | null>(null)
 
-  // On mount, try to load walkthrough.json written by `walkr dev`; fall back to built-in demo
+  // Load walkthrough.json on mount, then listen for live updates via Vite HMR
   useEffect(() => {
     fetch('/walkthrough.json')
       .then((res) => {
@@ -47,6 +47,14 @@ export function App() {
         }
       })
       .catch(() => setWalkthrough(DEMO_WALKTHROUGH))
+
+    if (import.meta.hot) {
+      import.meta.hot.on('walkthrough:update', (data: WalkthroughDef) => {
+        if (data?.url && Array.isArray(data.steps)) {
+          setWalkthrough(data)
+        }
+      })
+    }
   }, [])
 
   // Initialize engine when container is ready

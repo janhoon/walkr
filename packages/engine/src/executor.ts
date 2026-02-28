@@ -6,11 +6,13 @@ import {
 } from "./cursor.js";
 import type {
   ClickStep,
+  ClickCoordsStep,
   CursorConfig,
   EngineState,
   HighlightStep,
   MouseButton,
   MoveToStep,
+  MoveToCoordsStep,
   PanStep,
   ParallelStep,
   ScrollStep,
@@ -328,7 +330,37 @@ export function sleep(ms: number): Promise<void> {
   });
 }
 
-async function executeMoveTo(step: MoveToStep, cursor: HTMLElement): Promise<void> {
+function resolveElementCenter(
+  doc: Document,
+  selector: string,
+): { x: number; y: number } | null {
+  const el = doc.querySelector(selector);
+  if (!el) {
+    return null;
+  }
+  const rect = el.getBoundingClientRect();
+  return {
+    x: rect.left + rect.width / 2,
+    y: rect.top + rect.height / 2,
+  };
+}
+
+async function executeMoveTo(
+  step: MoveToStep,
+  cursor: HTMLElement,
+  iframe: HTMLIFrameElement,
+): Promise<void> {
+  const doc = getFrameDocument(iframe);
+  const center = doc ? resolveElementCenter(doc, step.options.selector) : null;
+  if (!center) {
+    return;
+  }
+  const duration = Math.max(0, step.options.duration ?? step.duration ?? DEFAULT_MOVE_DURATION);
+  const easing = step.options.easing ?? "easeInOut";
+  await moveCursorTo(cursor, center.x, center.y, duration, easing);
+}
+
+async function executeMoveToCoords(step: MoveToCoordsStep, cursor: HTMLElement): Promise<void> {
   const duration = Math.max(0, step.options.duration ?? step.duration ?? DEFAULT_MOVE_DURATION);
   const easing = step.options.easing ?? "easeInOut";
   await moveCursorTo(cursor, step.options.x, step.options.y, duration, easing);
@@ -336,6 +368,46 @@ async function executeMoveTo(step: MoveToStep, cursor: HTMLElement): Promise<voi
 
 async function executeClick(
   step: ClickStep,
+  cursor: HTMLElement,
+  iframe: HTMLIFrameElement,
+  context?: StepExecutionContext,
+): Promise<void> {
+  const doc = getFrameDocument(iframe);
+  if (!doc) {
+    return;
+  }
+
+  const center = resolveElementCenter(doc, step.options.selector);
+  if (!center) {
+    return;
+  }
+
+  await moveCursorTo(cursor, center.x, center.y, 120, "easeOut");
+  const clickColor = context?.getCursorConfig?.().clickColor ?? "#ef4444";
+  showClickRipple(cursor, center.x, center.y, clickColor);
+
+  const target = doc.querySelector(step.options.selector);
+  if (!target) {
+    return;
+  }
+
+  const button = getButtonCode(step.options.button);
+
+  dispatchMouse(doc, target, "pointerdown", center.x, center.y, button);
+  dispatchMouse(doc, target, "mousedown", center.x, center.y, button);
+  dispatchMouse(doc, target, "pointerup", center.x, center.y, button);
+  dispatchMouse(doc, target, "mouseup", center.x, center.y, button);
+  dispatchMouse(doc, target, "click", center.x, center.y, button);
+
+  if (step.options.double) {
+    await sleep(80);
+    dispatchMouse(doc, target, "click", center.x, center.y, button);
+    dispatchMouse(doc, target, "dblclick", center.x, center.y, button);
+  }
+}
+
+async function executeClickCoords(
+  step: ClickCoordsStep,
   cursor: HTMLElement,
   iframe: HTMLIFrameElement,
   context?: StepExecutionContext,
@@ -647,10 +719,16 @@ export async function executeStep(
   try {
     switch (step.type) {
       case "moveTo":
-        await executeMoveTo(step as MoveToStep, cursor);
+        await executeMoveTo(step as MoveToStep, cursor, iframe);
+        return;
+      case "moveToCoords":
+        await executeMoveToCoords(step as MoveToCoordsStep, cursor);
         return;
       case "click":
         await executeClick(step as ClickStep, cursor, iframe, context);
+        return;
+      case "clickCoords":
+        await executeClickCoords(step as ClickCoordsStep, cursor, iframe, context);
         return;
       case "type":
         await executeType(step as TypeStep, iframe);

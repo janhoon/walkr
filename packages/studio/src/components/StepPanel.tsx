@@ -9,7 +9,9 @@ interface StepPanelProps {
 
 const STEP_COLORS: Record<string, string> = {
   moveTo: '#1d3a5c',
+  moveToCoords: '#1a3050',
   click: '#3b1d5c',
+  clickCoords: '#301850',
   type: '#1d5c2a',
   scroll: '#5c3b1d',
   wait: '#333',
@@ -112,6 +114,14 @@ function renderStepFields(
     case 'moveTo':
       return (
         <>
+          <TextField label="Selector" value={(opts.selector as string) ?? ''} onChange={(v) => updateOptions({ selector: v })} />
+          <SelectField label="Easing" value={(opts.easing as string) ?? 'linear'} options={EASING_OPTIONS} onChange={(v) => updateOptions({ easing: v })} />
+        </>
+      )
+
+    case 'moveToCoords':
+      return (
+        <>
           <NumberField label="X" value={opts.x as number} onChange={(v) => updateOptions({ x: v })} />
           <NumberField label="Y" value={opts.y as number} onChange={(v) => updateOptions({ y: v })} />
           <SelectField label="Easing" value={(opts.easing as string) ?? 'linear'} options={EASING_OPTIONS} onChange={(v) => updateOptions({ easing: v })} />
@@ -119,6 +129,15 @@ function renderStepFields(
       )
 
     case 'click':
+      return (
+        <>
+          <TextField label="Selector" value={(opts.selector as string) ?? ''} onChange={(v) => updateOptions({ selector: v })} />
+          <SelectField label="Button" value={(opts.button as string) ?? 'left'} options={['left', 'right', 'middle']} onChange={(v) => updateOptions({ button: v })} />
+          <CheckboxField label="Double click" checked={!!opts.double} onChange={(v) => updateOptions({ double: v })} />
+        </>
+      )
+
+    case 'clickCoords':
       return (
         <>
           <NumberField label="X" value={opts.x as number} onChange={(v) => updateOptions({ x: v })} />

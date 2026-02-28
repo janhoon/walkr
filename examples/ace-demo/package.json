@@ -2,7 +2,11 @@
   "name": "@walkr/example-ace-demo",
   "private": true,
   "type": "module",
+  "scripts": {
+    "dev": "walkr dev demo.ts"
+  },
   "dependencies": {
-    "@walkr/core": "workspace:*"
+    "@walkr/core": "workspace:*",
+    "@walkr/cli": "workspace:*"
   }
 }
