@@ -21,7 +21,7 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@walkrstudio/core": "workspace:*"
+    "@walkrstudio/core": "workspace:^"
   },
   "devDependencies": {
     "typescript": "^5.8.2"
