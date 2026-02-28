@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
 import type { Walkthrough } from "@walkrstudio/core";
 
@@ -63,23 +64,40 @@ export async function exportCommand(scriptPath: string, options: ExportOptions):
     );
   }
 
-  console.log("Capturing frames…");
-  let lastPercent = -1;
+  const capture = async (): Promise<{ outputPath: string; duration: number; frameCount: number }> => {
+    console.log("Capturing frames…");
+    let lastPercent = -1;
+    return captureWalkthrough(walkthrough, {
+      format,
+      output,
+      width: options.width ?? 1920,
+      height: options.height ?? 1080,
+      fps: 30,
+      onProgress: (percent: number) => {
+        const rounded = Math.round(percent);
+        if (rounded !== lastPercent && rounded % 5 === 0) {
+          lastPercent = rounded;
+          process.stdout.write(`\r  Capturing frames… ${rounded}%`);
+        }
+      },
+    });
+  };
 
-  const result = await captureWalkthrough(walkthrough, {
-    format,
-    output,
-    width: options.width ?? 1920,
-    height: options.height ?? 1080,
-    fps: 30,
-    onProgress: (percent: number) => {
-      const rounded = Math.round(percent);
-      if (rounded !== lastPercent && rounded % 5 === 0) {
-        lastPercent = rounded;
-        process.stdout.write(`\r  Capturing frames… ${rounded}%`);
-      }
-    },
-  });
+  let result: { outputPath: string; duration: number; frameCount: number };
+  try {
+    result = await capture();
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "";
+    if (msg.includes("Executable doesn't exist") || msg.includes("browserType.launch")) {
+      console.log("Playwright browsers not found, installing chromium…");
+      execFileSync("npx", ["playwright", "install", "--with-deps", "chromium"], {
+        stdio: "inherit",
+      });
+      result = await capture();
+    } else {
+      throw err;
+    }
+  }
 
   process.stdout.write("\n");
   console.log("Encoding…");
