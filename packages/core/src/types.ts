@@ -27,6 +27,8 @@ export interface CursorConfig {
   shadow?: boolean;
   clickColor?: string;
   svgContent?: string;
+  /** Hotspot offset as a fraction of cursor size (0–1). Default: center {x:0.5,y:0.5}. */
+  offset?: { x: number; y: number };
 }
 
 export interface ZoomDefaults {

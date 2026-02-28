@@ -28,6 +28,7 @@ interface ResolvedCursorConfig {
   shadow: boolean;
   clickColor: string;
   svgContent?: string;
+  offset: { x: number; y: number };
 }
 
 function clampSize(size: number | undefined): number {
@@ -35,6 +36,18 @@ function clampSize(size: number | undefined): number {
     return DEFAULT_CURSOR_CONFIG.size;
   }
   return Math.max(6, Math.round(size ?? DEFAULT_CURSOR_CONFIG.size));
+}
+
+const DEFAULT_OFFSET = { x: 0.5, y: 0.5 };
+
+function clampOffset(offset: { x: number; y: number } | undefined): { x: number; y: number } {
+  if (!offset) {
+    return DEFAULT_OFFSET;
+  }
+  return {
+    x: Number.isFinite(offset.x) ? Math.max(0, Math.min(1, offset.x)) : DEFAULT_OFFSET.x,
+    y: Number.isFinite(offset.y) ? Math.max(0, Math.min(1, offset.y)) : DEFAULT_OFFSET.y,
+  };
 }
 
 function resolveCursorConfig(config: Partial<CursorConfig> = {}): ResolvedCursorConfig {
@@ -47,6 +60,7 @@ function resolveCursorConfig(config: Partial<CursorConfig> = {}): ResolvedCursor
     shadow: config.shadow ?? DEFAULT_CURSOR_CONFIG.shadow,
     clickColor: config.clickColor ?? DEFAULT_CURSOR_CONFIG.clickColor,
     svgContent: shape === "svg" ? config.svgContent : undefined,
+    offset: clampOffset(config.offset),
   };
 }
 
@@ -141,6 +155,7 @@ function applyCursorVisual(cursor: HTMLElement, config: ResolvedCursorConfig): v
     visual.style.boxShadow = "0 6px 12px rgba(15, 23, 42, 0.25)";
   }
 
+  cursor.style.transform = `translate(-${config.offset.x * 100}%, -${config.offset.y * 100}%)`;
   writeCursorConfig(cursor, config);
 }
 
@@ -183,7 +198,8 @@ export function createCursor(config: CursorConfig = {}): HTMLElement {
   cursor.style.pointerEvents = "none";
   cursor.style.zIndex = "99999";
   cursor.style.boxSizing = "border-box";
-  cursor.style.transform = "translate(-50%, -50%)";
+  const resolved = resolveCursorConfig(config);
+  cursor.style.transform = `translate(-${resolved.offset.x * 100}%, -${resolved.offset.y * 100}%)`;
   cursor.style.willChange = "left, top, opacity";
   cursor.style.transition = "opacity 140ms ease-out";
 
@@ -191,7 +207,7 @@ export function createCursor(config: CursorConfig = {}): HTMLElement {
   visual.dataset.walkrCursorVisual = "true";
   cursor.appendChild(visual);
 
-  applyCursorVisual(cursor, resolveCursorConfig(config));
+  applyCursorVisual(cursor, resolved);
   return cursor;
 }
 

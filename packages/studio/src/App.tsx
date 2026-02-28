@@ -59,6 +59,8 @@ export function App() {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [playheadTime, setPlayheadTime] = useState(0);
   const [loop, setLoop] = useState(false);
+  const [exportMenuOpen, setExportMenuOpen] = useState(false);
+  const exportBtnRef = useRef<HTMLDivElement>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const engineRef = useRef<WalkrEngine | null>(null);
@@ -162,6 +164,38 @@ export function App() {
     frameId = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frameId);
   }, [playbackStatus, totalDuration, loop, steps]);
+
+  // Close export menu when clicking outside
+  useEffect(() => {
+    if (!exportMenuOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (exportBtnRef.current && !exportBtnRef.current.contains(e.target as Node)) {
+        setExportMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [exportMenuOpen]);
+
+  const handleExportJSON = useCallback(() => {
+    if (!walkthrough) return;
+    const json = JSON.stringify(walkthrough, null, 2);
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${(walkthrough.title ?? "walkthrough").replace(/\s+/g, "-").toLowerCase()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setExportMenuOpen(false);
+  }, [walkthrough]);
+
+  const handleCopyJSON = useCallback(() => {
+    if (!walkthrough) return;
+    const json = JSON.stringify(walkthrough, null, 2);
+    navigator.clipboard.writeText(json);
+    setExportMenuOpen(false);
+  }, [walkthrough]);
 
   const handleLoadScript = useCallback(() => {
     const input = document.createElement("input");
@@ -321,9 +355,37 @@ export function App() {
         <button type="button" onClick={handleLoadScript} style={headerBtnStyle}>
           Load Script
         </button>
-        <button type="button" style={{ ...headerBtnStyle, marginLeft: 8 }}>
-          Export ▾
-        </button>
+        <div ref={exportBtnRef} style={{ position: "relative", marginLeft: 8 }}>
+          <button
+            type="button"
+            onClick={() => setExportMenuOpen((o) => !o)}
+            style={headerBtnStyle}
+          >
+            Export ▾
+          </button>
+          {exportMenuOpen && (
+            <div
+              style={{
+                position: "absolute",
+                top: "calc(100% + 4px)",
+                right: 0,
+                background: "#222",
+                border: "1px solid #333",
+                borderRadius: 6,
+                padding: "4px 0",
+                minWidth: 160,
+                zIndex: 100,
+              }}
+            >
+              <button type="button" onClick={handleExportJSON} style={dropdownItemStyle}>
+                Download JSON
+              </button>
+              <button type="button" onClick={handleCopyJSON} style={dropdownItemStyle}>
+                Copy JSON
+              </button>
+            </div>
+          )}
+        </div>
       </header>
 
       {/* Main content area */}
@@ -425,5 +487,17 @@ const headerBtnStyle: React.CSSProperties = {
   borderRadius: 6,
   padding: "6px 12px",
   fontSize: 13,
+  cursor: "pointer",
+};
+
+const dropdownItemStyle: React.CSSProperties = {
+  display: "block",
+  width: "100%",
+  background: "none",
+  border: "none",
+  color: "#ccc",
+  padding: "8px 14px",
+  fontSize: 13,
+  textAlign: "left",
   cursor: "pointer",
 };
