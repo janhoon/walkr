@@ -1,0 +1,25 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "packages": {
+    "packages/core": {
+      "release-type": "node",
+      "component": "core"
+    },
+    "packages/engine": {
+      "release-type": "node",
+      "component": "engine"
+    },
+    "packages/cli": {
+      "release-type": "node",
+      "component": "cli"
+    },
+    "packages/playwright": {
+      "release-type": "node",
+      "component": "playwright"
+    },
+    "packages/create-walkrstudio": {
+      "release-type": "node",
+      "component": "create-walkrstudio"
+    }
+  }
+}
