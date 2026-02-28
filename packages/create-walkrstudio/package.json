@@ -1,0 +1,15 @@
+{
+  "name": "create-walkrstudio",
+  "version": "0.1.0",
+  "description": "Scaffold a new Walkr project",
+  "type": "module",
+  "bin": {
+    "create-walkrstudio": "./src/index.js"
+  },
+  "files": [
+    "src"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

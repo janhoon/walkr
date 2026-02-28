@@ -1,15 +1,27 @@
 {
-  "name": "@walkr/engine",
+  "name": "@walkrstudio/engine",
   "version": "0.1.0",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsc",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@walkr/core": "workspace:*"
+    "@walkrstudio/core": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.8.2"

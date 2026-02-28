@@ -1,5 +1,5 @@
 {
-  "name": "@walkr/core",
+  "name": "@walkrstudio/core",
   "version": "0.1.0",
   "type": "module",
   "main": "dist/index.js",
@@ -13,6 +13,9 @@
   "files": [
     "dist"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "lint": "biome check src",
