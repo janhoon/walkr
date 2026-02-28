@@ -1,4 +1,4 @@
-import type { Step } from "@walkr/core";
+import type { Step } from "@walkrstudio/core";
 import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 

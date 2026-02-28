@@ -1,5 +1,5 @@
 import { pathToFileURL } from "node:url";
-import type { Walkthrough } from "@walkr/core";
+import type { Walkthrough } from "@walkrstudio/core";
 
 export interface ExportOptions {
   format?: "mp4" | "gif" | "webm" | "embed";
@@ -46,19 +46,19 @@ export async function exportCommand(scriptPath: string, options: ExportOptions):
   const walkthrough = await loadWalkthrough(scriptPath);
   console.log(`  Steps: ${walkthrough.steps.length}`);
 
-  // Dynamic import of @walkr/playwright (peer dep — must be installed)
+  // Dynamic import of @walkrstudio/playwright (peer dep — must be installed)
   let captureWalkthrough: (
     wt: Walkthrough,
     opts: Record<string, unknown>,
   ) => Promise<{ outputPath: string; duration: number; frameCount: number }>;
 
   try {
-    const mod = (await import("@walkr/playwright")) as {
+    const mod = (await import("@walkrstudio/playwright")) as {
       captureWalkthrough: typeof captureWalkthrough;
     };
     captureWalkthrough = mod.captureWalkthrough;
   } catch {
-    throw new Error("@walkr/playwright is not installed. Run: pnpm add @walkr/playwright");
+    throw new Error("@walkrstudio/playwright is not installed. Run: pnpm add @walkrstudio/playwright");
   }
 
   console.log("Capturing frames…");

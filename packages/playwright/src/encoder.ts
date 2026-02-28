@@ -3,7 +3,7 @@ import * as fs from "node:fs/promises";
 import * as os from "node:os";
 import * as path from "node:path";
 
-import type { Walkthrough } from "@walkr/core";
+import type { Walkthrough } from "@walkrstudio/core";
 import { buildEmbedHtml } from "./embed.js";
 import type { CaptureOptions, CaptureResult } from "./types.js";
 

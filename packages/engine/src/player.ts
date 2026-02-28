@@ -1,4 +1,4 @@
-import type { Step } from "@walkr/core";
+import type { Step } from "@walkrstudio/core";
 import { CursorOverlay } from "./cursor.js";
 import { StepExecutor } from "./executor.js";
 import type { EngineConfig, PlaybackEvent, PlaybackEventType, PlaybackState } from "./types.js";

@@ -1,4 +1,4 @@
-import { clearCache, click, highlight, moveTo, type, wait, walkr } from "@walkr/core";
+import { clearCache, click, highlight, moveTo, type, wait, walkr } from "@walkrstudio/core";
 
 /**
  * Ace Observability demo walkthrough.

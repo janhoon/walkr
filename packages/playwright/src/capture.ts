@@ -2,7 +2,7 @@ import { setTimeout as sleep } from "node:timers/promises";
 
 import { chromium } from "@playwright/test";
 
-import type { Step, Walkthrough } from "@walkr/core";
+import type { Step, Walkthrough } from "@walkrstudio/core";
 import { encodeFrames } from "./encoder.js";
 import type { CaptureOptions, CaptureResult } from "./types.js";
 

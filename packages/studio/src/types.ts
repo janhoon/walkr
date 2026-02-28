@@ -1,4 +1,4 @@
-import type { CursorConfig, Step } from "@walkr/core";
+import type { CursorConfig, Step } from "@walkrstudio/core";
 
 export interface WalkthroughDef {
   url: string;

@@ -53,7 +53,7 @@ function buildPackageJson(projectName) {
       export: "npx walkr export demo.ts --format mp4 --output output.mp4",
     },
     dependencies: {
-      "@walkr/core": "^0.1.0",
+      "@walkrstudio/core": "^0.1.0",
     },
     devDependencies: {
       "@tsconfig/node18": "^18.2.4",
@@ -63,7 +63,7 @@ function buildPackageJson(projectName) {
 }
 
 function demoSource() {
-  return `import { walkr, moveTo, click, type, highlight, wait } from "@walkr/core";
+  return `import { walkr, moveTo, click, type, highlight, wait } from "@walkrstudio/core";
 
 export default walkr({
   url: "https://example.com",

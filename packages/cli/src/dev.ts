@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
-import type { Walkthrough } from "@walkr/core";
+import type { Walkthrough } from "@walkrstudio/core";
 import { loadScriptWalkthrough, watchScript } from "./watch.js";
 
 const STUDIO_PORT = 5174;

@@ -6,7 +6,7 @@
     "dev": "walkr dev demo.ts"
   },
   "dependencies": {
-    "@walkr/core": "workspace:*",
-    "@walkr/cli": "workspace:*"
+    "@walkrstudio/core": "workspace:*",
+    "@walkrstudio/cli": "workspace:*"
   }
 }

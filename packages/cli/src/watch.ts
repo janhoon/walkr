@@ -2,7 +2,7 @@ import { watch as fsWatch } from "node:fs";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
-import type { Walkthrough } from "@walkr/core";
+import type { Walkthrough } from "@walkrstudio/core";
 
 const WATCH_DEBOUNCE_MS = 200;
 

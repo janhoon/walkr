@@ -20,33 +20,33 @@ importers:
 
   examples/ace-demo:
     dependencies:
-      '@walkr/cli':
+      '@walkrstudio/cli':
         specifier: workspace:*
         version: link:../../packages/cli
-      '@walkr/core':
+      '@walkrstudio/core':
         specifier: workspace:*
         version: link:../../packages/core
 
   packages/cli:
     dependencies:
-      '@walkr/core':
+      '@walkrstudio/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
       '@types/node':
         specifier: ^22.15.3
         version: 22.19.13
-      '@walkr/playwright':
+      '@walkrstudio/playwright':
         specifier: workspace:*
         version: link:../playwright
 
   packages/core: {}
 
-  packages/create-walkr: {}
+  packages/create-walkrstudio: {}
 
   packages/engine:
     dependencies:
-      '@walkr/core':
+      '@walkrstudio/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -59,7 +59,7 @@ importers:
       '@playwright/test':
         specifier: ^1.50.0
         version: 1.58.2
-      '@walkr/core':
+      '@walkrstudio/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -69,10 +69,10 @@ importers:
 
   packages/studio:
     dependencies:
-      '@walkr/core':
+      '@walkrstudio/core':
         specifier: workspace:*
         version: link:../core
-      '@walkr/engine':
+      '@walkrstudio/engine':
         specifier: workspace:*
         version: link:../engine
       react:

@@ -1,5 +1,5 @@
-import type { Step } from "@walkr/core";
-import { WalkrEngine } from "@walkr/engine";
+import type { Step } from "@walkrstudio/core";
+import { WalkrEngine } from "@walkrstudio/engine";
 import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { PlaybackControls } from "./components/PlaybackControls";

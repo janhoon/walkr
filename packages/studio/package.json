@@ -9,8 +9,8 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@walkr/core": "workspace:*",
-    "@walkr/engine": "workspace:*",
+    "@walkrstudio/core": "workspace:*",
+    "@walkrstudio/engine": "workspace:*",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
