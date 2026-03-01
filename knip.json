@@ -18,7 +18,7 @@
       "project": ["src/**/*.{ts,tsx}"],
       "vite": true
     },
-    "packages/create-walkr": {
+    "packages/create-walkrstudio": {
       "project": ["src/**/*.js"]
     },
     "examples/ace-demo": {

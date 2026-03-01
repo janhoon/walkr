@@ -5,3 +5,4 @@ dist
 *.tsbuildinfo
 .walkr-proxy-target
 packages/studio/public/walkthrough.json
+output.*

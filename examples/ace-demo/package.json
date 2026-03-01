@@ -1,5 +1,5 @@
 {
-  "name": "@walkr/example-ace-demo",
+  "name": "@walkrstudio/example-ace-demo",
   "private": true,
   "type": "module",
   "scripts": {
