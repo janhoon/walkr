@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/janhoon/walkr/compare/studio-v0.2.1...studio-v0.3.0) (2026-03-01)
+
+
+### Features
+
+* **recorder:** replace Playwright with CDP-based recorder ([373a707](https://github.com/janhoon/walkr/commit/373a7075799438acac7afdf892e92ced2acf297a))
+
 ## [0.2.1](https://github.com/janhoon/walkr/compare/studio-v0.2.0...studio-v0.2.1) (2026-02-28)
 
 
