@@ -6,6 +6,8 @@ Walkr lets you script interactive walkthroughs of any website — animated curso
 
 Write a short TypeScript script, point it at your app, and get a production-ready product demo you can embed in your landing page, docs, or sales deck.
 
+![Walkr Studio — visual timeline editor and live preview](docs/screenshot.png)
+
 ## Install
 
 Walkr ships as a single CLI package that includes everything you need:
