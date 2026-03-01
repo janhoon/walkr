@@ -49,6 +49,7 @@ walkr export demo.ts --format embed --output demo.html
 | `--output` | `string` | `output.<ext>` | Output file path. |
 | `--width` | `number` | `1920` | Render width in px. |
 | `--height` | `number` | `1080` | Render height in px. |
+| `--realtime` | `boolean` | — | Use real-time screencast instead of virtual time. |
 
 ### `walkr --help`
 
@@ -118,6 +119,5 @@ export default walkr({
 ## Requirements
 
 - Node.js >= 18
-- `@walkrstudio/core` — defines the walkthrough
-- `@walkrstudio/playwright` — required for `walkr export` (peer dependency)
-- `ffmpeg` — required on your system PATH for video encoding (mp4/gif/webm)
+- A Chromium-based browser (or set `CHROMIUM_PATH`)
+- `ffmpeg` on your system PATH (for mp4/gif/webm export)

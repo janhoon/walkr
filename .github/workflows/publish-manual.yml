@@ -11,7 +11,7 @@ on:
           - packages/core
           - packages/engine
           - packages/cli
-          - packages/playwright
+          - packages/recorder
           - packages/studio
           - packages/create-walkrstudio
 

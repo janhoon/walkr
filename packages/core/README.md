@@ -2,7 +2,7 @@
 
 TypeScript API for scripting cursor-driven product walkthroughs.
 
-`@walkrstudio/core` is a zero-dependency library that lets you describe a walkthrough as a sequence of steps: cursor movements, clicks, typing, highlights, scrolls, and camera controls. The output is a plain `Walkthrough` object consumed by the engine, CLI, or playwright packages.
+`@walkrstudio/core` is a zero-dependency library that lets you describe a walkthrough as a sequence of steps: cursor movements, clicks, typing, highlights, scrolls, and camera controls. The output is a plain `Walkthrough` object consumed by the engine, CLI, or recorder packages.
 
 ## Install
 
