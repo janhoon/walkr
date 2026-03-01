@@ -4,6 +4,7 @@ export interface RecordOptions {
   fps?: number;
   format?: "mp4" | "gif" | "webm" | "embed";
   output?: string;
+  realtime?: boolean;
   onProgress?: (percent: number) => void;
 }
 

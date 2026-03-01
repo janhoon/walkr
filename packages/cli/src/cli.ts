@@ -19,10 +19,11 @@ Commands:
   walkr export <script> [options]     Export walkthrough as video or embed
 
 Export options:
-  --format  mp4|gif|webm|embed        Output format (default: mp4)
-  --output  <path>                    Output file path (default: output.<ext>)
-  --width   <n>                       Video width in px (default: 1920)
-  --height  <n>                       Video height in px (default: 1080)
+  --format    mp4|gif|webm|embed      Output format (default: mp4)
+  --output    <path>                  Output file path (default: output.<ext>)
+  --width     <n>                     Video width in px (default: 1920)
+  --height    <n>                     Video height in px (default: 1080)
+  --realtime                          Use real-time screencast instead of virtual time
 
 Examples:
   walkr dev demo.ts
@@ -73,6 +74,10 @@ function parseArgs(argv: string[]): ParsedArgs {
     }
     if (arg === "--height") {
       result.exportOptions.height = parseInt(args[++i], 10);
+      continue;
+    }
+    if (arg === "--realtime") {
+      result.exportOptions.realtime = true;
       continue;
     }
 

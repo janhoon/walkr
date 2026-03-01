@@ -50,6 +50,8 @@ export async function launchChromium(options: {
     "--disable-sync",
     "--disable-translate",
     "--mute-audio",
+    "--run-all-compositor-stages-before-draw",
+    "--disable-new-content-rendering-timeout",
     `--window-size=${options.width},${options.height}`,
   ];
 

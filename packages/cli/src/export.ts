@@ -6,6 +6,7 @@ export interface ExportOptions {
   output?: string;
   width?: number;
   height?: number;
+  realtime?: boolean;
 }
 
 function isWalkthrough(value: unknown): value is Walkthrough {
@@ -35,11 +36,14 @@ export async function exportCommand(scriptPath: string, options: ExportOptions):
   const ext = format === "embed" ? "html" : format;
   const output = options.output ?? `output.${ext}`;
 
+  const mode = options.realtime ? "realtime" : "virtual-time";
+
   console.log(`\nWalkr Export`);
   console.log(`  Script:  ${scriptPath}`);
   console.log(`  Format:  ${format}`);
   console.log(`  Output:  ${output}`);
   console.log(`  Size:    ${options.width ?? 1920} × ${options.height ?? 1080}`);
+  console.log(`  Mode:    ${mode}`);
   console.log();
 
   console.log("Loading script…");
@@ -71,6 +75,7 @@ export async function exportCommand(scriptPath: string, options: ExportOptions):
       width: options.width ?? 1920,
       height: options.height ?? 1080,
       fps: 30,
+      realtime: options.realtime,
       onProgress: (percent: number) => {
         const rounded = Math.round(percent);
         if (rounded !== lastPercent && rounded % 5 === 0) {
