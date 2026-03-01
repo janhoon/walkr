@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.0](https://github.com/janhoon/walkr/compare/cli-v0.2.5...cli-v0.3.0) (2026-03-01)
+
+
+### Features
+
+* **recorder:** replace Playwright with CDP-based recorder ([373a707](https://github.com/janhoon/walkr/commit/373a7075799438acac7afdf892e92ced2acf297a))
+* **recorder:** streaming ffmpeg pipeline, real-time capture mode, and docs ([05dc8e0](https://github.com/janhoon/walkr/commit/05dc8e0f11c38c0a15f152a2269c6f954029bab4))
+
 ## [0.2.5](https://github.com/janhoon/walkr/compare/cli-v0.2.4...cli-v0.2.5) (2026-02-28)
 
 
