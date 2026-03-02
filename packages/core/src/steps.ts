@@ -25,6 +25,10 @@ import type {
   TypeOptions,
   TypeStep,
   TypeStepOptions,
+  WaitForNavigationOptions,
+  WaitForNavigationStep,
+  WaitForSelectorOptions,
+  WaitForSelectorStep,
   WaitStep,
   WaitStepOptions,
   ZoomOptions,
@@ -37,6 +41,8 @@ const DEFAULT_CLICK_DURATION = 50;
 const DEFAULT_ZOOM_DURATION = 360;
 const DEFAULT_PAN_DURATION = 360;
 const DEFAULT_CLEAR_CACHE_DURATION = 50;
+const DEFAULT_WAIT_FOR_SELECTOR_TIMEOUT = 5000;
+const DEFAULT_WAIT_FOR_NAVIGATION_TIMEOUT = 5000;
 const DEFAULT_EASING = "cubic-bezier(0.42, 0, 0.58, 1)";
 
 export function createStep<
@@ -96,6 +102,32 @@ export function scroll(x: number, y: number, options: ScrollOptions = {}): Scrol
 export function wait(ms: number): WaitStep {
   const stepOptions: WaitStepOptions = { ms };
   return createStep("wait", stepOptions, ms);
+}
+
+export function waitForSelector(
+  selector: string,
+  options: Omit<WaitForSelectorOptions, "selector"> = {},
+): WaitForSelectorStep {
+  const timeout = options.timeout ?? DEFAULT_WAIT_FOR_SELECTOR_TIMEOUT;
+  const stepOptions: WaitForSelectorOptions = {
+    selector,
+    timeout,
+    visible: options.visible,
+    cursor: options.cursor,
+  };
+  return createStep("waitForSelector", stepOptions, timeout);
+}
+
+export function waitForNavigation(
+  options: WaitForNavigationOptions = {},
+): WaitForNavigationStep {
+  const timeout = options.timeout ?? DEFAULT_WAIT_FOR_NAVIGATION_TIMEOUT;
+  const stepOptions: WaitForNavigationOptions = {
+    timeout,
+    waitUntil: options.waitUntil ?? "load",
+    cursor: options.cursor,
+  };
+  return createStep("waitForNavigation", stepOptions, timeout);
 }
 
 export function highlight(selector: string, options: HighlightOptions = {}): HighlightStep {

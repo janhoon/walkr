@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { moveTo, moveToCoords, click, clickCoords, type, scroll, wait, highlight, zoom, pan } from "../steps.js";
+import { moveTo, moveToCoords, click, clickCoords, type, scroll, wait, waitForSelector, waitForNavigation, highlight, zoom, pan } from "../steps.js";
 
 describe("moveTo (selector)", () => {
   it("creates a moveTo step with a selector", () => {
@@ -162,5 +162,65 @@ describe("scroll", () => {
     expect(step.options.x).toBe(0);
     expect(step.options.y).toBe(500);
     expect(step.duration).toBe(0);
+  });
+});
+
+describe("waitForSelector", () => {
+  it("creates a waitForSelector step with a selector and defaults", () => {
+    const step = waitForSelector("#loading-spinner");
+    expect(step.type).toBe("waitForSelector");
+    expect(step.options.selector).toBe("#loading-spinner");
+    expect(step.options.timeout).toBe(5000);
+    expect(step.options.visible).toBeUndefined();
+    expect(step.duration).toBe(5000);
+  });
+
+  it("accepts a custom timeout", () => {
+    const step = waitForSelector(".modal", { timeout: 10000 });
+    expect(step.options.timeout).toBe(10000);
+    expect(step.duration).toBe(10000);
+  });
+
+  it("accepts visible option", () => {
+    const step = waitForSelector("[data-ready]", { visible: true });
+    expect(step.options.visible).toBe(true);
+  });
+
+  it("generates unique IDs", () => {
+    const a = waitForSelector("#a");
+    const b = waitForSelector("#b");
+    expect(a.id).not.toBe(b.id);
+  });
+});
+
+describe("waitForNavigation", () => {
+  it("creates a waitForNavigation step with defaults", () => {
+    const step = waitForNavigation();
+    expect(step.type).toBe("waitForNavigation");
+    expect(step.options.timeout).toBe(5000);
+    expect(step.options.waitUntil).toBe("load");
+    expect(step.duration).toBe(5000);
+  });
+
+  it("accepts a custom timeout", () => {
+    const step = waitForNavigation({ timeout: 15000 });
+    expect(step.options.timeout).toBe(15000);
+    expect(step.duration).toBe(15000);
+  });
+
+  it("accepts waitUntil option", () => {
+    const step = waitForNavigation({ waitUntil: "domcontentloaded" });
+    expect(step.options.waitUntil).toBe("domcontentloaded");
+  });
+
+  it("accepts networkidle waitUntil", () => {
+    const step = waitForNavigation({ waitUntil: "networkidle" });
+    expect(step.options.waitUntil).toBe("networkidle");
+  });
+
+  it("generates unique IDs", () => {
+    const a = waitForNavigation();
+    const b = waitForNavigation();
+    expect(a.id).not.toBe(b.id);
   });
 });
