@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { moveTo, moveToCoords, click, clickCoords, type, scroll, wait, waitForSelector, waitForNavigation, highlight, zoom, pan } from "../steps.js";
+import { moveTo, moveToCoords, click, clickCoords, type, scroll, wait, waitForSelector, waitForNavigation, highlight, tooltip, zoom, pan } from "../steps.js";
 
 describe("moveTo (selector)", () => {
   it("creates a moveTo step with a selector", () => {
@@ -117,6 +117,62 @@ describe("highlight", () => {
     expect(step.options.backdropOpacity).toBe(0.8);
     expect(step.options.padding).toBe(16);
     expect(step.options.borderRadius).toBe(12);
+  });
+});
+
+describe("tooltip", () => {
+  it("creates a tooltip step with selector and text", () => {
+    const step = tooltip(".btn-primary", "Click this button");
+    expect(step.type).toBe("tooltip");
+    expect(step.options.selector).toBe(".btn-primary");
+    expect(step.options.text).toBe("Click this button");
+    expect(step.options.position).toBe("top");
+    expect(step.duration).toBe(3000);
+  });
+
+  it("uses default duration of 3000ms", () => {
+    const step = tooltip("#el", "Some text");
+    expect(step.options.duration).toBe(3000);
+    expect(step.duration).toBe(3000);
+  });
+
+  it("accepts a custom duration", () => {
+    const step = tooltip("#el", "Some text", { duration: 5000 });
+    expect(step.options.duration).toBe(5000);
+    expect(step.duration).toBe(5000);
+  });
+
+  it("accepts a custom position", () => {
+    const step = tooltip("#el", "Some text", { position: "bottom" });
+    expect(step.options.position).toBe("bottom");
+  });
+
+  it("accepts left and right positions", () => {
+    const left = tooltip("#el", "Left tip", { position: "left" });
+    const right = tooltip("#el", "Right tip", { position: "right" });
+    expect(left.options.position).toBe("left");
+    expect(right.options.position).toBe("right");
+  });
+
+  it("accepts a title option", () => {
+    const step = tooltip("#el", "Body text", { title: "Heading" });
+    expect(step.options.title).toBe("Heading");
+  });
+
+  it("leaves title undefined when not provided", () => {
+    const step = tooltip("#el", "Body text");
+    expect(step.options.title).toBeUndefined();
+  });
+
+  it("generates unique IDs for each step", () => {
+    const a = tooltip("#a", "text a");
+    const b = tooltip("#b", "text b");
+    expect(a.id).not.toBe(b.id);
+  });
+
+  it("passes cursor override through", () => {
+    const step = tooltip("#el", "text", { cursor: { color: "#ff0000" } });
+    expect(step.options.cursor).toEqual({ color: "#ff0000" });
   });
 });
 

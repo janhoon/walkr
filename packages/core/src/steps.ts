@@ -22,6 +22,9 @@ import type {
   ScrollStepOptions,
   Step,
   StepType,
+  TooltipOptions,
+  TooltipStep,
+  TooltipStepOptions,
   TypeOptions,
   TypeStep,
   TypeStepOptions,
@@ -41,6 +44,7 @@ const DEFAULT_CLICK_DURATION = 50;
 const DEFAULT_ZOOM_DURATION = 360;
 const DEFAULT_PAN_DURATION = 360;
 const DEFAULT_CLEAR_CACHE_DURATION = 50;
+const DEFAULT_TOOLTIP_DURATION = 3000;
 const DEFAULT_WAIT_FOR_SELECTOR_TIMEOUT = 5000;
 const DEFAULT_WAIT_FOR_NAVIGATION_TIMEOUT = 5000;
 const DEFAULT_EASING = "cubic-bezier(0.42, 0, 0.58, 1)";
@@ -142,6 +146,19 @@ export function highlight(selector: string, options: HighlightOptions = {}): Hig
     cursor: options.cursor,
   };
   return createStep("highlight", stepOptions, options.duration ?? 0);
+}
+
+export function tooltip(selector: string, text: string, options: TooltipOptions = {}): TooltipStep {
+  const duration = options.duration ?? DEFAULT_TOOLTIP_DURATION;
+  const stepOptions: TooltipStepOptions = {
+    selector,
+    text,
+    duration,
+    position: options.position ?? "top",
+    title: options.title,
+    cursor: options.cursor,
+  };
+  return createStep("tooltip", stepOptions, duration);
 }
 
 export function zoom(level: number, options: ZoomOptions = {}): ZoomStep {
