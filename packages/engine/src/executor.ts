@@ -12,6 +12,7 @@ import type {
   MouseButton,
   MoveToCoordsStep,
   MoveToStep,
+  NarrateStep,
   PanStep,
   ParallelStep,
   ScrollStep,
@@ -915,6 +916,94 @@ async function executeTooltip(step: TooltipStep, iframe: HTMLIFrameElement): Pro
   }
 }
 
+async function executeNarrate(step: NarrateStep, iframe: HTMLIFrameElement): Promise<void> {
+  const hostDocument = iframe.ownerDocument;
+  const stage = iframe.parentElement;
+  if (!hostDocument || !stage) {
+    throw new StepError({
+      stepType: "narrate",
+      reason: "no-document",
+      message: "narrate: cannot access host document",
+    });
+  }
+
+  const audio = hostDocument.createElement("audio");
+  audio.src = step.options.src;
+  audio.volume = Math.max(0, Math.min(1, step.options.volume ?? 1));
+  audio.loop = step.options.loop ?? false;
+  audio.preload = "auto";
+  // Keep element hidden but in the DOM so it can play
+  audio.style.display = "none";
+  stage.appendChild(audio);
+
+  try {
+    await new Promise<void>((resolve, reject) => {
+      let timer: ReturnType<typeof setTimeout> | undefined;
+
+      const cleanup = (): void => {
+        if (timer !== undefined) {
+          clearTimeout(timer);
+        }
+        audio.removeEventListener("ended", onEnded);
+        audio.removeEventListener("error", onError);
+        audio.remove();
+      };
+
+      const onEnded = (): void => {
+        cleanup();
+        resolve();
+      };
+
+      const onError = (): void => {
+        cleanup();
+        reject(
+          new StepError({
+            stepType: "narrate",
+            reason: "no-document",
+            message: `narrate: failed to load audio from "${step.options.src}"`,
+          }),
+        );
+      };
+
+      audio.addEventListener("ended", onEnded);
+      audio.addEventListener("error", onError);
+
+      const playPromise = audio.play();
+
+      if (playPromise && typeof playPromise.catch === "function") {
+        playPromise.catch((err: unknown) => {
+          cleanup();
+          reject(
+            new StepError({
+              stepType: "narrate",
+              reason: "no-document",
+              message: `narrate: playback failed for "${step.options.src}" — ${err instanceof Error ? err.message : String(err)}`,
+            }),
+          );
+        });
+      }
+
+      // If duration is specified, resolve after that time regardless of audio length
+      if (step.options.duration != null && step.options.duration > 0) {
+        timer = setTimeout(() => {
+          audio.pause();
+          cleanup();
+          resolve();
+        }, step.options.duration);
+      }
+    });
+  } catch (error) {
+    if (error instanceof StepError) {
+      throw error;
+    }
+    throw new StepError({
+      stepType: "narrate",
+      reason: "no-document",
+      message: `narrate: unexpected error — ${error instanceof Error ? error.message : String(error)}`,
+    });
+  }
+}
+
 async function executeZoom(
   step: ZoomStep,
   cursor: HTMLElement,
@@ -1115,6 +1204,9 @@ export async function executeStep(
         break;
       case "tooltip":
         await executeTooltip(step as TooltipStep, iframe);
+        break;
+      case "narrate":
+        await executeNarrate(step as NarrateStep, iframe);
         break;
       case "zoom":
         await executeZoom(step as ZoomStep, cursor, iframe, context);

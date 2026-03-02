@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { moveTo, moveToCoords, click, clickCoords, type, scroll, wait, waitForSelector, waitForNavigation, highlight, tooltip, zoom, pan } from "../steps.js";
+import { moveTo, moveToCoords, click, clickCoords, type, scroll, wait, waitForSelector, waitForNavigation, highlight, tooltip, narrate, zoom, pan } from "../steps.js";
 
 describe("moveTo (selector)", () => {
   it("creates a moveTo step with a selector", () => {
@@ -278,5 +278,57 @@ describe("waitForNavigation", () => {
     const a = waitForNavigation();
     const b = waitForNavigation();
     expect(a.id).not.toBe(b.id);
+  });
+});
+
+describe("narrate", () => {
+  it("creates a narrate step with src and defaults", () => {
+    const step = narrate("/audio/intro.mp3");
+    expect(step.type).toBe("narrate");
+    expect(step.options.src).toBe("/audio/intro.mp3");
+    expect(step.options.volume).toBe(1);
+    expect(step.options.loop).toBe(false);
+    expect(step.options.duration).toBeUndefined();
+    expect(step.duration).toBe(0);
+  });
+
+  it("accepts a custom duration", () => {
+    const step = narrate("/audio/intro.mp3", { duration: 5000 });
+    expect(step.options.duration).toBe(5000);
+    expect(step.duration).toBe(5000);
+  });
+
+  it("accepts a custom volume", () => {
+    const step = narrate("/audio/intro.mp3", { volume: 0.5 });
+    expect(step.options.volume).toBe(0.5);
+  });
+
+  it("accepts loop option", () => {
+    const step = narrate("/audio/bg-music.mp3", { loop: true });
+    expect(step.options.loop).toBe(true);
+  });
+
+  it("accepts all options together", () => {
+    const step = narrate("https://cdn.example.com/narration.ogg", {
+      duration: 10000,
+      volume: 0.8,
+      loop: true,
+    });
+    expect(step.options.src).toBe("https://cdn.example.com/narration.ogg");
+    expect(step.options.duration).toBe(10000);
+    expect(step.options.volume).toBe(0.8);
+    expect(step.options.loop).toBe(true);
+    expect(step.duration).toBe(10000);
+  });
+
+  it("generates unique IDs for each step", () => {
+    const a = narrate("/audio/a.mp3");
+    const b = narrate("/audio/b.mp3");
+    expect(a.id).not.toBe(b.id);
+  });
+
+  it("uses 0 as step duration when no duration option is set", () => {
+    const step = narrate("/audio/file.mp3");
+    expect(step.duration).toBe(0);
   });
 });
