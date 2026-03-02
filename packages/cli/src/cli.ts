@@ -18,6 +18,9 @@ Commands:
   walkr dev <script>                  Start Walkr Studio with live script reload
   walkr export <script> [options]     Export walkthrough as video or embed
 
+Dev options:
+  --port      <n>                     Dev server port (default: 5174)
+
 Export options:
   --format    mp4|gif|webm|embed      Output format (default: mp4)
   --output    <path>                  Output file path (default: output.<ext>)
@@ -34,6 +37,7 @@ Examples:
 interface ParsedArgs {
   command: string | null;
   scriptPath: string | null;
+  port: number | undefined;
   exportOptions: ExportOptions;
   help: boolean;
   version: boolean;
@@ -44,6 +48,7 @@ function parseArgs(argv: string[]): ParsedArgs {
   const result: ParsedArgs = {
     command: null,
     scriptPath: null,
+    port: undefined,
     exportOptions: {},
     help: false,
     version: false,
@@ -58,6 +63,10 @@ function parseArgs(argv: string[]): ParsedArgs {
     }
     if (arg === "--version" || arg === "-v") {
       result.version = true;
+      continue;
+    }
+    if (arg === "--port") {
+      result.port = parseInt(args[++i], 10);
       continue;
     }
     if (arg === "--format") {
@@ -110,7 +119,7 @@ async function main(): Promise<void> {
       console.error("  Example: walkr dev demo.ts");
       process.exit(1);
     }
-    await devCommand(parsed.scriptPath);
+    await devCommand(parsed.scriptPath, parsed.port);
     return;
   }
 

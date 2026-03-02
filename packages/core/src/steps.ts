@@ -42,7 +42,16 @@ import type {
   ZoomStepOptions,
 } from "./types.js";
 
-let stepCounter = 0;
+const typeCounters = new Map<string, number>();
+
+/**
+ * Reset per-type step counters. Called automatically by `walkr()` so that
+ * the same walkthrough definition always produces identical step IDs.
+ */
+export function resetStepCounters(): void {
+  typeCounters.clear();
+}
+
 const DEFAULT_CLICK_DURATION = 50;
 const DEFAULT_ZOOM_DURATION = 360;
 const DEFAULT_PAN_DURATION = 360;
@@ -57,9 +66,10 @@ export function createStep<
   // eslint-disable-next-line @typescript-eslint/no-empty-object-type
   TOptions extends {},
 >(type: TType, options: TOptions, duration = 0): Step<TType, TOptions> {
-  stepCounter += 1;
+  const count = typeCounters.get(type) ?? 0;
+  typeCounters.set(type, count + 1);
   return {
-    id: `${type}_${stepCounter}`,
+    id: `${type}_${count}`,
     type,
     options,
     duration,
