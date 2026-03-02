@@ -24,6 +24,8 @@ import type {
   ZoomDefaults,
   ZoomStep,
 } from "./types.js";
+import { StepError } from "./types.js";
+import type { StepResult } from "./types.js";
 
 const DEFAULT_MOVE_DURATION = 520;
 const DEFAULT_TYPE_DELAY = 40;
@@ -49,6 +51,10 @@ interface StepExecutionContext {
   showScrollIndicator?: (cursor: HTMLElement) => void;
   hideScrollIndicator?: (cursor: HTMLElement) => void;
   zoomDefaults?: ZoomDefaults;
+  /** Enable verbose step execution logging to the console. */
+  debug?: boolean;
+  /** Called when a step encounters an error (e.g. selector not found). */
+  onStepError?: (error: StepError, step: Step) => void;
 }
 
 function clamp(value: number, min: number, max: number): number {
@@ -359,9 +365,20 @@ async function executeMoveTo(
   iframe: HTMLIFrameElement,
 ): Promise<void> {
   const doc = getFrameDocument(iframe);
-  const center = doc ? resolveElementCenter(doc, step.options.selector) : null;
+  if (!doc) {
+    throw new StepError({
+      stepType: "moveTo",
+      selector: step.options.selector,
+      reason: "no-document",
+    });
+  }
+  const center = resolveElementCenter(doc, step.options.selector);
   if (!center) {
-    return;
+    throw new StepError({
+      stepType: "moveTo",
+      selector: step.options.selector,
+      reason: "not-found",
+    });
   }
   const duration = Math.max(0, step.options.duration ?? step.duration ?? DEFAULT_MOVE_DURATION);
   const easing = step.options.easing ?? "easeInOut";
@@ -382,12 +399,20 @@ async function executeClick(
 ): Promise<void> {
   const doc = getFrameDocument(iframe);
   if (!doc) {
-    return;
+    throw new StepError({
+      stepType: "click",
+      selector: step.options.selector,
+      reason: "no-document",
+    });
   }
 
   const center = resolveElementCenter(doc, step.options.selector);
   if (!center) {
-    return;
+    throw new StepError({
+      stepType: "click",
+      selector: step.options.selector,
+      reason: "not-found",
+    });
   }
 
   await moveCursorTo(cursor, center.x, center.y, 120, "easeOut");
@@ -396,7 +421,11 @@ async function executeClick(
 
   const target = doc.querySelector(step.options.selector);
   if (!target) {
-    return;
+    throw new StepError({
+      stepType: "click",
+      selector: step.options.selector,
+      reason: "not-found",
+    });
   }
 
   const button = getButtonCode(step.options.button);
@@ -452,7 +481,11 @@ async function executeClickCoords(
 async function executeType(step: TypeStep, iframe: HTMLIFrameElement): Promise<void> {
   const doc = getFrameDocument(iframe);
   if (!doc) {
-    return;
+    throw new StepError({
+      stepType: "type",
+      selector: step.options.selector,
+      reason: "no-document",
+    });
   }
 
   let target: HTMLElement | null = null;
@@ -461,6 +494,12 @@ async function executeType(step: TypeStep, iframe: HTMLIFrameElement): Promise<v
     const selected = doc.querySelector(step.options.selector);
     if (isHtmlElement(doc, selected)) {
       target = selected;
+    } else {
+      throw new StepError({
+        stepType: "type",
+        selector: step.options.selector,
+        reason: "not-found",
+      });
     }
   }
 
@@ -578,9 +617,12 @@ async function executeWaitForSelector(
     await sleep(POLL_INTERVAL);
   }
 
-  console.warn(
-    `[walkr] waitForSelector: timed out after ${timeout}ms waiting for "${step.options.selector}"`,
-  );
+  throw new StepError({
+    stepType: "waitForSelector",
+    selector: step.options.selector,
+    reason: "timeout",
+    message: `waitForSelector: timed out after ${timeout}ms waiting for "${step.options.selector}"`,
+  });
 }
 
 /**
@@ -636,14 +678,20 @@ async function executeHighlight(step: HighlightStep, iframe: HTMLIFrameElement):
   );
 
   if (!doc) {
-    await sleep(duration);
-    return;
+    throw new StepError({
+      stepType: "highlight",
+      selector: step.options.selector,
+      reason: "no-document",
+    });
   }
 
   const target = doc.querySelector(step.options.selector);
   if (!isHtmlElement(doc, target)) {
-    await sleep(duration);
-    return;
+    throw new StepError({
+      stepType: "highlight",
+      selector: step.options.selector,
+      reason: "not-found",
+    });
   }
 
   const color = step.options.color ?? "#f59e0b";
@@ -857,12 +905,23 @@ async function executeParallel(
   );
 }
 
+function getStepSelector(step: Step): string | undefined {
+  if (step.options && typeof step.options === "object" && "selector" in step.options) {
+    return (step.options as { selector: string }).selector;
+  }
+  return undefined;
+}
+
 export async function executeStep(
   step: Step,
   cursor: HTMLElement,
   iframe: HTMLIFrameElement,
   context?: StepExecutionContext,
-): Promise<void> {
+): Promise<StepResult> {
+  const startTime = performance.now();
+  const stepType = step.type;
+  const selector = getStepSelector(step);
+
   const cursorOverride = getStepCursorOverride(step);
   const previousCursorConfig =
     cursorOverride && context?.getCursorConfig ? { ...context.getCursorConfig() } : undefined;
@@ -875,52 +934,79 @@ export async function executeStep(
     switch (step.type) {
       case "moveTo":
         await executeMoveTo(step as MoveToStep, cursor, iframe);
-        return;
+        break;
       case "moveToCoords":
         await executeMoveToCoords(step as MoveToCoordsStep, cursor);
-        return;
+        break;
       case "click":
         await executeClick(step as ClickStep, cursor, iframe, context);
-        return;
+        break;
       case "clickCoords":
         await executeClickCoords(step as ClickCoordsStep, cursor, iframe, context);
-        return;
+        break;
       case "type":
         await executeType(step as TypeStep, iframe);
-        return;
+        break;
       case "scroll":
         await executeScroll(step as ScrollStep, cursor, iframe, context);
-        return;
+        break;
       case "wait":
         await executeWait(step as WaitStep);
-        return;
+        break;
       case "waitForSelector":
         await executeWaitForSelector(step as WaitForSelectorStep, iframe);
-        return;
+        break;
       case "waitForNavigation":
         await executeWaitForNavigation(step as WaitForNavigationStep, iframe);
-        return;
+        break;
       case "highlight":
         await executeHighlight(step as HighlightStep, iframe);
-        return;
+        break;
       case "zoom":
         await executeZoom(step as ZoomStep, cursor, iframe, context);
-        return;
+        break;
       case "pan":
         await executePan(step as PanStep, iframe);
-        return;
+        break;
       case "sequence":
         await executeSequence(step as SequenceStep, cursor, iframe, context);
-        return;
+        break;
       case "parallel":
         await executeParallel(step as ParallelStep, cursor, iframe, context);
-        return;
+        break;
       case "clearCache":
         await executeClearCache(iframe);
-        return;
+        break;
       default:
-        return;
+        break;
     }
+
+    const durationMs = performance.now() - startTime;
+
+    if (context?.debug) {
+      console.log(
+        `[walkr:debug] step=${stepType} selector=${selector ?? "none"} duration=${durationMs.toFixed(1)}ms result=ok`,
+      );
+    }
+
+    return { status: "ok", stepType, selector, durationMs };
+  } catch (error) {
+    const durationMs = performance.now() - startTime;
+
+    if (error instanceof StepError) {
+      if (context?.debug) {
+        console.log(
+          `[walkr:debug] step=${stepType} selector=${selector ?? "none"} duration=${durationMs.toFixed(1)}ms result=${error.reason}`,
+        );
+      }
+
+      context?.onStepError?.(error, step);
+
+      return { status: "error", stepType, selector, durationMs, error };
+    }
+
+    // Re-throw unexpected errors
+    throw error;
   } finally {
     if (previousCursorConfig && context?.setCursorConfig) {
       context.setCursorConfig(previousCursorConfig);

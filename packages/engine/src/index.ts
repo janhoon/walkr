@@ -19,4 +19,5 @@ export {
   initializeViewport,
   resetViewport,
 } from "./executor.js";
+export { StepError } from "./types.js";
 export type * from "./types.js";

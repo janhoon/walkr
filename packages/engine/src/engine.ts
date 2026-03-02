@@ -12,6 +12,7 @@ import type {
   EngineState,
   EventHandler,
   PlaybackEvent,
+  StepErrorDetail,
   Viewport,
   Walkthrough,
 } from "./types.js";
@@ -265,6 +266,20 @@ export class WalkrEngine {
           updateCursorConfig(cursorRef, this.activeCursorConfig);
         },
         zoomDefaults,
+        debug: this.options.debug,
+        onStepError: (error) => {
+          this.emit("step_error", {
+            error,
+            stepIndex: index,
+            stepResult: {
+              status: "error",
+              stepType: error.stepType,
+              selector: error.selector,
+              durationMs: 0,
+              error,
+            },
+          });
+        },
       });
 
       if (runId !== this.runId) {
@@ -334,7 +349,7 @@ export class WalkrEngine {
     return { ...this.state };
   }
 
-  private emit(event: PlaybackEvent): void {
+  private emit(event: PlaybackEvent, detail?: StepErrorDetail): void {
     const listeners = this.handlers.get(event);
     if (!listeners || listeners.size === 0) {
       return;
@@ -342,7 +357,7 @@ export class WalkrEngine {
 
     const snapshot = this.getState();
     for (const listener of listeners) {
-      listener(event, snapshot);
+      listener(event, snapshot, detail);
     }
   }
 
