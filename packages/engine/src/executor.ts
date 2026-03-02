@@ -18,6 +18,8 @@ import type {
   SequenceStep,
   Step,
   TypeStep,
+  WaitForNavigationStep,
+  WaitForSelectorStep,
   WaitStep,
   ZoomDefaults,
   ZoomStep,
@@ -530,6 +532,102 @@ async function executeWait(step: WaitStep): Promise<void> {
   await sleep(step.options.ms);
 }
 
+/**
+ * waitForSelector — waits for a DOM element matching the selector to appear
+ * in the iframe document.
+ *
+ * Limitation: The engine runs in-browser inside an iframe, so this polls the
+ * iframe's document via querySelector. Cross-origin iframes will not work.
+ */
+async function executeWaitForSelector(
+  step: WaitForSelectorStep,
+  iframe: HTMLIFrameElement,
+): Promise<void> {
+  const doc = getFrameDocument(iframe);
+  if (!doc) {
+    console.warn("[walkr] waitForSelector: cannot access iframe document");
+    return;
+  }
+
+  const timeout = step.options.timeout ?? 5000;
+  const visible = step.options.visible ?? false;
+  const deadline = performance.now() + timeout;
+  const POLL_INTERVAL = 100;
+
+  while (performance.now() < deadline) {
+    const el = doc.querySelector(step.options.selector);
+    if (el) {
+      if (!visible) {
+        return;
+      }
+      // Check visibility: element must have non-zero bounding rect and not be hidden
+      if (isHtmlElement(doc, el)) {
+        const style = doc.defaultView?.getComputedStyle(el);
+        const rect = el.getBoundingClientRect();
+        if (
+          style &&
+          style.display !== "none" &&
+          style.visibility !== "hidden" &&
+          rect.width > 0 &&
+          rect.height > 0
+        ) {
+          return;
+        }
+      }
+    }
+    await sleep(POLL_INTERVAL);
+  }
+
+  console.warn(
+    `[walkr] waitForSelector: timed out after ${timeout}ms waiting for "${step.options.selector}"`,
+  );
+}
+
+/**
+ * waitForNavigation — waits for the iframe to finish navigating.
+ *
+ * Limitation: The engine runs in-browser and the iframe is same-origin or
+ * sandboxed. For cross-origin iframes this will resolve immediately.
+ * Only the "load" waitUntil strategy is actively implemented; other strategies
+ * ("domcontentloaded", "networkidle") fall back to the load event.
+ */
+async function executeWaitForNavigation(
+  step: WaitForNavigationStep,
+  iframe: HTMLIFrameElement,
+): Promise<void> {
+  const timeout = step.options.timeout ?? 5000;
+  const waitUntil = step.options.waitUntil ?? "load";
+
+  if (waitUntil === "networkidle" || waitUntil === "domcontentloaded") {
+    console.warn(
+      `[walkr] waitForNavigation: "${waitUntil}" is not fully supported in the in-browser engine; falling back to "load" event`,
+    );
+  }
+
+  await new Promise<void>((resolve) => {
+    let settled = false;
+
+    const finish = (): void => {
+      if (settled) return;
+      settled = true;
+      iframe.removeEventListener("load", finish);
+      clearTimeout(timer);
+      resolve();
+    };
+
+    const timer = setTimeout(() => {
+      if (!settled) {
+        console.warn(
+          `[walkr] waitForNavigation: timed out after ${timeout}ms`,
+        );
+      }
+      finish();
+    }, timeout);
+
+    iframe.addEventListener("load", finish);
+  });
+}
+
 async function executeHighlight(step: HighlightStep, iframe: HTMLIFrameElement): Promise<void> {
   const doc = getFrameDocument(iframe);
   const duration = Math.max(
@@ -795,6 +893,12 @@ export async function executeStep(
         return;
       case "wait":
         await executeWait(step as WaitStep);
+        return;
+      case "waitForSelector":
+        await executeWaitForSelector(step as WaitForSelectorStep, iframe);
+        return;
+      case "waitForNavigation":
+        await executeWaitForNavigation(step as WaitForNavigationStep, iframe);
         return;
       case "highlight":
         await executeHighlight(step as HighlightStep, iframe);

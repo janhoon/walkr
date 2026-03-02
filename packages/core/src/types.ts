@@ -13,6 +13,8 @@ export type StepType =
   | "type"
   | "scroll"
   | "wait"
+  | "waitForSelector"
+  | "waitForNavigation"
   | "highlight"
   | "zoom"
   | "pan"
@@ -91,6 +93,19 @@ export interface WaitStepOptions extends StepCursorOverride {
   ms: number;
 }
 
+export interface WaitForSelectorOptions extends StepCursorOverride {
+  selector: string;
+  timeout?: number;
+  visible?: boolean;
+}
+
+export type WaitUntil = "load" | "domcontentloaded" | "networkidle";
+
+export interface WaitForNavigationOptions extends StepCursorOverride {
+  timeout?: number;
+  waitUntil?: WaitUntil;
+}
+
 export interface HighlightOptions extends StepCursorOverride {
   color?: string;
   duration?: number;
@@ -151,6 +166,8 @@ export type ClickCoordsStep = Step<"clickCoords", ClickCoordsStepOptions>;
 export type TypeStep = Step<"type", TypeStepOptions>;
 export type ScrollStep = Step<"scroll", ScrollStepOptions>;
 export type WaitStep = Step<"wait", WaitStepOptions>;
+export type WaitForSelectorStep = Step<"waitForSelector", WaitForSelectorOptions>;
+export type WaitForNavigationStep = Step<"waitForNavigation", WaitForNavigationOptions>;
 export type HighlightStep = Step<"highlight", HighlightStepOptions>;
 export type ZoomStep = Step<"zoom", ZoomStepOptions>;
 export type PanStep = Step<"pan", PanStepOptions>;
