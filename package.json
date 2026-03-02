@@ -9,7 +9,9 @@
     "lint": "pnpm -r lint",
     "type-check": "pnpm -r type-check",
     "dev": "pnpm -r --parallel dev",
-    "test": "vitest run"
+    "test": "vitest run",
+    "docs:dev": "pnpm --filter @walkrstudio/docs dev",
+    "docs:build": "pnpm --filter @walkrstudio/docs build"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^8.24.0",
