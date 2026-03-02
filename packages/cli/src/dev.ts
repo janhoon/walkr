@@ -31,7 +31,7 @@ function writeWalkthroughJson(path: string, walkthrough: Walkthrough, targetOrig
   writeFileSync(path, JSON.stringify(proxied, null, 2));
 }
 
-export async function devCommand(scriptPath: string): Promise<void> {
+export async function devCommand(scriptPath: string, port = STUDIO_PORT): Promise<void> {
   const resolvedScript = resolve(process.cwd(), scriptPath);
 
   // Resolve the studio package path from node_modules
@@ -74,7 +74,7 @@ export async function devCommand(scriptPath: string): Promise<void> {
     })();
   });
 
-  const vite = spawn("npx", ["vite", "--port", String(STUDIO_PORT)], {
+  const vite = spawn("npx", ["vite", "--port", String(port)], {
     cwd: studioRoot,
     stdio: ["ignore", "pipe", "pipe"],
     shell: false,
@@ -92,7 +92,7 @@ export async function devCommand(scriptPath: string): Promise<void> {
 
     if (!ready && (text.includes("Local:") || text.includes("localhost"))) {
       ready = true;
-      const url = `http://localhost:${STUDIO_PORT}`;
+      const url = `http://localhost:${port}`;
       console.log(`\nWalkr Studio running at ${url}\n`);
       openBrowser(url);
     }
