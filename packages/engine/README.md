@@ -4,6 +4,12 @@ Browser playback engine for Walkr walkthroughs.
 
 `@walkrstudio/engine` takes a `Walkthrough` object from `@walkrstudio/core` and runs it inside a browser. It renders an iframe with a cursor overlay, executes each timeline step with `requestAnimationFrame` animations, and emits playback events.
 
+> **Single entry point:** `WalkrEngine` is the only supported class for
+> programmatic walkthrough playback. The previously experimental `WalkrPlayer`
+> has been removed. If you were importing `WalkrPlayer`, switch to
+> `WalkrEngine` — a temporary re-export alias is available but will be removed
+> in the next major version.
+
 ## Install
 
 ```bash

@@ -17,6 +17,32 @@ import type {
   Walkthrough,
 } from "./types.js";
 
+/**
+ * The canonical entry point for running Walkr walkthroughs programmatically.
+ *
+ * `WalkrEngine` manages the full playback lifecycle: it creates an iframe with
+ * a cursor overlay inside a container element, loads a target URL, and executes
+ * each walkthrough step in sequence with `requestAnimationFrame`-driven
+ * animations. Playback can be paused, resumed, or cancelled at any time.
+ *
+ * **This is the only supported engine class.** The previously experimental
+ * `WalkrPlayer` has been removed — use `WalkrEngine` for all programmatic
+ * walkthrough playback.
+ *
+ * @example
+ * ```ts
+ * import { WalkrEngine } from "@walkrstudio/engine";
+ *
+ * const engine = new WalkrEngine({ cursor: { shape: "circle", color: "#22d3ee" } });
+ * engine.mount(document.getElementById("walkr")!);
+ *
+ * engine.on("step", (_event, state) => {
+ *   console.log(`Step ${state.currentStep}/${state.totalSteps}`);
+ * });
+ *
+ * await engine.play(myWalkthrough);
+ * ```
+ */
 export class WalkrEngine {
   private readonly options: EngineOptions;
 
@@ -51,6 +77,15 @@ export class WalkrEngine {
 
   private activeCursorConfig: CursorConfig = {};
 
+  /**
+   * Create a new WalkrEngine instance.
+   *
+   * @param options - Engine configuration. All fields are optional.
+   * @param options.cursor - Default cursor appearance (shape, color, size, shadow).
+   * @param options.container - Mount target element. Can also be set later via {@link mount}.
+   * @param options.viewport - Fixed design viewport dimensions (`{ width, height }`).
+   * @param options.debug - Enable verbose step execution logging to the console.
+   */
   constructor(options: EngineOptions = {}) {
     this.options = options;
     this.activeCursorConfig = options.cursor ?? {};
@@ -60,6 +95,11 @@ export class WalkrEngine {
     }
   }
 
+  /**
+   * Update cursor appearance at any time during or between playback.
+   *
+   * @param config - Partial cursor configuration to merge with the current config.
+   */
   setCursorConfig(config: Partial<CursorConfig>): void {
     this.activeCursorConfig = { ...this.activeCursorConfig, ...config };
     if (this.cursor) {
@@ -67,6 +107,11 @@ export class WalkrEngine {
     }
   }
 
+  /**
+   * Returns the current viewport zoom level and pan offset.
+   *
+   * @returns The current {@link ViewportState} with `zoom`, `panX`, and `panY`.
+   */
   getViewportState(): ViewportState {
     if (this.stage) {
       return getViewportState(this.stage);
@@ -74,12 +119,28 @@ export class WalkrEngine {
     return { zoom: 1, panX: 0, panY: 0 };
   }
 
+  /**
+   * Animate the viewport back to zoom level 1 and the default pan origin.
+   *
+   * @param options - Optional animation parameters.
+   * @param options.duration - Animation duration in milliseconds.
+   * @param options.easing - CSS easing function name or cubic-bezier string.
+   */
   async resetViewport(options?: { duration?: number; easing?: string }): Promise<void> {
     if (this.stage) {
       await resetViewport(this.stage, options);
     }
   }
 
+  /**
+   * Attach the engine to a DOM element.
+   *
+   * Creates the iframe, stage, cursor overlay, and (if a viewport is set) the
+   * scaler element inside the given container. Safe to call multiple times with
+   * the same container — subsequent calls are no-ops if the DOM is already set up.
+   *
+   * @param container - The DOM element to mount into.
+   */
   mount(container: HTMLElement): void {
     if (
       this.container === container &&
@@ -170,6 +231,12 @@ export class WalkrEngine {
     this.scaler.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
   }
 
+  /**
+   * Remove all engine DOM elements, disconnect observers, and reset playback state.
+   *
+   * After calling `unmount()`, the engine can be re-mounted to the same or a
+   * different container via {@link mount}.
+   */
   unmount(): void {
     this.runId += 1;
     this.paused = false;
@@ -200,6 +267,20 @@ export class WalkrEngine {
     };
   }
 
+  /**
+   * Load the walkthrough URL in the iframe and execute all steps in sequence.
+   *
+   * The returned promise resolves when all steps have completed (or rejects if
+   * the engine is unmounted mid-playback). Emits `start`, `step`, and
+   * `complete` events during execution, plus `step_error` if a step fails.
+   *
+   * The walkthrough's `viewport` and `cursor` settings take precedence over
+   * the engine-level options for this run.
+   *
+   * @param walkthrough - The {@link Walkthrough} object describing the URL, steps,
+   *   and optional viewport/cursor/zoom configuration.
+   * @throws If the engine has not been mounted yet.
+   */
   async play(walkthrough: Walkthrough): Promise<void> {
     if (!this.container) {
       throw new Error("WalkrEngine must be mounted before play().");
@@ -302,6 +383,10 @@ export class WalkrEngine {
     this.emit("complete");
   }
 
+  /**
+   * Pause playback between steps. The engine will stop advancing to the next
+   * step until {@link resume} is called. Emits the `pause` event.
+   */
   pause(): void {
     if (!this.state.playing || this.paused) {
       return;
@@ -312,6 +397,9 @@ export class WalkrEngine {
     this.emit("pause");
   }
 
+  /**
+   * Resume playback after a {@link pause}. Emits the `resume` event.
+   */
   resume(): void {
     if (!this.paused) {
       return;
@@ -323,6 +411,12 @@ export class WalkrEngine {
     this.emit("resume");
   }
 
+  /**
+   * Subscribe to a playback event.
+   *
+   * @param event - The event name: `"start"`, `"step"`, `"complete"`, `"pause"`, `"resume"`, or `"step_error"`.
+   * @param handler - Callback receiving `(event, state, detail?)`.
+   */
   on(event: PlaybackEvent, handler: EventHandler): void {
     const existing = this.handlers.get(event);
     if (existing) {
@@ -333,6 +427,12 @@ export class WalkrEngine {
     this.handlers.set(event, new Set([handler]));
   }
 
+  /**
+   * Unsubscribe from a playback event.
+   *
+   * @param event - The event name to unsubscribe from.
+   * @param handler - The previously registered handler to remove.
+   */
   off(event: PlaybackEvent, handler: EventHandler): void {
     const existing = this.handlers.get(event);
     if (!existing) {
@@ -345,6 +445,12 @@ export class WalkrEngine {
     }
   }
 
+  /**
+   * Returns a snapshot of the current playback state.
+   *
+   * @returns A copy of the current {@link EngineState} with `playing`,
+   *   `currentStep`, `totalSteps`, and `progress` (0–1).
+   */
   getState(): EngineState {
     return { ...this.state };
   }
