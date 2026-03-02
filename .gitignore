@@ -6,3 +6,5 @@ dist
 .walkr-proxy-target
 packages/studio/public/walkthrough.json
 output.*
+apps/docs/.vitepress/dist
+apps/docs/.vitepress/cache
