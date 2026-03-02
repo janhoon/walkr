@@ -1,45 +1,56 @@
 # create-walkrstudio
 
-Scaffold a new Walkr project.
+Scaffold a new [Walkr](https://github.com/janhoon/walkr) walkthrough project.
 
 ## Usage
 
 ```bash
-npm create walkrstudio@latest my-demo
+npm create walkrstudio@latest my-project
 ```
 
 Or interactively:
 
 ```bash
 npm create walkrstudio@latest
-# prompts for project name
+# ➜ prompts for project name and optional description
 ```
 
-This creates a project directory with:
+You can also use npx:
 
-```
-my-demo/
-  demo.ts          # starter walkthrough script
-  package.json     # dependencies and dev/export scripts
-  tsconfig.json    # TypeScript config
-  .gitignore
-  README.md
+```bash
+npx create-walkrstudio my-project
 ```
 
-## What's included
+## What you get
 
-- `@walkrstudio/core` as a dependency
-- TypeScript configured for Node 18+ / ES modules
-- npm scripts:
-  - `pnpm dev` — start the Studio preview with `walkr dev demo.ts`
-  - `pnpm export` — export to MP4 with `walkr export demo.ts`
+```
+my-project/
+├── walkthrough.ts   # starter walkthrough using @walkrstudio/core
+├── package.json     # dependencies & dev/export scripts
+├── tsconfig.json    # TypeScript config (ES2022 / NodeNext)
+├── .gitignore
+└── README.md
+```
+
+### Dependencies
+
+- `@walkrstudio/core` — step definitions and walkthrough builder
+- `@walkrstudio/engine` — playback engine
+
+### Scripts
+
+| Script         | Command                                              |
+| -------------- | ---------------------------------------------------- |
+| `npm run dev`  | `walkr dev walkthrough.ts` — live Studio preview     |
+| `npm run export` | `walkr export walkthrough.ts` — export to MP4      |
 
 ## Next steps
 
 ```bash
-cd my-demo
-pnpm install
-npx walkr dev demo.ts
+cd my-project
+npm install
+npx walkr dev walkthrough.ts
 ```
 
-Edit `demo.ts` to point at your app's URL and add your walkthrough steps. See the [@walkrstudio/core README](../core/README.md) for the full step API.
+Edit `walkthrough.ts` to point at your app's URL and add your walkthrough steps.
+See the [`@walkrstudio/core` README](../core/README.md) for the full step API.
