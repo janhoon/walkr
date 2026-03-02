@@ -17,6 +17,7 @@ export type StepType =
   | "waitForNavigation"
   | "highlight"
   | "tooltip"
+  | "narrate"
   | "zoom"
   | "pan"
   | "sequence"
@@ -133,6 +134,20 @@ export interface TooltipStepOptions extends TooltipOptions {
   text: string;
 }
 
+export interface NarrateOptions {
+  /** Duration in ms. If not set, derived from audio length at runtime. */
+  duration?: number;
+  /** Volume level from 0 to 1. Default: 1. */
+  volume?: number;
+  /** Whether to loop the audio. Default: false. */
+  loop?: boolean;
+}
+
+export interface NarrateStepOptions extends NarrateOptions {
+  /** URL or path to the audio file. */
+  src: string;
+}
+
 export interface ZoomOptions extends StepCursorOverride {
   x?: number;
   y?: number;
@@ -184,6 +199,7 @@ export type WaitForSelectorStep = Step<"waitForSelector", WaitForSelectorOptions
 export type WaitForNavigationStep = Step<"waitForNavigation", WaitForNavigationOptions>;
 export type HighlightStep = Step<"highlight", HighlightStepOptions>;
 export type TooltipStep = Step<"tooltip", TooltipStepOptions>;
+export type NarrateStep = Step<"narrate", NarrateStepOptions>;
 export type ZoomStep = Step<"zoom", ZoomStepOptions>;
 export type PanStep = Step<"pan", PanStepOptions>;
 export type SequenceStep = Step<"sequence", SequenceStepOptions>;

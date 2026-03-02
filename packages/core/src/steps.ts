@@ -14,6 +14,9 @@ import type {
   MoveToOptions,
   MoveToStep,
   MoveToStepOptions,
+  NarrateOptions,
+  NarrateStep,
+  NarrateStepOptions,
   PanOptions,
   PanStep,
   PanStepOptions,
@@ -159,6 +162,16 @@ export function tooltip(selector: string, text: string, options: TooltipOptions 
     cursor: options.cursor,
   };
   return createStep("tooltip", stepOptions, duration);
+}
+
+export function narrate(src: string, options: NarrateOptions = {}): NarrateStep {
+  const stepOptions: NarrateStepOptions = {
+    src,
+    duration: options.duration,
+    volume: options.volume ?? 1,
+    loop: options.loop ?? false,
+  };
+  return createStep("narrate", stepOptions, options.duration ?? 0);
 }
 
 export function zoom(level: number, options: ZoomOptions = {}): ZoomStep {
