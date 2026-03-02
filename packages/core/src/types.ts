@@ -16,6 +16,7 @@ export type StepType =
   | "waitForSelector"
   | "waitForNavigation"
   | "highlight"
+  | "tooltip"
   | "zoom"
   | "pan"
   | "sequence"
@@ -119,6 +120,19 @@ export interface HighlightStepOptions extends HighlightOptions {
   selector: string;
 }
 
+export type TooltipPosition = "top" | "bottom" | "left" | "right";
+
+export interface TooltipOptions extends StepCursorOverride {
+  duration?: number;
+  position?: TooltipPosition;
+  title?: string;
+}
+
+export interface TooltipStepOptions extends TooltipOptions {
+  selector: string;
+  text: string;
+}
+
 export interface ZoomOptions extends StepCursorOverride {
   x?: number;
   y?: number;
@@ -169,6 +183,7 @@ export type WaitStep = Step<"wait", WaitStepOptions>;
 export type WaitForSelectorStep = Step<"waitForSelector", WaitForSelectorOptions>;
 export type WaitForNavigationStep = Step<"waitForNavigation", WaitForNavigationOptions>;
 export type HighlightStep = Step<"highlight", HighlightStepOptions>;
+export type TooltipStep = Step<"tooltip", TooltipStepOptions>;
 export type ZoomStep = Step<"zoom", ZoomStepOptions>;
 export type PanStep = Step<"pan", PanStepOptions>;
 export type SequenceStep = Step<"sequence", SequenceStepOptions>;

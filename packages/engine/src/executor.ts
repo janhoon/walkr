@@ -17,6 +17,8 @@ import type {
   ScrollStep,
   SequenceStep,
   Step,
+  TooltipPosition,
+  TooltipStep,
   TypeStep,
   WaitForNavigationStep,
   WaitForSelectorStep,
@@ -32,6 +34,7 @@ const DEFAULT_TYPE_DELAY = 40;
 const DEFAULT_ZOOM_DURATION = 360;
 const DEFAULT_PAN_DURATION = 360;
 const DEFAULT_HIGHLIGHT_DURATION = 700;
+const DEFAULT_TOOLTIP_DURATION = 3000;
 const DEFAULT_VIEWPORT_EASING = "cubic-bezier(0.42, 0, 0.58, 1)";
 
 export interface ViewportState {
@@ -764,6 +767,154 @@ async function executeHighlight(step: HighlightStep, iframe: HTMLIFrameElement):
   target.style.transition = previous.transition;
 }
 
+function getArrowStyles(position: TooltipPosition): string {
+  switch (position) {
+    case "top":
+      return `
+        bottom: -6px; left: 50%; transform: translateX(-50%);
+        border-left: 6px solid transparent; border-right: 6px solid transparent;
+        border-top: 6px solid #1e1e2e;
+      `;
+    case "bottom":
+      return `
+        top: -6px; left: 50%; transform: translateX(-50%);
+        border-left: 6px solid transparent; border-right: 6px solid transparent;
+        border-bottom: 6px solid #1e1e2e;
+      `;
+    case "left":
+      return `
+        right: -6px; top: 50%; transform: translateY(-50%);
+        border-top: 6px solid transparent; border-bottom: 6px solid transparent;
+        border-left: 6px solid #1e1e2e;
+      `;
+    case "right":
+      return `
+        left: -6px; top: 50%; transform: translateY(-50%);
+        border-top: 6px solid transparent; border-bottom: 6px solid transparent;
+        border-right: 6px solid #1e1e2e;
+      `;
+  }
+}
+
+function positionTooltip(
+  tooltipEl: HTMLElement,
+  targetRect: DOMRect,
+  position: TooltipPosition,
+): void {
+  const gap = 10;
+  switch (position) {
+    case "top":
+      tooltipEl.style.left = `${targetRect.left + targetRect.width / 2}px`;
+      tooltipEl.style.top = `${targetRect.top - gap}px`;
+      tooltipEl.style.transform = "translate(-50%, -100%)";
+      break;
+    case "bottom":
+      tooltipEl.style.left = `${targetRect.left + targetRect.width / 2}px`;
+      tooltipEl.style.top = `${targetRect.bottom + gap}px`;
+      tooltipEl.style.transform = "translate(-50%, 0)";
+      break;
+    case "left":
+      tooltipEl.style.left = `${targetRect.left - gap}px`;
+      tooltipEl.style.top = `${targetRect.top + targetRect.height / 2}px`;
+      tooltipEl.style.transform = "translate(-100%, -50%)";
+      break;
+    case "right":
+      tooltipEl.style.left = `${targetRect.right + gap}px`;
+      tooltipEl.style.top = `${targetRect.top + targetRect.height / 2}px`;
+      tooltipEl.style.transform = "translate(0, -50%)";
+      break;
+  }
+}
+
+async function executeTooltip(step: TooltipStep, iframe: HTMLIFrameElement): Promise<void> {
+  const doc = getFrameDocument(iframe);
+  const duration = Math.max(
+    0,
+    step.options.duration ?? step.duration ?? DEFAULT_TOOLTIP_DURATION,
+  );
+
+  if (!doc) {
+    throw new StepError({
+      stepType: "tooltip",
+      selector: step.options.selector,
+      reason: "no-document",
+    });
+  }
+
+  const target = doc.querySelector(step.options.selector);
+  if (!isHtmlElement(doc, target)) {
+    throw new StepError({
+      stepType: "tooltip",
+      selector: step.options.selector,
+      reason: "not-found",
+    });
+  }
+
+  const stage = iframe.parentElement;
+  const hostDocument = iframe.ownerDocument;
+  if (!stage || !hostDocument) {
+    await sleep(duration);
+    return;
+  }
+
+  const targetRect = target.getBoundingClientRect();
+  const position: TooltipPosition = step.options.position ?? "top";
+
+  const tooltipEl = hostDocument.createElement("div");
+  tooltipEl.style.cssText = `
+    position: absolute;
+    z-index: 999992;
+    pointer-events: none;
+    background: #1e1e2e;
+    color: #ffffff;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 13px;
+    line-height: 1.4;
+    max-width: 280px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    transition: opacity 150ms ease-in;
+  `;
+
+  // Build inner content
+  let innerHTML = "";
+  if (step.options.title) {
+    innerHTML += `<div style="font-weight: 600; font-size: 14px; margin-bottom: 4px;">${step.options.title}</div>`;
+  }
+  innerHTML += `<div>${step.options.text}</div>`;
+
+  // Arrow
+  const arrowEl = hostDocument.createElement("div");
+  arrowEl.style.cssText = `
+    position: absolute; width: 0; height: 0;
+    ${getArrowStyles(position)}
+  `;
+
+  tooltipEl.innerHTML = innerHTML;
+  tooltipEl.appendChild(arrowEl);
+
+  positionTooltip(tooltipEl, targetRect, position);
+
+  stage.appendChild(tooltipEl);
+
+  // Fade in
+  requestAnimationFrame(() => {
+    tooltipEl.style.opacity = "1";
+  });
+
+  try {
+    await sleep(duration);
+  } finally {
+    // Fade out
+    tooltipEl.style.transition = "opacity 150ms ease-out";
+    tooltipEl.style.opacity = "0";
+    await sleep(150);
+    tooltipEl.remove();
+  }
+}
+
 async function executeZoom(
   step: ZoomStep,
   cursor: HTMLElement,
@@ -961,6 +1112,9 @@ export async function executeStep(
         break;
       case "highlight":
         await executeHighlight(step as HighlightStep, iframe);
+        break;
+      case "tooltip":
+        await executeTooltip(step as TooltipStep, iframe);
         break;
       case "zoom":
         await executeZoom(step as ZoomStep, cursor, iframe, context);
