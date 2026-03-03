@@ -8,6 +8,7 @@ import type {
   ClickCoordsStep,
   ClickStep,
   CursorConfig,
+  DragStep,
   HighlightStep,
   MouseButton,
   MoveToCoordsStep,
@@ -36,6 +37,7 @@ const DEFAULT_ZOOM_DURATION = 360;
 const DEFAULT_PAN_DURATION = 360;
 const DEFAULT_HIGHLIGHT_DURATION = 700;
 const DEFAULT_TOOLTIP_DURATION = 3000;
+const DEFAULT_DRAG_DURATION = 1000;
 const DEFAULT_VIEWPORT_EASING = "cubic-bezier(0.42, 0, 0.58, 1)";
 
 export interface ViewportState {
@@ -1077,6 +1079,127 @@ async function executePan(step: PanStep, iframe: HTMLIFrameElement): Promise<voi
   );
 }
 
+/**
+ * executeDrag — simulates a click-drag interaction using Pointer/Mouse events.
+ *
+ * This dispatches pointer and mouse events only (pointerdown, mousedown,
+ * pointermove, mousemove, pointerup, mouseup). HTML5 Drag and Drop API events
+ * (dragstart, drag, dragover, drop) are not dispatched.
+ */
+async function executeDrag(
+  step: DragStep,
+  cursor: HTMLElement,
+  iframe: HTMLIFrameElement,
+  context?: StepExecutionContext,
+): Promise<void> {
+  const doc = getFrameDocument(iframe);
+  if (!doc) {
+    throw new StepError({
+      stepType: "drag",
+      reason: "no-document",
+    });
+  }
+
+  const duration = Math.max(0, step.duration || DEFAULT_DRAG_DURATION);
+
+  // Phase durations
+  const moveToSourceDuration = duration * 0.15;
+  const pressDuration = duration * 0.05;
+  const dragDuration = duration * 0.7;
+  const releaseDuration = duration * 0.1;
+
+  // Resolve source coordinates
+  let fromX: number;
+  let fromY: number;
+  if ("selector" in step.options.from) {
+    const center = resolveElementCenter(doc, step.options.from.selector);
+    if (!center) {
+      throw new StepError({
+        stepType: "drag",
+        selector: step.options.from.selector,
+        reason: "not-found",
+        message: `drag: source element "${step.options.from.selector}" not found`,
+      });
+    }
+    fromX = center.x;
+    fromY = center.y;
+  } else {
+    fromX = step.options.from.x;
+    fromY = step.options.from.y;
+  }
+
+  // Resolve target coordinates
+  let toX: number;
+  let toY: number;
+  if ("selector" in step.options.to) {
+    const center = resolveElementCenter(doc, step.options.to.selector);
+    if (!center) {
+      throw new StepError({
+        stepType: "drag",
+        selector: step.options.to.selector,
+        reason: "not-found",
+        message: `drag: target element "${step.options.to.selector}" not found`,
+      });
+    }
+    toX = center.x;
+    toY = center.y;
+  } else {
+    toX = step.options.to.x;
+    toY = step.options.to.y;
+  }
+
+  // Phase 1: Move cursor to source
+  await moveCursorTo(cursor, fromX, fromY, moveToSourceDuration, "easeOut");
+
+  // Phase 2: Press down
+  const sourceTarget = doc.elementFromPoint(fromX, fromY);
+  if (sourceTarget) {
+    dispatchMouse(doc, sourceTarget, "pointerdown", fromX, fromY, 0);
+    dispatchMouse(doc, sourceTarget, "mousedown", fromX, fromY, 0);
+  }
+  await sleep(pressDuration);
+
+  // Phase 3: Drag to target (animate cursor + emit mousemove events)
+  const moveCount = Math.max(1, Math.floor(dragDuration / 16));
+  const intervalMs = dragDuration / moveCount;
+
+  for (let i = 1; i <= moveCount; i++) {
+    const t = i / moveCount;
+    const currentX = fromX + (toX - fromX) * t;
+    const currentY = fromY + (toY - fromY) * t;
+
+    await moveCursorTo(cursor, currentX, currentY, intervalMs, "linear");
+
+    const moveTarget = doc.elementFromPoint(currentX, currentY);
+    if (moveTarget) {
+      const MouseEventCtor = doc.defaultView?.MouseEvent ?? MouseEvent;
+      for (const eventType of ["pointermove", "mousemove"] as const) {
+        moveTarget.dispatchEvent(
+          new MouseEventCtor(eventType, {
+            bubbles: true,
+            cancelable: true,
+            clientX: currentX,
+            clientY: currentY,
+            button: 0,
+            buttons: 1,
+          }),
+        );
+      }
+    }
+  }
+
+  // Phase 4: Release
+  const clickColor = context?.getCursorConfig?.().clickColor ?? "#ef4444";
+  showClickRipple(cursor, toX, toY, clickColor);
+
+  const releaseTarget = doc.elementFromPoint(toX, toY);
+  if (releaseTarget) {
+    dispatchMouse(doc, releaseTarget, "pointerup", toX, toY, 0);
+    dispatchMouse(doc, releaseTarget, "mouseup", toX, toY, 0);
+  }
+  await sleep(releaseDuration);
+}
+
 async function executeClearCache(iframe: HTMLIFrameElement): Promise<void> {
   try {
     const win = getFrameWindow(iframe);
@@ -1222,6 +1345,9 @@ export async function executeStep(
         break;
       case "clearCache":
         await executeClearCache(iframe);
+        break;
+      case "drag":
+        await executeDrag(step as DragStep, cursor, iframe, context);
         break;
       default:
         break;
