@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.4.2](https://github.com/janhoon/walkr/compare/engine-v0.4.1...engine-v0.4.2) (2026-03-03)
+
+
+### Bug Fixes
+
+* **cli:** rebuild with cursor preset support from engine ([ed0cf33](https://github.com/janhoon/walkr/commit/ed0cf33fa4b2722a56b6af8f8a13db2180193511))
+* **engine:** use CursorShape type alias from core ([3e14079](https://github.com/janhoon/walkr/commit/3e14079645d8be56ca96142332ee7b57a2ed0d25))
+* **recorder:** rebuild with cursor preset support from engine ([638bf2a](https://github.com/janhoon/walkr/commit/638bf2a544824bea5e222f5e56edb678f364152e))
+* **studio:** rebuild with cursor preset support from engine ([5b83589](https://github.com/janhoon/walkr/commit/5b835894c7ba19ad56d480b0927950657fb3f001))
+
 ## [0.4.1](https://github.com/janhoon/walkr/compare/engine-v0.4.0...engine-v0.4.1) (2026-03-03)
 
 
