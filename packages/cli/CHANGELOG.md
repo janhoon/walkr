@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/janhoon/walkr/compare/cli-v0.4.0...cli-v0.4.1) (2026-03-03)
+
+
+### Bug Fixes
+
+* read package versions dynamically for --version output ([98e616d](https://github.com/janhoon/walkr/commit/98e616d0b8f5cab7883a78510d4abe1165515f32))
+
 ## [0.4.0](https://github.com/janhoon/walkr/compare/cli-v0.3.0...cli-v0.4.0) (2026-03-03)
 
 
