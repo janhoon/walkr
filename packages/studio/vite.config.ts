@@ -82,6 +82,10 @@ function rewriteAbsolutePaths(content: string, contentType: string): string {
   }
 
   // JS/JSON/other text: conservative patterns only.
+  // First, strip full localhost origin URLs (e.g. axios baseURL: "http://localhost:8080")
+  // so that API calls route through the proxy instead of bypassing it.
+  content = content.replace(/(["'`])https?:\/\/localhost:\d+/g, `$1`);
+
   // Only match paths with depth ("/segment/...") or file extensions ("/file.ext").
   // This avoids corrupting regex flags like .replace(/"/g, ...) where "/g" would match.
   return content

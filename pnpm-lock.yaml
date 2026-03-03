@@ -42,6 +42,15 @@ importers:
         specifier: workspace:*
         version: link:../../packages/core
 
+  examples/lesaka-demo:
+    dependencies:
+      '@walkrstudio/cli':
+        specifier: workspace:*
+        version: link:../../packages/cli
+      '@walkrstudio/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+
   packages/cli:
     dependencies:
       '@walkrstudio/core':

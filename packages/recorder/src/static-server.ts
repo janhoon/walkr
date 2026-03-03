@@ -96,6 +96,10 @@ function rewriteAbsolutePaths(content: string, contentType: string): string {
       .replace(/(@import\s+["'])\/(?!\/|__target__)/g, `$1${PROXY_PREFIX}/`);
   }
 
+  // First, strip full localhost origin URLs (e.g. axios baseURL: "http://localhost:8080")
+  // so that API calls route through the proxy instead of bypassing it.
+  content = content.replace(/(["'`])https?:\/\/localhost:\d+/g, `$1`);
+
   return content
     .replace(/(["'`])\/(?!\/|__target__)([a-zA-Z@._][\w@._-]*\/)/g, `$1${PROXY_PREFIX}/$2`)
     .replace(/(["'`])\/(?!\/|__target__)([a-zA-Z@._][\w@._-]+\.\w{2,})/g, `$1${PROXY_PREFIX}/$2`);

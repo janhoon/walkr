@@ -1,0 +1,12 @@
+{
+  "name": "@walkrstudio/example-lesaka-demo",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "walkr dev demo.ts"
+  },
+  "dependencies": {
+    "@walkrstudio/core": "workspace:*",
+    "@walkrstudio/cli": "workspace:*"
+  }
+}
