@@ -33,6 +33,15 @@ importers:
         specifier: ^3.5.13
         version: 3.5.29(typescript@5.9.3)
 
+  examples/ace-demo:
+    dependencies:
+      '@walkrstudio/cli':
+        specifier: workspace:*
+        version: link:../../packages/cli
+      '@walkrstudio/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+
   packages/cli:
     dependencies:
       '@walkrstudio/core':
