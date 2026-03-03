@@ -13,7 +13,7 @@ export default walkr({
   title: "Example",
   description: "A short walkthrough.",
   viewport: { width: 1920, height: 1080 },
-  cursor: { shape: "circle", color: "#22d3ee", size: 24 },
+  cursor: { shape: "cursor-02", color: "#22d3ee", size: 24 },
   zoom: { defaultLevel: 1, easing: "cubic-bezier(0.42, 0, 0.58, 1)" },
 });
 ```
@@ -34,7 +34,7 @@ export default walkr({
 
 | Field | Type | Default | Description |
 |---|---|---|---|
-| `shape` | `"circle" \| "arrow" \| "dot" \| "svg"` | — | Cursor shape. |
+| `shape` | `"circle" \| "arrow" \| "dot" \| "svg" \| "cursor-01" \| "cursor-02" \| "cursor-03"` | — | Cursor shape. Use a `cursor-*` preset for a ready-made pointer. |
 | `color` | `string` | — | Cursor colour. |
 | `size` | `number` | — | Cursor size in pixels. |
 | `shadow` | `boolean` | — | Show drop shadow. |
@@ -352,7 +352,7 @@ export default walkr({
   title: "Product Demo — Feature Walkthrough",
   viewport: { width: 1366, height: 768 },
   cursor: {
-    shape: "circle",
+    shape: "cursor-02",
     color: "#22d3ee",
     size: 24,
     shadow: true,

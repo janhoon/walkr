@@ -21,7 +21,7 @@ Ask the user these questions (one at a time, skip any they've already answered):
 
 Use sensible defaults for everything else:
 - Viewport: 1920x1080 (or 1280x720 for smaller demos)
-- Cursor: circle shape, cyan color (#22d3ee), size 24, with shadow
+- Cursor: `cursor-02` preset, cyan color (#22d3ee), size 24, with shadow. Three presets are available: `cursor-01` (outlined tilted pointer), `cursor-02` (filled pointer), `cursor-03` (outlined pointer). Users can also use `circle`, `arrow`, `dot`, or a custom `svg`.
 - Timing: 600ms for cursor movements, 35-50ms typing delay, 300-800ms waits between scenes
 
 ### Phase 2: Project setup
