@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.3.0](https://github.com/janhoon/walkr/compare/core-v0.2.0...core-v0.3.0) (2026-03-03)
+
+
+### Features
+
+* add --port flag and deterministic step IDs ([#471](https://github.com/janhoon/walkr/issues/471), [#472](https://github.com/janhoon/walkr/issues/472)) ([#24](https://github.com/janhoon/walkr/issues/24)) ([903eac2](https://github.com/janhoon/walkr/commit/903eac25d5dce6abfc68d00c4536f40652c31538))
+* add audio narration step ([#469](https://github.com/janhoon/walkr/issues/469)) ([#23](https://github.com/janhoon/walkr/issues/23)) ([a6edf42](https://github.com/janhoon/walkr/commit/a6edf42e6b1a0ea4cd0707b2db78ef640ae90bb8))
+* add drag step type definitions ([ff0add6](https://github.com/janhoon/walkr/commit/ff0add68856c802e9bf01830e0be3cac0a0bcf4d))
+* add drag() step builder function ([6abb341](https://github.com/janhoon/walkr/commit/6abb341b44d2c3da00398b616bc4bcb6d447b297))
+* add tooltip/annotation step ([#468](https://github.com/janhoon/walkr/issues/468)) ([#22](https://github.com/janhoon/walkr/issues/22)) ([1efa638](https://github.com/janhoon/walkr/commit/1efa638fc288ef56e7bbbe3e7c9336e1b28914e7))
+* add waitForSelector and waitForNavigation steps ([#463](https://github.com/janhoon/walkr/issues/463)) ([#18](https://github.com/janhoon/walkr/issues/18)) ([99f55e7](https://github.com/janhoon/walkr/commit/99f55e74f0f1e5463c73049d9939182242a9b0b3))
+
 ## [0.2.0](https://github.com/janhoon/walkr/compare/core-v0.1.0...core-v0.2.0) (2026-02-28)
 
 
