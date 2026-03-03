@@ -1,0 +1,22 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "walkr",
+  "description": "Walkr — scriptable product walkthrough engine",
+  "owner": {
+    "name": "Walkr Studio"
+  },
+  "plugins": [
+    {
+      "name": "walkr",
+      "description": "Create product walkthrough demos with Walkr — guides agents through script authoring, preview, and export",
+      "version": "0.1.0",
+      "author": {
+        "name": "Walkr Studio"
+      },
+      "source": "./.claude/plugins/walkr",
+      "category": "development",
+      "homepage": "https://github.com/janhoon/walkr",
+      "keywords": ["walkthrough", "demo", "product-tour", "video", "recording"]
+    }
+  ]
+}
