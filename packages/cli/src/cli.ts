@@ -1,5 +1,8 @@
 #!/usr/bin/env node
-import { register } from "node:module";
+import { readFileSync } from "node:fs";
+import { createRequire, register } from "node:module";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 // Register a custom ESM resolve hook so user walkthrough scripts can
 // import @walkrstudio/* packages from the CLI's node_modules, even
@@ -9,7 +12,49 @@ register("./resolve-hook.js", import.meta.url);
 import { devCommand } from "./dev.js";
 import { type ExportOptions, exportCommand } from "./export.js";
 
-export const VERSION = "0.1.0";
+function findPkgJson(startDir: string, name: string): string | undefined {
+  let dir = startDir;
+  while (dir !== dirname(dir)) {
+    try {
+      const raw = readFileSync(join(dir, "package.json"), "utf-8");
+      const pkg = JSON.parse(raw) as { name?: string; version?: string };
+      if (pkg.name === name) return pkg.version;
+    } catch {
+      // no package.json here
+    }
+    dir = dirname(dir);
+  }
+  return undefined;
+}
+
+function readPkgVersion(name: string): string {
+  const cliRequire = createRequire(import.meta.url);
+  const resolvers = [cliRequire];
+
+  // Also try resolving from studio's directory to find transitive deps (e.g. engine)
+  try {
+    resolvers.push(createRequire(cliRequire.resolve("@walkrstudio/studio/package.json")));
+  } catch {}
+
+  for (const req of resolvers) {
+    // Try resolving <name>/package.json directly (works when no exports field blocks it)
+    try {
+      const raw = readFileSync(req.resolve(`${name}/package.json`), "utf-8");
+      return (JSON.parse(raw) as { version: string }).version;
+    } catch {}
+
+    // Fallback: resolve the package entry and walk up to find its package.json
+    try {
+      return findPkgJson(dirname(req.resolve(name)), name) ?? "n/a";
+    } catch {}
+  }
+
+  return "n/a";
+}
+
+/** CLI's own version, read from its package.json relative to this file. */
+const CLI_VERSION =
+  findPkgJson(dirname(fileURLToPath(import.meta.url)), "@walkrstudio/cli") ?? "n/a";
 
 const USAGE = `\
 Usage: walkr <command> [options]
@@ -104,7 +149,18 @@ async function main(): Promise<void> {
   const parsed = parseArgs(process.argv);
 
   if (parsed.version) {
-    console.log(`walkr v${VERSION}`);
+    const deps = [
+      "@walkrstudio/core",
+      "@walkrstudio/engine",
+      "@walkrstudio/studio",
+      "@walkrstudio/recorder",
+    ] as const;
+    const all = ["@walkrstudio/cli", ...deps] as const;
+    const maxLen = Math.max(...all.map((p) => p.length));
+    console.log(`${"@walkrstudio/cli".padEnd(maxLen)}  ${CLI_VERSION}`);
+    for (const name of deps) {
+      console.log(`${name.padEnd(maxLen)}  ${readPkgVersion(name)}`);
+    }
     return;
   }
 
