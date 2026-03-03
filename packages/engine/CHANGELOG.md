@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/janhoon/walkr/compare/engine-v0.4.0...engine-v0.4.1) (2026-03-03)
+
+
+### Bug Fixes
+
+* **engine:** unexport unused CursorPreset interface ([501280c](https://github.com/janhoon/walkr/commit/501280c236a02d3565e31518839ae4c64fbb6780))
+
 ## [0.4.0](https://github.com/janhoon/walkr/compare/engine-v0.3.0...engine-v0.4.0) (2026-03-03)
 
 
