@@ -1,0 +1,12 @@
+{
+  "name": "walkr",
+  "description": "Create product walkthrough demos with Walkr — guides agents through script authoring, preview, and export",
+  "version": "0.1.0",
+  "author": {
+    "name": "Walkr Studio"
+  },
+  "homepage": "https://github.com/janhoon/walkr",
+  "repository": "https://github.com/janhoon/walkr",
+  "license": "MIT",
+  "keywords": ["walkthrough", "demo", "product-tour", "video", "recording"]
+}
