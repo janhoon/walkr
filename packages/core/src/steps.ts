@@ -6,6 +6,9 @@ import type {
   ClickOptions,
   ClickStep,
   ClickStepOptions,
+  DragEndpoint,
+  DragStep,
+  DragStepOptions,
   HighlightOptions,
   HighlightStep,
   HighlightStepOptions,
@@ -24,6 +27,7 @@ import type {
   ScrollStep,
   ScrollStepOptions,
   Step,
+  StepCursorOverride,
   StepType,
   TooltipOptions,
   TooltipStep,
@@ -56,6 +60,7 @@ const DEFAULT_CLICK_DURATION = 50;
 const DEFAULT_ZOOM_DURATION = 360;
 const DEFAULT_PAN_DURATION = 360;
 const DEFAULT_CLEAR_CACHE_DURATION = 50;
+const DEFAULT_DRAG_DURATION = 1000;
 const DEFAULT_TOOLTIP_DURATION = 3000;
 const DEFAULT_WAIT_FOR_SELECTOR_TIMEOUT = 5000;
 const DEFAULT_WAIT_FOR_NAVIGATION_TIMEOUT = 5000;
@@ -209,4 +214,13 @@ export function clearCache(): ClearCacheStep {
   return createStep("clearCache", stepOptions, DEFAULT_CLEAR_CACHE_DURATION);
 }
 
-export type { PanStepOptions, ZoomStepOptions };
+export function drag(
+  from: DragEndpoint,
+  to: DragEndpoint,
+  options: StepCursorOverride = {},
+): DragStep {
+  const stepOptions: DragStepOptions = { from, to, cursor: options.cursor };
+  return createStep("drag", stepOptions, DEFAULT_DRAG_DURATION);
+}
+
+export type { DragEndpoint, PanStepOptions, ZoomStepOptions };
