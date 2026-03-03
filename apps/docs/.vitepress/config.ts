@@ -4,6 +4,19 @@ export default defineConfig({
   title: "Walkr",
   description:
     "Scriptable walkthrough engine — record, replay, and export interactive product demos.",
+  base: "/walkr/",
+
+  head: [
+    [
+      "link",
+      {
+        rel: "alternate",
+        type: "text/plain",
+        href: "/walkr/llms.txt",
+        title: "LLM-friendly summary",
+      },
+    ],
+  ],
 
   themeConfig: {
     nav: [

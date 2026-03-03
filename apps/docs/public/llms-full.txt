@@ -1,0 +1,714 @@
+# Walkr
+
+> Scriptable walkthrough engine — define interactive product demos in TypeScript, preview them live, and export as MP4, GIF, WebM, or self-contained HTML embeds.
+
+Walkr is a monorepo of npm packages under the `@walkrstudio` scope. You write a short TypeScript script with step functions (moveTo, click, type, highlight, etc.), point it at any web app, and get a deterministic, pixel-perfect product demo.
+
+---
+
+# Getting Started
+
+Walkr lets you define interactive product walkthroughs in TypeScript and play them back in the browser, export them as video, or embed them as self-contained HTML.
+
+## Installation
+
+Install the core package and CLI:
+
+```bash
+pnpm add @walkrstudio/core @walkrstudio/cli
+```
+
+If you want to export walkthroughs as video you also need the recorder:
+
+```bash
+pnpm add @walkrstudio/recorder
+```
+
+## Write Your First Walkthrough
+
+Create a file called `demo.ts`:
+
+```ts
+import { walkr, moveTo, click, type, wait, highlight } from "@walkrstudio/core";
+
+export default walkr({
+  url: "http://localhost:3000",
+  title: "My First Walkthrough",
+  viewport: { width: 1280, height: 720 },
+  steps: [
+    // Move the cursor to a button and click it
+    moveTo("#get-started", { duration: 600 }),
+    click("#get-started"),
+
+    // Wait for the page to settle
+    wait(500),
+
+    // Type into an input
+    moveTo("#email-input", { duration: 400 }),
+    click("#email-input"),
+    type("hello@example.com", { selector: "#email-input", delay: 40 }),
+
+    // Highlight a section
+    highlight("#signup-form", {
+      spotlight: true,
+      color: "#3b82f6",
+      duration: 1500,
+    }),
+  ],
+});
+```
+
+A walkthrough is created with the `walkr()` function. It takes a target URL, an optional viewport size, and an array of steps.
+
+## Run with `walkr dev`
+
+Start Walkr Studio with live-reload:
+
+```bash
+npx walkr dev demo.ts
+```
+
+This launches a local dev server (default port 5174) with Walkr Studio. The walkthrough replays inside an iframe pointed at your target URL. Every time you save `demo.ts`, the studio reloads automatically.
+
+## Export
+
+When you are happy with the walkthrough, export it:
+
+```bash
+npx walkr export demo.ts --format mp4 --output demo.mp4
+```
+
+See the CLI Reference below for all export options.
+
+## Next Steps
+
+- Core API — all step builders and composers
+- Engine API — programmatic playback with `WalkrEngine`
+- CLI Reference — `walkr dev` and `walkr export` flags
+
+---
+
+# Core API
+
+`@walkrstudio/core` provides the step builders, composers, and the `walkr()` factory that together define a walkthrough.
+
+## `walkr(options)`
+
+Creates a `Walkthrough` object — the top-level unit that the engine and CLI consume.
+
+```ts
+import { walkr, moveTo, click } from "@walkrstudio/core";
+
+export default walkr({
+  url: "https://example.com",
+  steps: [moveTo("#btn", { duration: 500 }), click("#btn")],
+  title: "Example",
+  description: "A short walkthrough.",
+  viewport: { width: 1920, height: 1080 },
+  cursor: { shape: "circle", color: "#22d3ee", size: 24 },
+  zoom: { defaultLevel: 1, easing: "cubic-bezier(0.42, 0, 0.58, 1)" },
+});
+```
+
+### `WalkthroughOptions`
+
+| Field | Type | Description |
+|---|---|---|
+| `url` | `string` | **(required)** The target page URL. |
+| `steps` | `Step[]` | **(required)** Array of steps to execute. |
+| `title` | `string` | Optional walkthrough title. |
+| `description` | `string` | Optional description. |
+| `viewport` | `Viewport` | Design viewport `{ width, height }`. |
+| `cursor` | `CursorConfig` | Default cursor appearance. |
+| `zoom` | `ZoomDefaults` | Default zoom level and easing. |
+
+### `CursorConfig`
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `shape` | `"circle" \| "arrow" \| "dot" \| "svg"` | — | Cursor shape. |
+| `color` | `string` | — | Cursor colour. |
+| `size` | `number` | — | Cursor size in pixels. |
+| `shadow` | `boolean` | — | Show drop shadow. |
+| `clickColor` | `string` | — | Colour of the click ripple. |
+| `svgContent` | `string` | — | Raw SVG string (when `shape` is `"svg"`). |
+| `offset` | `{ x: number; y: number }` | `{ x: 0.5, y: 0.5 }` | Hotspot offset as a fraction of cursor size. |
+
+## Step Builders
+
+Every step builder returns a `Step` object with `id`, `type`, `options`, and `duration`.
+
+### `moveTo(selector, options?)`
+
+Move the virtual cursor to a DOM element.
+
+```ts
+moveTo("#my-button", { duration: 600, easing: "ease-in-out" });
+```
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `duration` | `number` | `0` | Animation duration in ms. |
+| `easing` | `string` | — | CSS easing function. |
+| `follow` | `boolean` | — | Keep cursor attached to the element. |
+| `cursor` | `Partial<CursorConfig>` | — | Per-step cursor override. |
+
+### `moveToCoords(x, y, options?)`
+
+Move the cursor to absolute coordinates.
+
+```ts
+moveToCoords(960, 540, { duration: 400 });
+```
+
+Accepts the same options as `moveTo`.
+
+### `click(selector, options?)`
+
+Click a DOM element.
+
+```ts
+click("#submit-btn");
+click("#item", { button: "right", double: true });
+```
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `button` | `"left" \| "right" \| "middle"` | `"left"` | Mouse button. |
+| `double` | `boolean` | `false` | Double-click. |
+| `cursor` | `Partial<CursorConfig>` | — | Per-step cursor override. |
+
+### `clickCoords(x, y, options?)`
+
+Click at absolute coordinates.
+
+```ts
+clickCoords(100, 200, { button: "left" });
+```
+
+Accepts the same options as `click`.
+
+### `type(text, options?)`
+
+Type text character by character.
+
+```ts
+type("hello@example.com", { selector: "#email", delay: 40 });
+```
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `delay` | `number` | `0` | Delay between keystrokes in ms. |
+| `selector` | `string` | — | Target input element. |
+| `cursor` | `Partial<CursorConfig>` | — | Per-step cursor override. |
+
+The step duration is computed as `text.length * delay`.
+
+### `scroll(x, y, options?)`
+
+Scroll the page by `(x, y)` pixels.
+
+```ts
+scroll(0, 300, { smooth: true });
+```
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `smooth` | `boolean` | — | Use smooth scrolling. |
+| `cursor` | `Partial<CursorConfig>` | — | Per-step cursor override. |
+
+### `wait(ms)`
+
+Pause playback for the given number of milliseconds.
+
+```ts
+wait(1000); // wait one second
+```
+
+### `waitForSelector(selector, options?)`
+
+Wait until a DOM element matching `selector` exists (and optionally is visible).
+
+```ts
+waitForSelector(".modal", { timeout: 3000, visible: true });
+```
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `timeout` | `number` | `5000` | Maximum wait time in ms. |
+| `visible` | `boolean` | — | Also require the element to be visible. |
+| `cursor` | `Partial<CursorConfig>` | — | Per-step cursor override. |
+
+### `waitForNavigation(options?)`
+
+Wait for a page navigation to complete.
+
+```ts
+waitForNavigation({ waitUntil: "networkidle", timeout: 8000 });
+```
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `timeout` | `number` | `5000` | Maximum wait time in ms. |
+| `waitUntil` | `"load" \| "domcontentloaded" \| "networkidle"` | `"load"` | When to consider navigation complete. |
+| `cursor` | `Partial<CursorConfig>` | — | Per-step cursor override. |
+
+### `highlight(selector, options?)`
+
+Highlight a DOM element with an optional spotlight overlay.
+
+```ts
+highlight("#feature-card", {
+  spotlight: true,
+  color: "#3b82f6",
+  duration: 2000,
+  backdropOpacity: 0.3,
+  padding: 8,
+  borderRadius: 6,
+});
+```
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `color` | `string` | — | Highlight border / glow colour. |
+| `duration` | `number` | `0` | How long the highlight stays visible (ms). |
+| `spotlight` | `boolean` | — | Dim the rest of the page behind the element. |
+| `backdropOpacity` | `number` | — | Opacity of the spotlight backdrop (0–1). |
+| `borderRadius` | `number` | — | Border radius of the highlight box (px). |
+| `padding` | `number` | — | Extra padding around the element (px). |
+| `cursor` | `Partial<CursorConfig>` | — | Per-step cursor override. |
+
+### `tooltip(selector, text, options?)`
+
+Show a tooltip anchored to a DOM element.
+
+```ts
+tooltip("#help-icon", "Click here to get started", {
+  position: "bottom",
+  duration: 3000,
+  title: "Tip",
+});
+```
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `duration` | `number` | `3000` | How long the tooltip is shown (ms). |
+| `position` | `"top" \| "bottom" \| "left" \| "right"` | `"top"` | Tooltip placement relative to the element. |
+| `title` | `string` | — | Bold title line above the text. |
+| `cursor` | `Partial<CursorConfig>` | — | Per-step cursor override. |
+
+### `narrate(src, options?)`
+
+Play an audio file during the walkthrough.
+
+```ts
+narrate("/audio/intro.mp3", { duration: 5000, volume: 0.8 });
+```
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `duration` | `number` | — | Duration in ms. If omitted, derived from audio length at runtime. |
+| `volume` | `number` | `1` | Volume level from 0 to 1. |
+| `loop` | `boolean` | `false` | Whether to loop the audio. |
+
+### `zoom(level, options?)`
+
+Zoom the viewport to a given level.
+
+```ts
+zoom(2, { x: 500, y: 300, easing: "ease-out" });
+```
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `x` | `number` | — | Zoom origin X coordinate. |
+| `y` | `number` | — | Zoom origin Y coordinate. |
+| `easing` | `string` | `"cubic-bezier(0.42, 0, 0.58, 1)"` | CSS easing function. |
+| `follow` | `boolean` | — | Keep zoom centred on cursor. |
+| `cursor` | `Partial<CursorConfig>` | — | Per-step cursor override. |
+
+Default animation duration is 360 ms.
+
+### `pan(x, y, options?)`
+
+Pan (translate) the viewport to a position.
+
+```ts
+pan(200, 100, { duration: 500, easing: "ease-in-out" });
+```
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `duration` | `number` | `360` | Animation duration in ms. |
+| `easing` | `string` | `"cubic-bezier(0.42, 0, 0.58, 1)"` | CSS easing function. |
+| `cursor` | `Partial<CursorConfig>` | — | Per-step cursor override. |
+
+### `drag(from, to, options?)`
+
+Simulate a click-drag from one location to another. Each endpoint can be a CSS selector (resolves to the element's center) or absolute coordinates.
+
+```ts
+drag({ selector: "#item" }, { selector: "#dropzone" });
+drag({ x: 100, y: 200 }, { x: 500, y: 300 });
+drag({ selector: "#slider-thumb" }, { x: 800, y: 200 });
+```
+
+**Endpoint types:**
+
+| Shape | Type | Resolves to |
+|---|---|---|
+| Selector | `{ selector: string }` | Center of the matching DOM element. |
+| Coordinates | `{ x: number; y: number }` | Absolute viewport position. |
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `cursor` | `Partial<CursorConfig>` | — | Per-step cursor override. |
+
+Default duration is 1000 ms (15% move to source, 5% press, 70% drag, 10% release). Dispatches standard pointer and mouse events (`pointerdown`, `mousemove`, `pointerup`, etc.), not the HTML5 Drag and Drop API.
+
+### `clearCache()`
+
+Clear the browser cache inside the iframe. Useful at the start of a walkthrough to ensure a clean state.
+
+```ts
+clearCache();
+```
+
+No options. Default duration is 50 ms.
+
+## Composers
+
+Composers combine multiple steps into a single logical unit.
+
+### `sequence(...steps)`
+
+Run steps one after another. The total duration is the sum of all child durations.
+
+```ts
+import { sequence, moveTo, click, wait } from "@walkrstudio/core";
+
+sequence(
+  moveTo("#btn", { duration: 400 }),
+  click("#btn"),
+  wait(300),
+);
+```
+
+### `parallel(...steps)`
+
+Run steps simultaneously. The total duration is the maximum of all child durations.
+
+```ts
+import { parallel, moveTo, narrate } from "@walkrstudio/core";
+
+parallel(
+  moveTo("#hero", { duration: 1000 }),
+  narrate("/audio/intro.mp3", { duration: 1000 }),
+);
+```
+
+---
+
+# Engine API
+
+`@walkrstudio/engine` provides `WalkrEngine` — the browser playback engine that loads a walkthrough URL in an iframe, renders a cursor overlay, and executes steps with `requestAnimationFrame`-driven animations.
+
+## Quick Start
+
+```ts
+import { WalkrEngine } from "@walkrstudio/engine";
+
+const engine = new WalkrEngine({ cursor: { shape: "circle", color: "#22d3ee" } });
+engine.mount(document.getElementById("walkr")!);
+
+engine.on("step", (_event, state) => {
+  console.log(`Step ${state.currentStep}/${state.totalSteps}`);
+});
+
+await engine.play(myWalkthrough);
+```
+
+## `new WalkrEngine(options?)`
+
+Create a new engine instance.
+
+### `EngineOptions`
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `cursor` | `CursorConfig` | — | Default cursor appearance (shape, colour, size, shadow). |
+| `container` | `HTMLElement` | — | Mount target. Can also be set later via `mount()`. |
+| `viewport` | `Viewport` | — | Fixed design viewport `{ width, height }`. |
+| `debug` | `boolean` | `false` | Enable verbose step execution logging. |
+
+If `container` is passed in the constructor the engine mounts immediately.
+
+## Methods
+
+### `mount(container)`
+
+Attach the engine to a DOM element. Creates an iframe, stage layer, cursor overlay, and (when a viewport is configured) a scaler element inside the container.
+
+```ts
+engine.mount(document.getElementById("walkr")!);
+```
+
+Safe to call multiple times with the same container — subsequent calls are no-ops.
+
+### `unmount()`
+
+Remove all engine DOM elements, disconnect observers, and reset playback state. The engine can be re-mounted afterwards.
+
+```ts
+engine.unmount();
+```
+
+### `play(walkthrough)`
+
+Load the walkthrough URL in the iframe and execute all steps in sequence. Returns a promise that resolves when playback completes.
+
+```ts
+await engine.play(myWalkthrough);
+```
+
+The walkthrough's `viewport` and `cursor` settings take precedence over engine-level options for that run. Throws if the engine has not been mounted.
+
+### `pause()`
+
+Pause playback between steps. The engine stops advancing until `resume()` is called. Emits the `pause` event.
+
+```ts
+engine.pause();
+```
+
+### `resume()`
+
+Resume playback after a pause. Emits the `resume` event.
+
+```ts
+engine.resume();
+```
+
+### `getState()`
+
+Returns a snapshot of the current playback state.
+
+```ts
+const state = engine.getState();
+// { playing: true, currentStep: 3, totalSteps: 10, progress: 0.3 }
+```
+
+#### `EngineState`
+
+| Field | Type | Description |
+|---|---|---|
+| `playing` | `boolean` | Whether playback is currently active. |
+| `currentStep` | `number` | Index of the last completed step. |
+| `totalSteps` | `number` | Total number of steps in the walkthrough. |
+| `progress` | `number` | Progress from `0` to `1`. |
+
+### `setCursorConfig(config)`
+
+Update cursor appearance at any time during or between playback.
+
+```ts
+engine.setCursorConfig({ color: "#ef4444", size: 32 });
+```
+
+### `getViewportState()`
+
+Returns the current viewport zoom level and pan offset.
+
+```ts
+const vp = engine.getViewportState();
+// { zoom: 1.5, panX: 200, panY: 100 }
+```
+
+#### `ViewportState`
+
+| Field | Type | Description |
+|---|---|---|
+| `zoom` | `number` | Current zoom level. |
+| `panX` | `number` | Horizontal pan offset. |
+| `panY` | `number` | Vertical pan offset. |
+
+### `resetViewport(options?)`
+
+Animate the viewport back to zoom level 1 and the default pan origin.
+
+```ts
+await engine.resetViewport({ duration: 500, easing: "ease-out" });
+```
+
+| Option | Type | Description |
+|---|---|---|
+| `duration` | `number` | Animation duration in ms. |
+| `easing` | `string` | CSS easing function. |
+
+## Events
+
+Subscribe with `on(event, handler)` and unsubscribe with `off(event, handler)`.
+
+```ts
+engine.on("step", (event, state, detail?) => {
+  console.log(`${event}: step ${state.currentStep}/${state.totalSteps}`);
+});
+```
+
+### `PlaybackEvent`
+
+| Event | Description |
+|---|---|
+| `"start"` | Playback has begun. |
+| `"step"` | A step has completed. |
+| `"complete"` | All steps have finished. |
+| `"pause"` | Playback was paused. |
+| `"resume"` | Playback was resumed. |
+| `"step_error"` | A step failed (e.g. selector not found). |
+
+### `EventHandler`
+
+```ts
+type EventHandler = (
+  event: PlaybackEvent,
+  state: EngineState,
+  detail?: StepErrorDetail,
+) => void;
+```
+
+The `detail` argument is only present for `step_error` events.
+
+### `StepErrorDetail`
+
+| Field | Type | Description |
+|---|---|---|
+| `error` | `StepError` | The error object. |
+| `stepIndex` | `number` | Index of the failed step. |
+| `stepResult` | `StepResult` | Result metadata including `status`, `stepType`, `selector`, and `durationMs`. |
+
+## `StepError`
+
+A custom error class thrown when a step fails at runtime.
+
+```ts
+import { StepError } from "@walkrstudio/engine";
+
+engine.on("step_error", (_event, _state, detail) => {
+  const err = detail!.error;
+  console.error(err.stepType, err.selector, err.reason);
+});
+```
+
+### Properties
+
+| Field | Type | Description |
+|---|---|---|
+| `stepType` | `StepType` | The type of step that failed (e.g. `"click"`, `"waitForSelector"`). |
+| `selector` | `string \| undefined` | The CSS selector involved, if any. |
+| `reason` | `StepErrorReason` | `"not-found"`, `"timeout"`, or `"no-document"`. |
+
+### `StepErrorReason`
+
+| Value | Description |
+|---|---|
+| `"not-found"` | The selector did not match any element. |
+| `"timeout"` | The wait/navigation timed out. |
+| `"no-document"` | The iframe document was not accessible. |
+
+## Low-Level Exports
+
+The engine package also re-exports several lower-level utilities. These are considered internal but available for advanced use:
+
+- `executeStep(step, cursor, iframe, context)` — Run a single step.
+- `initializeViewport(stage)` / `getViewportState(stage)` / `resetViewport(stage, options?)` — Viewport transform helpers.
+- `createCursor(config)` / `showCursor(el)` / `hideCursor(el)` / `moveCursorTo(el, x, y)` / `updateCursorConfig(el, config)` — Cursor DOM helpers.
+- `showClickRipple(el)` / `showScrollIndicator(el)` / `hideScrollIndicator(el)` — Visual feedback helpers.
+- `cubicBezier(...)` / `easeInOut` / `easeOut` / `linear` — Easing functions.
+
+---
+
+# CLI Reference
+
+The `@walkrstudio/cli` package provides the `walkr` command for developing and exporting walkthroughs.
+
+## Installation
+
+```bash
+pnpm add @walkrstudio/cli
+```
+
+The CLI is available as `walkr` (via the `bin` field in the package).
+
+## `walkr dev <script>`
+
+Start Walkr Studio with live script reload.
+
+```bash
+walkr dev demo.ts
+walkr dev demo.ts --port 3000
+```
+
+### Options
+
+| Flag | Type | Default | Description |
+|---|---|---|---|
+| `--port` | `number` | `5174` | Dev server port. |
+
+This command:
+
+1. Loads and evaluates the walkthrough script (must `export default` a `Walkthrough`).
+2. Resolves the target origin from the walkthrough's `url` field.
+3. Launches a Vite dev server (default port **5174**) serving Walkr Studio.
+4. Proxies requests to your target app through `/__target__/` so the iframe can access it without CORS issues.
+5. Opens the Studio URL in your default browser.
+6. Watches the script file — on save, the walkthrough JSON is re-written and Studio hot-reloads.
+
+Press `Ctrl+C` to stop.
+
+## `walkr export <script> [options]`
+
+Export a walkthrough as video or a self-contained HTML embed.
+
+```bash
+walkr export demo.ts --format mp4 --output demo.mp4
+```
+
+The script must `export default` a `Walkthrough` object from `@walkrstudio/core`.
+
+### Options
+
+| Flag | Type | Default | Description |
+|---|---|---|---|
+| `--format` | `mp4 \| gif \| webm \| embed` | `mp4` | Output format. `embed` produces a self-contained HTML file. |
+| `--output` | `string` | `output.<ext>` | Output file path. |
+| `--width` | `number` | `1920` | Video width in pixels. |
+| `--height` | `number` | `1080` | Video height in pixels. |
+| `--realtime` | `boolean` | `false` | Use real-time screencast instead of virtual time. |
+
+### Examples
+
+```bash
+# Export as MP4 (default)
+walkr export demo.ts
+
+# Export as GIF
+walkr export demo.ts --format gif --output demo.gif
+
+# Export as self-contained HTML embed
+walkr export demo.ts --format embed --output demo.html
+
+# Custom resolution
+walkr export demo.ts --width 1280 --height 720 --output demo-720p.mp4
+
+# Real-time recording
+walkr export demo.ts --realtime --format webm
+```
+
+The `export` command requires `@walkrstudio/recorder` to be installed and a Chromium binary available on the system.
+
+## Global Flags
+
+| Flag | Description |
+|---|---|
+| `--help`, `-h` | Show usage information. |
+| `--version`, `-v` | Print the CLI version. |

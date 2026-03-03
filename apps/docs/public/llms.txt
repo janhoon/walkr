@@ -1,0 +1,17 @@
+# Walkr
+
+> Scriptable walkthrough engine — define interactive product demos in TypeScript, preview them live, and export as MP4, GIF, WebM, or self-contained HTML embeds.
+
+Walkr is a monorepo of npm packages under the `@walkrstudio` scope. You write a short TypeScript script with step functions (moveTo, click, type, highlight, etc.), point it at any web app, and get a deterministic, pixel-perfect product demo.
+
+## Docs
+
+- [Getting Started](https://janhoon.github.io/walkr/guide/getting-started.html): Installation, first walkthrough, dev preview, and export
+- [Core API](https://janhoon.github.io/walkr/api/core.html): Step builders (moveTo, click, type, scroll, highlight, zoom, pan, drag, etc.), composers (sequence, parallel), walkr() factory, and CursorConfig
+- [Engine API](https://janhoon.github.io/walkr/api/engine.html): WalkrEngine class — mount, play, pause, resume, events, viewport control, and error handling
+- [CLI Reference](https://janhoon.github.io/walkr/api/cli.html): walkr dev (live preview) and walkr export (video/embed output) commands and flags
+
+## Optional
+
+- [Full documentation](https://janhoon.github.io/walkr/llms-full.txt): Complete documentation content in a single file
+- [GitHub Repository](https://github.com/janhoon/walkr): Source code, issues, and contributions

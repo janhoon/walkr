@@ -8,6 +8,8 @@ Write a short TypeScript script, point it at your app, and get a production-read
 
 ![Walkr Studio — visual timeline editor and live preview](docs/screenshot.png)
 
+**[Documentation](https://janhoon.github.io/walkr/)**
+
 ## Install
 
 Walkr ships as a single CLI package that includes everything you need:
