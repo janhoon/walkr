@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.0](https://github.com/janhoon/walkr/compare/engine-v0.3.0...engine-v0.4.0) (2026-03-03)
+
+
+### Features
+
+* **engine:** add cursor preset registry with tests ([f913991](https://github.com/janhoon/walkr/commit/f9139913ea9f15325f9eedcb780c316e8954870e))
+* **engine:** wire cursor presets into rendering pipeline ([b295cd6](https://github.com/janhoon/walkr/commit/b295cd6a0c9869f8b0fe31dd6670c4ed085d4a24))
+
 ## [0.3.0](https://github.com/janhoon/walkr/compare/engine-v0.2.1...engine-v0.3.0) (2026-03-03)
 
 

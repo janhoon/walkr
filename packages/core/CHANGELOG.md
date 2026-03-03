@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/janhoon/walkr/compare/core-v0.3.0...core-v0.4.0) (2026-03-03)
+
+
+### Features
+
+* **core:** add cursor preset names to shape union ([9e90422](https://github.com/janhoon/walkr/commit/9e9042230c7a2ef21f63c6a5665d4d424e3a64e7))
+
 ## [0.3.0](https://github.com/janhoon/walkr/compare/core-v0.2.0...core-v0.3.0) (2026-03-03)
 
 
