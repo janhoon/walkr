@@ -2,7 +2,7 @@
   "packages/core": "0.3.0",
   "packages/engine": "0.3.0",
   "packages/cli": "0.4.1",
-  "packages/recorder": "0.3.0",
-  "packages/studio": "0.5.0",
+  "packages/recorder": "0.3.1",
+  "packages/studio": "0.5.1",
   "packages/create": "0.2.2"
 }
