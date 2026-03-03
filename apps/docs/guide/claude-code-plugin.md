@@ -10,10 +10,16 @@ Walkr ships with a [Claude Code](https://claude.com/claude-code) plugin that tea
 
 ## Installation
 
-Install the Walkr plugin from inside Claude Code:
+Add the Walkr marketplace and install the plugin from inside Claude Code:
 
 ```
-/install-plugin walkr
+/plugin marketplace add janhoon/walkr
+```
+
+Then install the Walkr plugin:
+
+```
+/plugin install walkr@walkr
 ```
 
 This registers the `create-walkthrough` skill, which Claude will use automatically when you ask it to build a product demo.
