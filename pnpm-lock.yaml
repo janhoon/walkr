@@ -60,7 +60,7 @@ importers:
 
   packages/core: {}
 
-  packages/create-walkrstudio: {}
+  packages/create: {}
 
   packages/engine:
     dependencies:

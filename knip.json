@@ -16,7 +16,7 @@
     "packages/studio": {
       "project": ["src/**/*.{ts,tsx}"]
     },
-    "packages/create-walkrstudio": {
+    "packages/create": {
       "project": ["src/**/*.js"]
     },
     "apps/docs": {

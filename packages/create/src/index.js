@@ -243,7 +243,7 @@ async function scaffold(name, description) {
 
 async function main() {
   console.log();
-  console.log("  create-walkrstudio");
+  console.log("  @walkrstudio/create");
   console.log();
 
   // Project name — from argv or interactive prompt

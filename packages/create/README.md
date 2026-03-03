@@ -1,17 +1,17 @@
-# create-walkrstudio
+# @walkrstudio/create
 
 Scaffold a new [Walkr](https://github.com/janhoon/walkr) walkthrough project.
 
 ## Usage
 
 ```bash
-npm create walkrstudio@latest my-project
+npm create @walkrstudio@latest my-project
 ```
 
 Or interactively:
 
 ```bash
-npm create walkrstudio@latest
+npm create @walkrstudio@latest
 # ➜ prompts for project name and optional description
 ```
 

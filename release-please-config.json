@@ -21,9 +21,9 @@
       "release-type": "node",
       "component": "studio"
     },
-    "packages/create-walkrstudio": {
+    "packages/create": {
       "release-type": "node",
-      "component": "create-walkrstudio"
+      "component": "create"
     }
   }
 }
