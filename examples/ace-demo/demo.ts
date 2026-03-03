@@ -5,8 +5,6 @@ import { clearCache, click, highlight, moveTo, type, wait, walkr } from "@walkrs
  *
  * Flow: Login -> switch to Victoria org -> open AI Copilot -> ask for a
  * sample VictoriaMetrics query.
- *
- * Target viewport: 1920x1080
  */
 export default walkr({
   url: "http://localhost:5173/login",
@@ -14,7 +12,7 @@ export default walkr({
   description:
     "Log in, switch to the Victoria organization, and use the AI Copilot to generate a VictoriaMetrics query.",
 
-  viewport: { width: 1920, height: 1080 },
+  viewport: { width: 1366, height: 768 },
 
   cursor: {
     shape: "svg",
@@ -56,14 +54,7 @@ export default walkr({
 
     wait(300),
 
-    // Highlight and click Sign in
-    highlight('[data-testid="login-submit-btn"]', {
-      spotlight: true,
-      color: "#10b981",
-      duration: 1000,
-      backdropOpacity: 0.3,
-      padding: 8,
-    }),
+    // Click Sign in
     moveTo('[data-testid="login-submit-btn"]', { duration: 400 }),
     click('[data-testid="login-submit-btn"]'),
 
@@ -84,7 +75,7 @@ export default walkr({
     click('[data-testid="org-dropdown-item-265c1068-660e-4c3c-affd-aa78a4362562"]'),
 
     // Wait for org switch + page reload
-    wait(1500),
+    wait(500),
 
     // ── Scene 3: Open AI Copilot ────────────────────────────────────
     // Move to the AI toggle button
@@ -121,6 +112,6 @@ export default walkr({
     click('[data-testid="copilot-send-btn"]'),
 
     // Let the response stream in
-    wait(3000),
+    wait(5000),
   ],
 });
