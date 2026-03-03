@@ -1,4 +1,4 @@
-export interface CursorPreset {
+interface CursorPreset {
   svg: string;
   colorAttr: "stroke" | "fill";
   originalColor: string;
