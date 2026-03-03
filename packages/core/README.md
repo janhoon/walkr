@@ -81,6 +81,25 @@ npx walkr dev demo.ts
 | `double` | `boolean` | `false` | Double-click. |
 | `cursor` | `Partial<CursorConfig>` | — | Per-step cursor override. |
 
+### Drag
+
+```ts
+drag({ selector: "#item" }, { selector: "#dropzone" })
+drag({ x: 100, y: 200 }, { x: 500, y: 300 })
+```
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `drag` | `drag(from, to, options?)` | Click-drag from one location to another. |
+
+Each endpoint is either `{ selector: string }` (resolved to element center) or `{ x: number; y: number }` (absolute coordinates).
+
+| Option | Type | Default | Description |
+| --- | --- | --- | --- |
+| `cursor` | `Partial<CursorConfig>` | — | Per-step cursor override. |
+
+Default duration: 1000 ms. Dispatches pointer and mouse events (not HTML5 Drag and Drop).
+
 ### Type
 
 ```ts

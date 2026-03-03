@@ -255,6 +255,29 @@ pan(200, 100, { duration: 500, easing: "ease-in-out" });
 | `easing` | `string` | `"cubic-bezier(0.42, 0, 0.58, 1)"` | CSS easing function. |
 | `cursor` | `Partial<CursorConfig>` | — | Per-step cursor override. |
 
+### `drag(from, to, options?)`
+
+Simulate a click-drag from one location to another. Each endpoint can be a CSS selector (resolves to the element's center) or absolute coordinates.
+
+```ts
+drag({ selector: "#item" }, { selector: "#dropzone" });
+drag({ x: 100, y: 200 }, { x: 500, y: 300 });
+drag({ selector: "#slider-thumb" }, { x: 800, y: 200 });
+```
+
+**Endpoint types:**
+
+| Shape | Type | Resolves to |
+|---|---|---|
+| Selector | `{ selector: string }` | Center of the matching DOM element. |
+| Coordinates | `{ x: number; y: number }` | Absolute viewport position. |
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `cursor` | `Partial<CursorConfig>` | — | Per-step cursor override. |
+
+Default duration is 1000 ms (15% move to source, 5% press, 70% drag, 10% release). Dispatches standard pointer and mouse events (`pointerdown`, `mousemove`, `pointerup`, etc.), not the HTML5 Drag and Drop API.
+
 ### `clearCache()`
 
 Clear the browser cache inside the iframe. Useful at the start of a walkthrough to ensure a clean state.

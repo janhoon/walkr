@@ -37,7 +37,7 @@ npx @walkrstudio/cli dev demo.ts
 Create a file called `demo.ts`:
 
 ```ts
-import { walkr, moveTo, click, type, highlight, wait } from "@walkrstudio/core";
+import { walkr, moveTo, click, type, highlight, wait, drag } from "@walkrstudio/core";
 
 export default walkr({
   url: "https://your-app.com",
@@ -249,6 +249,22 @@ Pause for a fixed duration. Useful between steps for pacing.
 wait(500)
 ```
 
+### `drag(from, to, options?)`
+
+Simulate a click-drag from one location to another. Each endpoint can be a CSS selector or absolute coordinates.
+
+```ts
+drag({ selector: "#item" }, { selector: "#dropzone" })
+drag({ x: 100, y: 200 }, { x: 500, y: 300 })
+drag({ selector: "#slider-thumb" }, { x: 800, y: 200 })
+```
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `cursor` | `Partial<CursorConfig>` | Per-step cursor override |
+
+Default duration: 1000 ms. Dispatches pointer and mouse events (not the HTML5 Drag and Drop API).
+
 ### `clearCache()`
 
 Clear browser cookies and storage. Useful at the start of a walkthrough to ensure a clean state.
@@ -312,7 +328,7 @@ walkr({
 
 ```ts
 import {
-  clearCache, click, highlight, moveTo,
+  clearCache, click, drag, highlight, moveTo,
   type, wait, walkr, zoom, parallel,
 } from "@walkrstudio/core";
 
@@ -383,6 +399,9 @@ Early development / alpha
 ```bash
 pnpm install
 pnpm build
-pnpm dev      # run all packages in dev mode
-pnpm check    # lint + type-check + dead code detection
+pnpm dev          # run all packages in dev mode
+pnpm lint         # biome lint + format
+pnpm type-check   # typescript
+pnpm knip         # dead code + unused dependency detection
+pnpm test         # vitest
 ```
