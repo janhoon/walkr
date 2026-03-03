@@ -5,7 +5,6 @@
       "project": ["src/**/*.ts"]
     },
     "packages/engine": {
-      "entry": ["src/player.ts"],
       "project": ["src/**/*.ts"]
     },
     "packages/cli": {
@@ -15,11 +14,14 @@
       "project": ["src/**/*.ts"]
     },
     "packages/studio": {
-      "project": ["src/**/*.{ts,tsx}"],
-      "vite": true
+      "project": ["src/**/*.{ts,tsx}"]
     },
     "packages/create-walkrstudio": {
       "project": ["src/**/*.js"]
+    },
+    "apps/docs": {
+      "project": ["**/*.{ts,md}"],
+      "ignoreDependencies": ["vue"]
     },
     "examples/ace-demo": {
       "entry": ["demo.ts"],

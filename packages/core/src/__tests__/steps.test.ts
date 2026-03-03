@@ -1,5 +1,20 @@
-import { describe, it, expect } from "vitest";
-import { moveTo, moveToCoords, click, clickCoords, type, scroll, wait, waitForSelector, waitForNavigation, highlight, tooltip, narrate, zoom, pan } from "../steps.js";
+import { describe, expect, it } from "vitest";
+import {
+  click,
+  clickCoords,
+  highlight,
+  moveTo,
+  moveToCoords,
+  narrate,
+  pan,
+  scroll,
+  tooltip,
+  type,
+  wait,
+  waitForNavigation,
+  waitForSelector,
+  zoom,
+} from "../steps.js";
 
 describe("moveTo (selector)", () => {
   it("creates a moveTo step with a selector", () => {

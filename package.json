@@ -9,17 +9,15 @@
     "lint": "pnpm -r lint",
     "type-check": "pnpm -r type-check",
     "dev": "pnpm -r --parallel dev",
+    "knip": "knip",
     "test": "vitest run",
     "docs:dev": "pnpm --filter @walkrstudio/docs dev",
     "docs:build": "pnpm --filter @walkrstudio/docs build"
   },
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^8.24.0",
-    "@typescript-eslint/parser": "^8.24.0",
-    "eslint": "^9.20.1",
-    "eslint-config-prettier": "^10.0.1",
+    "@biomejs/biome": "^2.4.5",
     "jsdom": "^28.1.0",
-    "prettier": "^3.5.2",
+    "knip": "^5.85.0",
     "typescript": "^5.8.2",
     "vitest": "^4.0.18"
   }

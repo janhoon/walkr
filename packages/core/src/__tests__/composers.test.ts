@@ -1,6 +1,6 @@
-import { describe, it, expect } from "vitest";
-import { sequence, parallel } from "../composers.js";
-import { wait, moveToCoords, clickCoords } from "../steps.js";
+import { describe, expect, it } from "vitest";
+import { parallel, sequence } from "../composers.js";
+import { clickCoords, moveToCoords, wait } from "../steps.js";
 
 describe("sequence", () => {
   it("sums the durations of all child steps", () => {
@@ -25,11 +25,7 @@ describe("sequence", () => {
   });
 
   it("handles mixed step types", () => {
-    const step = sequence(
-      moveToCoords(0, 0, { duration: 200 }),
-      wait(500),
-      clickCoords(100, 100),
-    );
+    const step = sequence(moveToCoords(0, 0, { duration: 200 }), wait(500), clickCoords(100, 100));
     // moveToCoords(200) + wait(500) + clickCoords(50) = 750
     expect(step.duration).toBe(750);
   });

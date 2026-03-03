@@ -140,9 +140,7 @@ export function waitForSelector(
   return createStep("waitForSelector", stepOptions, timeout);
 }
 
-export function waitForNavigation(
-  options: WaitForNavigationOptions = {},
-): WaitForNavigationStep {
+export function waitForNavigation(options: WaitForNavigationOptions = {}): WaitForNavigationStep {
   const timeout = options.timeout ?? DEFAULT_WAIT_FOR_NAVIGATION_TIMEOUT;
   const stepOptions: WaitForNavigationOptions = {
     timeout,
