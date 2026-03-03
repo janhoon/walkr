@@ -6,6 +6,7 @@ import {
   easeOut,
   linear,
 } from "./bezier.js";
+import { CURSOR_PRESETS, getPresetSvg, isPresetShape } from "./cursor-presets.js";
 import type { CursorConfig } from "./types.js";
 
 const DEFAULT_CURSOR_CONFIG = {
@@ -22,7 +23,7 @@ const SCROLL_INDICATOR_SELECTOR = "[data-walkr-scroll-indicator]";
 const cursorAnimations = new WeakMap<HTMLElement, number>();
 
 interface ResolvedCursorConfig {
-  shape: "circle" | "arrow" | "dot" | "svg";
+  shape: "circle" | "arrow" | "dot" | "svg" | "cursor-01" | "cursor-02" | "cursor-03";
   color: string;
   size: number;
   shadow: boolean;
@@ -52,6 +53,7 @@ function clampOffset(offset: { x: number; y: number } | undefined): { x: number;
 
 function resolveCursorConfig(config: Partial<CursorConfig> = {}): ResolvedCursorConfig {
   const shape = config.shape ?? DEFAULT_CURSOR_CONFIG.shape;
+  const presetOffset = isPresetShape(shape) ? CURSOR_PRESETS[shape].offset : undefined;
 
   return {
     shape,
@@ -60,7 +62,7 @@ function resolveCursorConfig(config: Partial<CursorConfig> = {}): ResolvedCursor
     shadow: config.shadow ?? DEFAULT_CURSOR_CONFIG.shadow,
     clickColor: config.clickColor ?? DEFAULT_CURSOR_CONFIG.clickColor,
     svgContent: shape === "svg" ? config.svgContent : undefined,
-    offset: clampOffset(config.offset),
+    offset: clampOffset(config.offset ?? presetOffset),
   };
 }
 
@@ -138,6 +140,16 @@ function applyCursorVisual(cursor: HTMLElement, config: ResolvedCursorConfig): v
   } else if (config.shape === "svg" && config.svgContent) {
     applyCommonVisualStyle(visual, config);
     visual.innerHTML = config.svgContent;
+    const first = visual.firstElementChild;
+    if (first instanceof HTMLElement) {
+      first.style.width = "100%";
+      first.style.height = "100%";
+      first.style.display = "block";
+    }
+  } else if (isPresetShape(config.shape)) {
+    applyCommonVisualStyle(visual, config);
+    const presetSvg = getPresetSvg(config.shape, config.color);
+    visual.innerHTML = presetSvg;
     const first = visual.firstElementChild;
     if (first instanceof HTMLElement) {
       first.style.width = "100%";
