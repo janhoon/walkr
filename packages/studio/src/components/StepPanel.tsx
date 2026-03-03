@@ -19,6 +19,7 @@ const STEP_COLORS: Record<string, string> = {
   pan: "#1d5c5c",
   highlight: "#5c5c1d",
   clearCache: "#5c2a1d",
+  drag: "#4a1d5c",
 };
 
 const labelStyle: React.CSSProperties = {
@@ -327,6 +328,82 @@ function renderStepFields(step: Step, updateOptions: (updates: Record<string, un
           Clears cookies, localStorage, and sessionStorage, then reloads the page.
         </div>
       );
+
+    case "drag": {
+      const from = (opts.from ?? {}) as Record<string, unknown>;
+      const to = (opts.to ?? {}) as Record<string, unknown>;
+      const fromType = "selector" in from ? "selector" : "coords";
+      const toType = "selector" in to ? "selector" : "coords";
+
+      return (
+        <>
+          <SelectField
+            label="From type"
+            value={fromType}
+            options={["selector", "coords"]}
+            onChange={(v) => {
+              if (v === "selector") {
+                updateOptions({ from: { selector: "" } });
+              } else {
+                updateOptions({ from: { x: 0, y: 0 } });
+              }
+            }}
+          />
+          {fromType === "selector" ? (
+            <TextField
+              label="From selector"
+              value={(from.selector as string) ?? ""}
+              onChange={(v) => updateOptions({ from: { selector: v } })}
+            />
+          ) : (
+            <>
+              <NumberField
+                label="From X"
+                value={(from.x as number) ?? 0}
+                onChange={(v) => updateOptions({ from: { ...from, x: v } })}
+              />
+              <NumberField
+                label="From Y"
+                value={(from.y as number) ?? 0}
+                onChange={(v) => updateOptions({ from: { ...from, y: v } })}
+              />
+            </>
+          )}
+          <SelectField
+            label="To type"
+            value={toType}
+            options={["selector", "coords"]}
+            onChange={(v) => {
+              if (v === "selector") {
+                updateOptions({ to: { selector: "" } });
+              } else {
+                updateOptions({ to: { x: 0, y: 0 } });
+              }
+            }}
+          />
+          {toType === "selector" ? (
+            <TextField
+              label="To selector"
+              value={(to.selector as string) ?? ""}
+              onChange={(v) => updateOptions({ to: { selector: v } })}
+            />
+          ) : (
+            <>
+              <NumberField
+                label="To X"
+                value={(to.x as number) ?? 0}
+                onChange={(v) => updateOptions({ to: { ...to, x: v } })}
+              />
+              <NumberField
+                label="To Y"
+                value={(to.y as number) ?? 0}
+                onChange={(v) => updateOptions({ to: { ...to, y: v } })}
+              />
+            </>
+          )}
+        </>
+      );
+    }
 
     default:
       return null;
