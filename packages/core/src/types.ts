@@ -25,8 +25,17 @@ export type StepType =
   | "clearCache"
   | "drag";
 
+export type CursorShape =
+  | "circle"
+  | "arrow"
+  | "dot"
+  | "svg"
+  | "cursor-01"
+  | "cursor-02"
+  | "cursor-03";
+
 export interface CursorConfig {
-  shape?: "circle" | "arrow" | "dot" | "svg" | "cursor-01" | "cursor-02" | "cursor-03";
+  shape?: CursorShape;
   color?: string;
   size?: number;
   shadow?: boolean;
