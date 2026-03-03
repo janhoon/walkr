@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.1](https://github.com/janhoon/walkr/compare/studio-v0.5.0...studio-v0.5.1) (2026-03-03)
+
+
+### Bug Fixes
+
+* rewrite CORS Origin header in proxy to prevent 403 from target backend ([0c381ba](https://github.com/janhoon/walkr/commit/0c381bab770701a2591a1adee985a11ccc80bda7))
+
 ## [0.5.0](https://github.com/janhoon/walkr/compare/studio-v0.4.1...studio-v0.5.0) (2026-03-03)
 
 
