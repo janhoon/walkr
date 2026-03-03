@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.2.3](https://github.com/janhoon/walkr/compare/create-v0.2.2...create-v0.2.3) (2026-03-03)
+
+
+### Bug Fixes
+
+* **cli:** rebuild with cursor preset support from engine ([ed0cf33](https://github.com/janhoon/walkr/commit/ed0cf33fa4b2722a56b6af8f8a13db2180193511))
+* **recorder:** rebuild with cursor preset support from engine ([638bf2a](https://github.com/janhoon/walkr/commit/638bf2a544824bea5e222f5e56edb678f364152e))
+* **studio:** rebuild with cursor preset support from engine ([5b83589](https://github.com/janhoon/walkr/commit/5b835894c7ba19ad56d480b0927950657fb3f001))
+
 ## [0.2.2](https://github.com/janhoon/walkr/compare/create-v0.2.1...create-v0.2.2) (2026-03-03)
 
 

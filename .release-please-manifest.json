@@ -1,8 +1,8 @@
 {
-  "packages/core": "0.4.0",
-  "packages/engine": "0.4.1",
-  "packages/cli": "0.4.1",
-  "packages/recorder": "0.3.1",
-  "packages/studio": "0.5.1",
-  "packages/create": "0.2.2"
+  "packages/core": "0.4.1",
+  "packages/engine": "0.4.2",
+  "packages/cli": "0.4.2",
+  "packages/recorder": "0.3.2",
+  "packages/studio": "0.5.2",
+  "packages/create": "0.2.3"
 }
