@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/janhoon/walkr/compare/cli-v0.3.0...cli-v0.4.0) (2026-03-03)
+
+
+### Features
+
+* add --port flag and deterministic step IDs ([#471](https://github.com/janhoon/walkr/issues/471), [#472](https://github.com/janhoon/walkr/issues/472)) ([#24](https://github.com/janhoon/walkr/issues/24)) ([903eac2](https://github.com/janhoon/walkr/commit/903eac25d5dce6abfc68d00c4536f40652c31538))
+
 ## [0.3.0](https://github.com/janhoon/walkr/compare/cli-v0.2.5...cli-v0.3.0) (2026-03-01)
 
 

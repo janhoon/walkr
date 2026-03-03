@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/janhoon/walkr/compare/studio-v0.3.0...studio-v0.4.0) (2026-03-03)
+
+
+### Features
+
+* add drag step configuration panel in Studio ([983b6b0](https://github.com/janhoon/walkr/commit/983b6b0a5c8e5795d6eebde184fb8b8591d07100))
+
 ## [0.3.0](https://github.com/janhoon/walkr/compare/studio-v0.2.1...studio-v0.3.0) (2026-03-01)
 
 
