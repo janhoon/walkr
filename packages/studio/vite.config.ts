@@ -115,12 +115,22 @@ export default defineConfig({
             // We handle the response ourselves so we can rewrite paths
             selfHandleResponse: true,
             configure: (proxy) => {
-              // Ask target not to compress so we can rewrite text
-              proxy.on("proxyReq", (proxyReq) => {
+              proxy.on("proxyReq", (proxyReq, req) => {
+                // Ask target not to compress so we can rewrite text
                 proxyReq.setHeader("accept-encoding", "identity");
+                // Rewrite Origin so the target's CORS middleware accepts the request
+                if (req.headers.origin) {
+                  proxyReq.setHeader("origin", proxyTarget);
+                }
               });
 
               proxy.on("proxyRes", (proxyRes, _req: IncomingMessage, res: ServerResponse) => {
+                // Rewrite CORS allow-origin to match the studio's origin
+                const reqOrigin = _req.headers.origin;
+                if (reqOrigin && proxyRes.headers["access-control-allow-origin"]) {
+                  proxyRes.headers["access-control-allow-origin"] = reqOrigin;
+                }
+
                 const contentType = proxyRes.headers["content-type"] ?? "";
 
                 if (isTextResponse(contentType)) {

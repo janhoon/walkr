@@ -140,6 +140,11 @@ function proxyRequest(
   const headers: Record<string, string | string[] | undefined> = { ...req.headers };
   headers.host = targetUrl.host;
   headers["accept-encoding"] = "identity";
+  // Rewrite Origin so the target's CORS middleware accepts the request
+  const reqOrigin = headers.origin as string | undefined;
+  if (reqOrigin) {
+    headers.origin = targetOrigin;
+  }
 
   const proxyReq = transport.request(
     targetUrl,
@@ -148,6 +153,11 @@ function proxyRequest(
       headers,
     },
     (proxyRes) => {
+      // Rewrite CORS allow-origin to match the studio's origin
+      if (reqOrigin && proxyRes.headers["access-control-allow-origin"]) {
+        proxyRes.headers["access-control-allow-origin"] = reqOrigin;
+      }
+
       const contentType = proxyRes.headers["content-type"] ?? "";
 
       if (isTextResponse(contentType)) {
