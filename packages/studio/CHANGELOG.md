@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/janhoon/walkr/compare/studio-v0.4.0...studio-v0.4.1) (2026-03-03)
+
+
+### Bug Fixes
+
+* strip localhost origins in proxy JS rewriting to fix API routing ([7e67015](https://github.com/janhoon/walkr/commit/7e67015d0129c72af5b7a54032df1a281e9adf7e))
+
 ## [0.4.0](https://github.com/janhoon/walkr/compare/studio-v0.3.0...studio-v0.4.0) (2026-03-03)
 
 
