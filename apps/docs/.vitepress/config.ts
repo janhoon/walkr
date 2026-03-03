@@ -31,7 +31,10 @@ export default defineConfig({
         text: "Guide",
         items: [
           { text: "Getting Started", link: "/guide/getting-started" },
-          { text: "Claude Code Plugin", link: "/guide/claude-code-plugin" },
+          { text: "Claude Code", link: "/guide/claude-code-plugin" },
+          { text: "Cursor", link: "/guide/cursor" },
+          { text: "VS Code", link: "/guide/vscode" },
+          { text: "Antigravity", link: "/guide/antigravity" },
         ],
       },
       {
