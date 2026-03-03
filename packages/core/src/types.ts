@@ -26,7 +26,7 @@ export type StepType =
   | "drag";
 
 export interface CursorConfig {
-  shape?: "circle" | "arrow" | "dot" | "svg";
+  shape?: "circle" | "arrow" | "dot" | "svg" | "cursor-01" | "cursor-02" | "cursor-03";
   color?: string;
   size?: number;
   shadow?: boolean;
