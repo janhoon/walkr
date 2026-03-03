@@ -31,6 +31,7 @@ export default defineConfig({
         text: "Guide",
         items: [
           { text: "Getting Started", link: "/guide/getting-started" },
+          { text: "Claude Code Plugin", link: "/guide/claude-code-plugin" },
         ],
       },
       {

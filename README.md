@@ -396,6 +396,28 @@ Early development / alpha
 @walkrstudio/recorder    Headless capture via CDP + streaming ffmpeg encode
 ```
 
+## Claude Code Plugin
+
+Walkr includes a [Claude Code](https://claude.com/claude-code) plugin that helps AI agents create walkthroughs for you. The `create-walkthrough` skill guides Claude through project setup, script authoring, preview, and export.
+
+### Install the plugin
+
+In Claude Code, run:
+
+```
+/install-plugin walkr
+```
+
+Then ask Claude to create a walkthrough:
+
+```
+Create a walkthrough for my app at http://localhost:3000 showing the signup flow
+```
+
+Claude will walk through the full process — setting up the project, writing the script, previewing in Studio, and exporting to video.
+
+See the [Claude Code Plugin guide](https://janhoon.github.io/walkr/guide/claude-code-plugin) for detailed setup instructions.
+
 ## Development
 
 ```bash
