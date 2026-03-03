@@ -7,7 +7,7 @@ import {
   linear,
 } from "./bezier.js";
 import { CURSOR_PRESETS, getPresetSvg, isPresetShape } from "./cursor-presets.js";
-import type { CursorConfig } from "./types.js";
+import type { CursorConfig, CursorShape } from "./types.js";
 
 const DEFAULT_CURSOR_CONFIG = {
   shape: "circle",
@@ -23,7 +23,7 @@ const SCROLL_INDICATOR_SELECTOR = "[data-walkr-scroll-indicator]";
 const cursorAnimations = new WeakMap<HTMLElement, number>();
 
 interface ResolvedCursorConfig {
-  shape: "circle" | "arrow" | "dot" | "svg" | "cursor-01" | "cursor-02" | "cursor-03";
+  shape: CursorShape;
   color: string;
   size: number;
   shadow: boolean;

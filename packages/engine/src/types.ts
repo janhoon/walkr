@@ -8,6 +8,7 @@ export type {
   ClickStep,
   ClickStepOptions,
   CursorConfig,
+  CursorShape,
   DragEndpoint,
   DragStep,
   DragStepOptions,
