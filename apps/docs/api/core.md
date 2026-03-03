@@ -36,13 +36,41 @@ export default walkr({
 
 | Field | Type | Default | Description |
 |---|---|---|---|
-| `shape` | `"circle" \| "arrow" \| "dot" \| "svg"` | — | Cursor shape. |
+| `shape` | `"circle" \| "arrow" \| "dot" \| "svg" \| "cursor-01" \| "cursor-02" \| "cursor-03"` | — | Cursor shape. Use a `cursor-*` preset for a ready-made pointer. |
 | `color` | `string` | — | Cursor colour. |
 | `size` | `number` | — | Cursor size in pixels. |
 | `shadow` | `boolean` | — | Show drop shadow. |
 | `clickColor` | `string` | — | Colour of the click ripple. |
 | `svgContent` | `string` | — | Raw SVG string (when `shape` is `"svg"`). |
 | `offset` | `{ x: number; y: number }` | `{ x: 0.5, y: 0.5 }` | Hotspot offset as a fraction of cursor size. |
+
+#### Cursor Presets
+
+Built-in cursor presets you can use by setting `shape` to the preset name. The `color` option controls the cursor colour.
+
+<div style="display:flex;gap:2rem;align-items:flex-start;margin:1.5rem 0">
+  <div style="text-align:center">
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="48" height="48"><path d="M17.2607 12.4008C19.3774 11.2626 20.4357 10.6935 20.7035 10.0084C20.9359 9.41393 20.8705 8.74423 20.5276 8.20587C20.1324 7.58551 18.984 7.23176 16.6872 6.52425L8.00612 3.85014C6.06819 3.25318 5.09923 2.95471 4.45846 3.19669C3.90068 3.40733 3.46597 3.85584 3.27285 4.41993C3.051 5.06794 3.3796 6.02711 4.03681 7.94545L6.94793 16.4429C7.75632 18.8025 8.16052 19.9824 8.80519 20.3574C9.36428 20.6826 10.0461 20.7174 10.6354 20.4507C11.3149 20.1432 11.837 19.0106 12.8813 16.7454L13.6528 15.0719C13.819 14.7113 13.9021 14.531 14.0159 14.3736C14.1168 14.2338 14.2354 14.1078 14.3686 13.9984C14.5188 13.8752 14.6936 13.7812 15.0433 13.5932L17.2607 12.4008Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <div><code>cursor-01</code></div>
+  </div>
+  <div style="text-align:center">
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="48" height="48"><path d="M16.5744 19.1999L12.6361 15.2616L11.4334 16.4643C10.2022 17.6955 9.58656 18.3111 8.92489 18.1658C8.26322 18.0204 7.96225 17.2035 7.3603 15.5696L5.3527 10.1205C4.15187 6.86106 3.55146 5.23136 4.39141 4.39141C5.23136 3.55146 6.86106 4.15187 10.1205 5.35271L15.5696 7.3603C17.2035 7.96225 18.0204 8.26322 18.1658 8.92489C18.3111 9.58656 17.6955 10.2022 16.4643 11.4334L15.2616 12.6361L19.1999 16.5744C19.6077 16.9821 19.8116 17.186 19.9058 17.4135C20.0314 17.7168 20.0314 18.0575 19.9058 18.3608C19.8116 18.5882 19.6077 18.7921 19.1999 19.1999C18.7921 19.6077 18.5882 19.8116 18.3608 19.9058C18.0575 20.0314 17.7168 20.0314 17.4135 19.9058C17.186 19.8116 16.9821 19.6077 16.5744 19.1999Z" fill="currentColor"/></svg>
+    <div><code>cursor-02</code></div>
+  </div>
+  <div style="text-align:center">
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="48" height="48"><path d="M16.5744 19.1999L12.6361 15.2616L11.4334 16.4643C10.2022 17.6955 9.58656 18.3111 8.92489 18.1658C8.26322 18.0204 7.96225 17.2035 7.3603 15.5696L5.3527 10.1205C4.15187 6.86106 3.55146 5.23136 4.39141 4.39141C5.23136 3.55146 6.86106 4.15187 10.1205 5.35271L15.5696 7.3603C17.2035 7.96225 18.0204 8.26322 18.1658 8.92489C18.3111 9.58656 17.6955 10.2022 16.4643 11.4334L15.2616 12.6361L19.1999 16.5744C19.6077 16.9821 19.8116 17.186 19.9058 17.4135C20.0314 17.7168 20.0314 18.0575 19.9058 18.3608C19.8116 18.5882 19.6077 18.7921 19.1999 19.1999C18.7921 19.6077 18.5882 19.8116 18.3608 19.9058C18.0575 20.0314 17.7168 20.0314 17.4135 19.9058C17.186 19.8116 16.9821 19.6077 16.5744 19.1999Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <div><code>cursor-03</code></div>
+  </div>
+</div>
+
+```ts
+// Example: use cursor-02 preset with a custom colour
+walkr({
+  url: "https://example.com",
+  cursor: { shape: "cursor-02", color: "#10b981", size: 28 },
+  steps: [/* ... */],
+});
+```
 
 ---
 
