@@ -12,10 +12,13 @@
     "knip": "knip",
     "test": "vitest run",
     "docs:dev": "pnpm --filter @walkrstudio/docs dev",
-    "docs:build": "pnpm --filter @walkrstudio/docs build"
+    "docs:build": "pnpm --filter @walkrstudio/docs build",
+    "version": "changeset version",
+    "release": "pnpm build && changeset publish"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.5",
+    "@changesets/cli": "^2.30.0",
     "jsdom": "^28.1.0",
     "knip": "^5.85.0",
     "typescript": "^5.8.2",

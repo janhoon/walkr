@@ -1,6 +1,6 @@
 {
   "name": "@walkrstudio/create",
-  "version": "0.2.3",
+  "version": "0.5.2",
   "description": "Scaffold a new Walkr walkthrough project",
   "type": "module",
   "bin": {
