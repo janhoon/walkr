@@ -81,6 +81,26 @@ npx walkr dev demo.ts
 | `double` | `boolean` | `false` | Double-click. |
 | `cursor` | `Partial<CursorConfig>` | — | Per-step cursor override. |
 
+### Hover
+
+```ts
+hover(".dropdown-trigger", { duration: 1500 })
+hover("#tooltip-target")
+```
+
+| Function | Signature | Description |
+| --- | --- | --- |
+| `hover` | `hover(selector, options?)` | Hover over a DOM element with automatic cleanup. |
+
+**Options** (`HoverOptions`):
+
+| Option | Type | Default | Description |
+| --- | --- | --- | --- |
+| `duration` | `number` | `0` | How long to hold the hover state (ms). |
+| `cursor` | `Partial<CursorConfig>` | — | Per-step cursor override. |
+
+Moves cursor to the element, dispatches `mouseover` + `mouseenter`, holds for the duration, then dispatches `mouseleave` + `mouseout`. The element returns to its default (non-hovered) appearance after the step completes.
+
 ### Drag
 
 ```ts

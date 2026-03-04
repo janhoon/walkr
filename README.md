@@ -39,7 +39,7 @@ npx @walkrstudio/cli dev demo.ts
 Create a file called `demo.ts`:
 
 ```ts
-import { walkr, moveTo, click, type, highlight, wait, drag } from "@walkrstudio/core";
+import { walkr, moveTo, click, type, highlight, hover, wait, drag } from "@walkrstudio/core";
 
 export default walkr({
   url: "https://your-app.com",
@@ -250,6 +250,20 @@ Pause for a fixed duration. Useful between steps for pacing.
 ```ts
 wait(500)
 ```
+
+### `hover(selector, options?)`
+
+Hover over an element. Moves the cursor to the element, dispatches `mouseover` and `mouseenter`, holds for the specified duration, then dispatches `mouseleave` and `mouseout` to clean up the hover state. The element returns to its default (non-hovered) appearance after the step completes.
+
+```ts
+hover(".dropdown-trigger", { duration: 1500 })
+hover("#tooltip-target")
+```
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `duration` | `number` | How long to hold the hover (ms). Default: `0` |
+| `cursor` | `Partial<CursorConfig>` | Per-step cursor override |
 
 ### `drag(from, to, options?)`
 

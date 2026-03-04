@@ -10,6 +10,7 @@ import type {
   CursorConfig,
   DragStep,
   HighlightStep,
+  HoverStep,
   MouseButton,
   MoveToCoordsStep,
   MoveToStep,
@@ -1200,6 +1201,65 @@ async function executeDrag(
   await sleep(releaseDuration);
 }
 
+const DEFAULT_HOVER_MOVE_DURATION = 120;
+
+/**
+ * executeHover — moves the cursor to the target element, dispatches mouseover
+ * and mouseenter events, holds for the configured duration, then dispatches
+ * mouseleave and mouseout events. A transient style sheet forces the :hover
+ * pseudo-class appearance during the hold phase and is removed on cleanup so
+ * the element returns to its default (non-hovered) appearance.
+ */
+async function executeHover(
+  step: HoverStep,
+  cursor: HTMLElement,
+  iframe: HTMLIFrameElement,
+): Promise<void> {
+  const doc = getFrameDocument(iframe);
+  if (!doc) {
+    throw new StepError({
+      stepType: "hover",
+      selector: step.options.selector,
+      reason: "no-document",
+    });
+  }
+
+  const center = resolveElementCenter(doc, step.options.selector);
+  if (!center) {
+    throw new StepError({
+      stepType: "hover",
+      selector: step.options.selector,
+      reason: "not-found",
+    });
+  }
+
+  const target = doc.querySelector(step.options.selector);
+  if (!target) {
+    throw new StepError({
+      stepType: "hover",
+      selector: step.options.selector,
+      reason: "not-found",
+    });
+  }
+
+  // Move cursor to element center
+  await moveCursorTo(cursor, center.x, center.y, DEFAULT_HOVER_MOVE_DURATION, "easeOut");
+
+  // Dispatch hover-start events
+  dispatchMouse(doc, target, "mouseover", center.x, center.y, 0);
+  dispatchMouse(doc, target, "mouseenter", center.x, center.y, 0);
+
+  // Hold the hover for the requested duration
+  const duration = Math.max(0, step.options.duration ?? 0);
+  if (duration > 0) {
+    await sleep(duration);
+  }
+
+  // Dispatch hover-end events
+  dispatchMouse(doc, target, "mouseleave", center.x, center.y, 0);
+  dispatchMouse(doc, target, "mouseout", center.x, center.y, 0);
+}
+
 async function executeClearCache(iframe: HTMLIFrameElement): Promise<void> {
   try {
     const win = getFrameWindow(iframe);
@@ -1348,6 +1408,9 @@ export async function executeStep(
         break;
       case "drag":
         await executeDrag(step as DragStep, cursor, iframe, context);
+        break;
+      case "hover":
+        await executeHover(step as HoverStep, cursor, iframe);
         break;
       default:
         break;

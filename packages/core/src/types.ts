@@ -23,7 +23,8 @@ export type StepType =
   | "sequence"
   | "parallel"
   | "clearCache"
-  | "drag";
+  | "drag"
+  | "hover";
 
 export type CursorShape =
   | "circle"
@@ -197,6 +198,15 @@ export interface DragStepOptions extends StepCursorOverride {
   to: DragEndpoint;
 }
 
+export interface HoverOptions extends StepCursorOverride {
+  /** How long to hold the hover state in ms before dispatching leave events. Default: 0. */
+  duration?: number;
+}
+
+export interface HoverStepOptions extends HoverOptions {
+  selector: string;
+}
+
 // biome-ignore lint/complexity/noBannedTypes: {} is intentional — constrains TOptions to any object shape
 export interface Step<TType extends StepType = StepType, TOptions extends {} = {}> {
   id: string;
@@ -223,6 +233,7 @@ export type SequenceStep = Step<"sequence", SequenceStepOptions>;
 export type ParallelStep = Step<"parallel", ParallelStepOptions>;
 export type ClearCacheStep = Step<"clearCache", ClearCacheStepOptions>;
 export type DragStep = Step<"drag", DragStepOptions>;
+export type HoverStep = Step<"hover", HoverStepOptions>;
 
 export interface Walkthrough {
   url: string;

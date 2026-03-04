@@ -12,6 +12,9 @@ import type {
   HighlightOptions,
   HighlightStep,
   HighlightStepOptions,
+  HoverOptions,
+  HoverStep,
+  HoverStepOptions,
   MoveToCoordsStep,
   MoveToCoordsStepOptions,
   MoveToOptions,
@@ -61,6 +64,7 @@ const DEFAULT_ZOOM_DURATION = 360;
 const DEFAULT_PAN_DURATION = 360;
 const DEFAULT_CLEAR_CACHE_DURATION = 50;
 const DEFAULT_DRAG_DURATION = 1000;
+const DEFAULT_HOVER_DURATION = 0;
 const DEFAULT_TOOLTIP_DURATION = 3000;
 const DEFAULT_WAIT_FOR_SELECTOR_TIMEOUT = 5000;
 const DEFAULT_WAIT_FOR_NAVIGATION_TIMEOUT = 5000;
@@ -219,6 +223,16 @@ export function drag(
 ): DragStep {
   const stepOptions: DragStepOptions = { from, to, cursor: options.cursor };
   return createStep("drag", stepOptions, DEFAULT_DRAG_DURATION);
+}
+
+export function hover(selector: string, options: HoverOptions = {}): HoverStep {
+  const duration = options.duration ?? DEFAULT_HOVER_DURATION;
+  const stepOptions: HoverStepOptions = {
+    selector,
+    duration,
+    cursor: options.cursor,
+  };
+  return createStep("hover", stepOptions, duration);
 }
 
 export type { DragEndpoint, PanStepOptions, ZoomStepOptions };

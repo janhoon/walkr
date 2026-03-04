@@ -101,6 +101,7 @@ The engine handles every step type from `@walkrstudio/core`:
 - **highlight** — Renders a backdrop overlay with spotlight around the target element.
 - **zoom** — Applies CSS `scale()` transform to the stage.
 - **pan** — Applies CSS `translate()` transform to the stage.
+- **hover** — Moves cursor to the element, dispatches hover-start events, holds, then dispatches hover-end events for cleanup.
 - **drag** — Animates a click-drag between two endpoints with pointer/mouse events.
 - **clearCache** — Clears browser state for a clean starting point.
 - **sequence / parallel** — Nested step composition.
