@@ -283,6 +283,24 @@ pan(200, 100, { duration: 500, easing: "ease-in-out" });
 | `easing` | `string` | `"cubic-bezier(0.42, 0, 0.58, 1)"` | CSS easing function. |
 | `cursor` | `Partial<CursorConfig>` | — | Per-step cursor override. |
 
+### `hover(selector, options?)`
+
+Hover over a DOM element. The engine moves the cursor to the element, dispatches `mouseover` and `mouseenter` events, holds the hover for the configured duration, then dispatches `mouseleave` and `mouseout` to end the hover. The element returns to its default (non-hovered) appearance after cleanup.
+
+```ts
+hover(".dropdown-trigger", { duration: 1500 });
+hover("#tooltip-target");
+```
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `duration` | `number` | `0` | How long to hold the hover state (ms). |
+| `cursor` | `Partial<CursorConfig>` | — | Per-step cursor override. |
+
+::: tip Hover-End Cleanup
+Unlike a bare `moveTo` (which leaves the cursor positioned over the element), `hover` explicitly dispatches leave events when the duration expires. This ensures CSS `:hover` styles, JavaScript hover handlers, and tooltip triggers are properly deactivated — the element returns to its non-hovered state.
+:::
+
 ### `drag(from, to, options?)`
 
 Simulate a click-drag from one location to another. Each endpoint can be a CSS selector (resolves to the element's center) or absolute coordinates.

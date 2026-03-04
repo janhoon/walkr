@@ -3,6 +3,7 @@ import {
   click,
   clickCoords,
   highlight,
+  hover,
   moveTo,
   moveToCoords,
   narrate,
@@ -345,5 +346,38 @@ describe("narrate", () => {
   it("uses 0 as step duration when no duration option is set", () => {
     const step = narrate("/audio/file.mp3");
     expect(step.duration).toBe(0);
+  });
+});
+
+describe("hover", () => {
+  it("creates a hover step with selector and default duration", () => {
+    const step = hover("#menu-item");
+    expect(step.type).toBe("hover");
+    expect(step.options.selector).toBe("#menu-item");
+    expect(step.options.duration).toBe(0);
+    expect(step.duration).toBe(0);
+  });
+
+  it("accepts a custom duration", () => {
+    const step = hover(".tooltip-trigger", { duration: 1500 });
+    expect(step.options.duration).toBe(1500);
+    expect(step.duration).toBe(1500);
+  });
+
+  it("creates a zero-duration hover step", () => {
+    const step = hover("#btn", { duration: 0 });
+    expect(step.options.duration).toBe(0);
+    expect(step.duration).toBe(0);
+  });
+
+  it("passes cursor override through", () => {
+    const step = hover("#el", { cursor: { color: "#ff0000" } });
+    expect(step.options.cursor).toEqual({ color: "#ff0000" });
+  });
+
+  it("generates unique IDs for each step", () => {
+    const a = hover("#a");
+    const b = hover("#b");
+    expect(a.id).not.toBe(b.id);
   });
 });
