@@ -51,7 +51,13 @@ export interface ZoomDefaults {
   easing?: string;
 }
 
-export interface StepCursorOverride {
+/** Base options shared by all step builders. */
+export interface BaseStepOptions {
+  /** Optional human-readable name for the step. Shown in Studio timeline, engine events, and error messages. */
+  name?: string;
+}
+
+export interface StepCursorOverride extends BaseStepOptions {
   cursor?: Partial<CursorConfig>;
 }
 
@@ -145,7 +151,7 @@ export interface TooltipStepOptions extends TooltipOptions {
   text: string;
 }
 
-export interface NarrateOptions {
+export interface NarrateOptions extends BaseStepOptions {
   /** Duration in ms. If not set, derived from audio length at runtime. */
   duration?: number;
   /** Volume level from 0 to 1. Default: 1. */
@@ -188,8 +194,7 @@ export interface ParallelStepOptions extends StepCursorOverride {
   steps: Step[];
 }
 
-// biome-ignore lint/complexity/noBannedTypes: {} is intentional — no options needed
-export type ClearCacheStepOptions = {};
+export type ClearCacheStepOptions = BaseStepOptions;
 
 export type DragEndpoint = { selector: string } | { x: number; y: number };
 
@@ -213,6 +218,8 @@ export interface Step<TType extends StepType = StepType, TOptions extends {} = {
   type: TType;
   options: TOptions;
   duration: number;
+  /** Optional human-readable name. Shown in Studio timeline, engine events, and error messages. */
+  name?: string;
 }
 
 export type MoveToStep = Step<"moveTo", MoveToStepOptions>;

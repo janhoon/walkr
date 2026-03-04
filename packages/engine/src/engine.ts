@@ -12,6 +12,7 @@ import type {
   EngineState,
   EventHandler,
   PlaybackEvent,
+  StepDetail,
   StepErrorDetail,
   Viewport,
   Walkthrough,
@@ -339,7 +340,15 @@ export class WalkrEngine {
       }
 
       const step = walkthrough.steps[index];
+      const stepName = step.name;
       const cursorRef = this.cursor;
+
+      this.emit("step_start", {
+        stepIndex: index,
+        stepType: step.type,
+        stepName,
+      });
+
       await executeStep(step, cursorRef, this.iframe, {
         getCursorConfig: () => ({ ...this.activeCursorConfig }),
         setCursorConfig: (config) => {
@@ -355,6 +364,7 @@ export class WalkrEngine {
             stepResult: {
               status: "error",
               stepType: error.stepType,
+              stepName,
               selector: error.selector,
               durationMs: 0,
               error,
@@ -370,6 +380,12 @@ export class WalkrEngine {
       this.state.currentStep = index + 1;
       this.state.progress =
         this.state.totalSteps > 0 ? this.state.currentStep / this.state.totalSteps : 1;
+
+      this.emit("step_end", {
+        stepIndex: index,
+        stepType: step.type,
+        stepName,
+      });
       this.emit("step");
     }
 
@@ -455,7 +471,7 @@ export class WalkrEngine {
     return { ...this.state };
   }
 
-  private emit(event: PlaybackEvent, detail?: StepErrorDetail): void {
+  private emit(event: PlaybackEvent, detail?: StepErrorDetail | StepDetail): void {
     const listeners = this.handlers.get(event);
     if (!listeners || listeners.size === 0) {
       return;

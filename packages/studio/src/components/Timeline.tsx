@@ -308,11 +308,17 @@ export function Timeline({
                   style={{
                     fontSize: 11,
                     fontWeight: 600,
-                    textTransform: "uppercase",
+                    textTransform: step.name ? "none" : "uppercase",
                     color: "#e8e8e8",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                    maxWidth: "100%",
+                    padding: "0 4px",
                   }}
+                  title={step.name ? `${step.name} (${step.type})` : step.type}
                 >
-                  {step.type}
+                  {step.name ?? step.type}
                 </span>
                 <span style={{ fontSize: 10, color: "rgba(255,255,255,0.5)", marginTop: 2 }}>
                   {resizing?.index === i && resizePreview !== null
