@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/janhoon/walkr/compare/engine-v0.4.2...engine-v0.5.0) (2026-03-04)
+
+
+### Features
+
+* add hover step to Actions API ([#491](https://github.com/janhoon/walkr/issues/491)) ([#34](https://github.com/janhoon/walkr/issues/34)) ([8e820da](https://github.com/janhoon/walkr/commit/8e820da68bc7d408cc76f16f06a3344fa35fb708))
+
 ## [0.4.2](https://github.com/janhoon/walkr/compare/engine-v0.4.1...engine-v0.4.2) (2026-03-03)
 
 
