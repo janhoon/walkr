@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.6.0](https://github.com/janhoon/walkr/compare/engine-v0.5.0...engine-v0.6.0) (2026-03-05)
+
+
+### Features
+
+* add optional name annotation to all steps ([#492](https://github.com/janhoon/walkr/issues/492)) ([10f92ea](https://github.com/janhoon/walkr/commit/10f92ead324b819705c5e916d6442d95415c26c2))
+* add optional name annotation to all steps ([#492](https://github.com/janhoon/walkr/issues/492)) ([f82f8a0](https://github.com/janhoon/walkr/commit/f82f8a068e2b01afd65fc4da986f89f65b263444))
+
+
+### Bug Fixes
+
+* address CodeRabbit review comments on step names ([ba66f55](https://github.com/janhoon/walkr/commit/ba66f551b2c3675018b6db4365d7ffb789dfd884))
+
 ## [0.5.0](https://github.com/janhoon/walkr/compare/engine-v0.4.2...engine-v0.5.0) (2026-03-04)
 
 
