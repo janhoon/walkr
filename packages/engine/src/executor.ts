@@ -1344,6 +1344,7 @@ export async function executeStep(
   const startTime = performance.now();
   const stepType = step.type;
   const selector = getStepSelector(step);
+  const stepName = step.name;
 
   const cursorOverride = getStepCursorOverride(step);
   const previousCursorConfig =
@@ -1419,25 +1420,27 @@ export async function executeStep(
     const durationMs = performance.now() - startTime;
 
     if (context?.debug) {
+      const nameLabel = stepName ? ` name="${stepName}"` : "";
       console.log(
-        `[walkr:debug] step=${stepType} selector=${selector ?? "none"} duration=${durationMs.toFixed(1)}ms result=ok`,
+        `[walkr:debug] step=${stepType}${nameLabel} selector=${selector ?? "none"} duration=${durationMs.toFixed(1)}ms result=ok`,
       );
     }
 
-    return { status: "ok", stepType, selector, durationMs };
+    return { status: "ok", stepType, stepName, selector, durationMs };
   } catch (error) {
     const durationMs = performance.now() - startTime;
 
     if (error instanceof StepError) {
       if (context?.debug) {
+        const nameLabel = stepName ? ` name="${stepName}"` : "";
         console.log(
-          `[walkr:debug] step=${stepType} selector=${selector ?? "none"} duration=${durationMs.toFixed(1)}ms result=${error.reason}`,
+          `[walkr:debug] step=${stepType}${nameLabel} selector=${selector ?? "none"} duration=${durationMs.toFixed(1)}ms result=${error.reason}`,
         );
       }
 
       context?.onStepError?.(error, step);
 
-      return { status: "error", stepType, selector, durationMs, error };
+      return { status: "error", stepType, stepName, selector, durationMs, error };
     }
 
     // Re-throw unexpected errors

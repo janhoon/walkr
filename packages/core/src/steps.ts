@@ -1,4 +1,5 @@
 import type {
+  BaseStepOptions,
   ClearCacheStep,
   ClearCacheStepOptions,
   ClickCoordsStep,
@@ -74,146 +75,166 @@ export function createStep<
   TType extends StepType,
   // eslint-disable-next-line @typescript-eslint/no-empty-object-type
   TOptions extends {},
->(type: TType, options: TOptions, duration = 0): Step<TType, TOptions> {
+>(type: TType, options: TOptions, duration = 0, name?: string): Step<TType, TOptions> {
   const count = typeCounters.get(type) ?? 0;
   typeCounters.set(type, count + 1);
-  return {
+  const step: Step<TType, TOptions> = {
     id: `${type}_${count}`,
     type,
     options,
     duration,
   };
+  if (name != null) {
+    step.name = name;
+  }
+  return step;
 }
 
 export function moveTo(selector: string, options: MoveToOptions = {}): MoveToStep {
-  const stepOptions: MoveToStepOptions = { selector, ...options };
-  return createStep("moveTo", stepOptions, options.duration ?? 0);
+  const { name, ...rest } = options;
+  const stepOptions: MoveToStepOptions = { selector, ...rest };
+  return createStep("moveTo", stepOptions, options.duration ?? 0, name);
 }
 
 export function moveToCoords(x: number, y: number, options: MoveToOptions = {}): MoveToCoordsStep {
-  const stepOptions: MoveToCoordsStepOptions = { x, y, ...options };
-  return createStep("moveToCoords", stepOptions, options.duration ?? 0);
+  const { name, ...rest } = options;
+  const stepOptions: MoveToCoordsStepOptions = { x, y, ...rest };
+  return createStep("moveToCoords", stepOptions, options.duration ?? 0, name);
 }
 
 export function click(selector: string, options: ClickOptions = {}): ClickStep {
+  const { name, ...rest } = options;
   const stepOptions: ClickStepOptions = {
     selector,
-    button: options.button ?? "left",
-    double: options.double ?? false,
+    button: rest.button ?? "left",
+    double: rest.double ?? false,
+    ...(rest.cursor !== undefined && { cursor: rest.cursor }),
   };
-  return createStep("click", stepOptions, DEFAULT_CLICK_DURATION);
+  return createStep("click", stepOptions, DEFAULT_CLICK_DURATION, name);
 }
 
 export function clickCoords(x: number, y: number, options: ClickOptions = {}): ClickCoordsStep {
+  const { name, ...rest } = options;
   const stepOptions: ClickCoordsStepOptions = {
     x,
     y,
-    button: options.button ?? "left",
-    double: options.double ?? false,
+    button: rest.button ?? "left",
+    double: rest.double ?? false,
+    ...(rest.cursor !== undefined && { cursor: rest.cursor }),
   };
-  return createStep("clickCoords", stepOptions, DEFAULT_CLICK_DURATION);
+  return createStep("clickCoords", stepOptions, DEFAULT_CLICK_DURATION, name);
 }
 
 export function type(text: string, options: TypeOptions = {}): TypeStep {
-  const stepOptions: TypeStepOptions = { text, ...options };
+  const { name, ...rest } = options;
+  const stepOptions: TypeStepOptions = { text, ...rest };
   const duration = text.length * (options.delay ?? 0);
-  return createStep("type", stepOptions, duration);
+  return createStep("type", stepOptions, duration, name);
 }
 
 export function scroll(x: number, y: number, options: ScrollOptions = {}): ScrollStep {
-  const stepOptions: ScrollStepOptions = { x, y, ...options };
-  return createStep("scroll", stepOptions, 0);
+  const { name, ...rest } = options;
+  const stepOptions: ScrollStepOptions = { x, y, ...rest };
+  return createStep("scroll", stepOptions, 0, name);
 }
 
-export function wait(ms: number): WaitStep {
+export function wait(ms: number, options: BaseStepOptions = {}): WaitStep {
   const stepOptions: WaitStepOptions = { ms };
-  return createStep("wait", stepOptions, ms);
+  return createStep("wait", stepOptions, ms, options.name);
 }
 
 export function waitForSelector(
   selector: string,
   options: Omit<WaitForSelectorOptions, "selector"> = {},
 ): WaitForSelectorStep {
-  const timeout = options.timeout ?? DEFAULT_WAIT_FOR_SELECTOR_TIMEOUT;
+  const { name, ...rest } = options;
+  const timeout = rest.timeout ?? DEFAULT_WAIT_FOR_SELECTOR_TIMEOUT;
   const stepOptions: WaitForSelectorOptions = {
     selector,
     timeout,
-    visible: options.visible,
-    cursor: options.cursor,
+    visible: rest.visible,
+    cursor: rest.cursor,
   };
-  return createStep("waitForSelector", stepOptions, timeout);
+  return createStep("waitForSelector", stepOptions, timeout, name);
 }
 
 export function waitForNavigation(options: WaitForNavigationOptions = {}): WaitForNavigationStep {
-  const timeout = options.timeout ?? DEFAULT_WAIT_FOR_NAVIGATION_TIMEOUT;
+  const { name, ...rest } = options;
+  const timeout = rest.timeout ?? DEFAULT_WAIT_FOR_NAVIGATION_TIMEOUT;
   const stepOptions: WaitForNavigationOptions = {
     timeout,
-    waitUntil: options.waitUntil ?? "load",
-    cursor: options.cursor,
+    waitUntil: rest.waitUntil ?? "load",
+    cursor: rest.cursor,
   };
-  return createStep("waitForNavigation", stepOptions, timeout);
+  return createStep("waitForNavigation", stepOptions, timeout, name);
 }
 
 export function highlight(selector: string, options: HighlightOptions = {}): HighlightStep {
+  const { name, ...rest } = options;
   const stepOptions: HighlightStepOptions = {
     selector,
-    color: options.color,
-    duration: options.duration,
-    spotlight: options.spotlight,
-    backdropOpacity: options.backdropOpacity,
-    borderRadius: options.borderRadius,
-    padding: options.padding,
-    cursor: options.cursor,
+    color: rest.color,
+    duration: rest.duration,
+    spotlight: rest.spotlight,
+    backdropOpacity: rest.backdropOpacity,
+    borderRadius: rest.borderRadius,
+    padding: rest.padding,
+    cursor: rest.cursor,
   };
-  return createStep("highlight", stepOptions, options.duration ?? 0);
+  return createStep("highlight", stepOptions, options.duration ?? 0, name);
 }
 
 export function tooltip(selector: string, text: string, options: TooltipOptions = {}): TooltipStep {
-  const duration = options.duration ?? DEFAULT_TOOLTIP_DURATION;
+  const { name, ...rest } = options;
+  const duration = rest.duration ?? DEFAULT_TOOLTIP_DURATION;
   const stepOptions: TooltipStepOptions = {
     selector,
     text,
     duration,
-    position: options.position ?? "top",
-    title: options.title,
-    cursor: options.cursor,
+    position: rest.position ?? "top",
+    title: rest.title,
+    cursor: rest.cursor,
   };
-  return createStep("tooltip", stepOptions, duration);
+  return createStep("tooltip", stepOptions, duration, name);
 }
 
 export function narrate(src: string, options: NarrateOptions = {}): NarrateStep {
+  const { name, ...rest } = options;
   const stepOptions: NarrateStepOptions = {
     src,
-    duration: options.duration,
-    volume: options.volume ?? 1,
-    loop: options.loop ?? false,
+    duration: rest.duration,
+    volume: rest.volume ?? 1,
+    loop: rest.loop ?? false,
   };
-  return createStep("narrate", stepOptions, options.duration ?? 0);
+  return createStep("narrate", stepOptions, options.duration ?? 0, name);
 }
 
 export function zoom(level: number, options: ZoomOptions = {}): ZoomStep {
+  const { name, ...rest } = options;
   const stepOptions: ZoomStepOptions = {
     level,
-    easing: options.easing ?? DEFAULT_EASING,
-    ...options,
+    easing: rest.easing ?? DEFAULT_EASING,
+    ...rest,
   };
-  return createStep("zoom", stepOptions, DEFAULT_ZOOM_DURATION);
+  return createStep("zoom", stepOptions, DEFAULT_ZOOM_DURATION, name);
 }
 
 export function pan(x: number, y: number, options: PanOptions = {}): PanStep {
+  const { name, ...rest } = options;
   const stepOptions: PanStepOptions = {
     x,
     y,
-    duration: options.duration ?? DEFAULT_PAN_DURATION,
-    easing: options.easing ?? DEFAULT_EASING,
-    ...options,
+    duration: rest.duration ?? DEFAULT_PAN_DURATION,
+    easing: rest.easing ?? DEFAULT_EASING,
+    ...rest,
   };
-  return createStep("pan", stepOptions, stepOptions.duration ?? DEFAULT_PAN_DURATION);
+  return createStep("pan", stepOptions, stepOptions.duration ?? DEFAULT_PAN_DURATION, name);
 }
 
-export function clearCache(): ClearCacheStep {
-  const stepOptions: ClearCacheStepOptions = {};
-  return createStep("clearCache", stepOptions, DEFAULT_CLEAR_CACHE_DURATION);
+export function clearCache(options: ClearCacheStepOptions = {}): ClearCacheStep {
+  const { name, ...rest } = options;
+  const stepOptions: ClearCacheStepOptions = { ...rest };
+  return createStep("clearCache", stepOptions, DEFAULT_CLEAR_CACHE_DURATION, name);
 }
 
 export function drag(
@@ -221,18 +242,20 @@ export function drag(
   to: DragEndpoint,
   options: StepCursorOverride = {},
 ): DragStep {
-  const stepOptions: DragStepOptions = { from, to, cursor: options.cursor };
-  return createStep("drag", stepOptions, DEFAULT_DRAG_DURATION);
+  const { name, ...rest } = options;
+  const stepOptions: DragStepOptions = { from, to, cursor: rest.cursor };
+  return createStep("drag", stepOptions, DEFAULT_DRAG_DURATION, name);
 }
 
 export function hover(selector: string, options: HoverOptions = {}): HoverStep {
-  const duration = options.duration ?? DEFAULT_HOVER_DURATION;
+  const { name, ...rest } = options;
+  const duration = rest.duration ?? DEFAULT_HOVER_DURATION;
   const stepOptions: HoverStepOptions = {
     selector,
     duration,
-    cursor: options.cursor,
+    cursor: rest.cursor,
   };
-  return createStep("hover", stepOptions, duration);
+  return createStep("hover", stepOptions, duration, name);
 }
 
 export type { DragEndpoint, PanStepOptions, ZoomStepOptions };

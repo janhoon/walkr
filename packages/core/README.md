@@ -48,6 +48,18 @@ Preview it with the CLI:
 npx walkr dev demo.ts
 ```
 
+## Step names
+
+Every step accepts an optional `name` in its options. Names appear in the Studio timeline, engine lifecycle events, and error messages — making walkthroughs easier to read and debug.
+
+```ts
+moveTo('#settings', { name: 'Open settings menu' })
+click('#save-btn', { name: 'Save changes' })
+wait(1000, { name: 'Wait for animation' })
+```
+
+Step names also help AI agents debug: when a user reports an issue with "the Save changes step", an AI can target that step directly by name rather than guessing from step indices.
+
 ## Step reference
 
 ### Cursor movement
@@ -61,6 +73,7 @@ npx walkr dev demo.ts
 
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
+| `name` | `string` | — | Human-readable step label. |
 | `duration` | `number` | `0` | Animation duration in ms. |
 | `easing` | `string` | — | CSS easing string (e.g. `"ease-in-out"`). |
 | `follow` | `boolean` | — | Keep following a moving target when supported by the runtime. |
@@ -77,6 +90,7 @@ npx walkr dev demo.ts
 
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
+| `name` | `string` | — | Human-readable step label. |
 | `button` | `"left" \| "right" \| "middle"` | `"left"` | Mouse button. |
 | `double` | `boolean` | `false` | Double-click. |
 | `cursor` | `Partial<CursorConfig>` | — | Per-step cursor override. |
@@ -151,7 +165,11 @@ scroll(0, 700, { smooth: true })
 wait(500) // pause for 500ms
 ```
 
-No options — accepts a single `ms` value.
+Accepts a single `ms` value and the optional `name` option.
+
+| Option | Type | Default | Description |
+| --- | --- | --- | --- |
+| `name` | `string` | — | Optional step name shown in the timeline and emitted in events. |
 
 ### Highlight
 

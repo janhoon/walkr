@@ -45,13 +45,13 @@ export default walkr({
   url: "https://your-app.com",
   title: "Signup walkthrough",
   steps: [
-    moveTo("#email-input", { duration: 600 }),
-    click("#email-input"),
-    type("hello@example.com", { selector: "#email-input", delay: 35 }),
-    wait(300),
-    highlight(".submit-btn", { spotlight: true, color: "#22d3ee", duration: 1200 }),
-    moveTo(".submit-btn", { duration: 400 }),
-    click(".submit-btn"),
+    moveTo("#email-input", { name: "Focus email field", duration: 600 }),
+    click("#email-input", { name: "Click email input" }),
+    type("hello@example.com", { name: "Enter email", selector: "#email-input", delay: 35 }),
+    wait(300, { name: "Pause before highlight" }),
+    highlight(".submit-btn", { name: "Spotlight submit", spotlight: true, color: "#22d3ee", duration: 1200 }),
+    moveTo(".submit-btn", { name: "Move to submit", duration: 400 }),
+    click(".submit-btn", { name: "Submit form" }),
   ],
 });
 ```
@@ -110,6 +110,18 @@ walkr export demo.ts --format mp4 --realtime
 
 All step functions are imported from `@walkrstudio/core`.
 
+### Step names
+
+Every step accepts an optional `name` in its options. Names appear in the Studio timeline, engine lifecycle events (`step_start`, `step_end`, `step_error`), and error messages — making walkthroughs easier to read and debug.
+
+```ts
+moveTo('#settings', { name: 'Open settings menu' })
+click('#save-btn', { name: 'Save changes' })
+wait(1000, { name: 'Wait for animation' })
+```
+
+When a step has no name, the Studio timeline falls back to showing the step type (e.g. `CLICK`).
+
 ### `walkr(options)`
 
 Define a walkthrough. Returns a `Walkthrough` object.
@@ -135,6 +147,7 @@ moveTo("#signup-btn", { duration: 600, easing: "ease-in-out" })
 
 | Option | Type | Description |
 |--------|------|-------------|
+| `name` | `string` | Human-readable step label |
 | `duration` | `number` | Animation time in ms |
 | `easing` | `string` | CSS easing function |
 | `follow` | `boolean` | Follow element if it moves |
@@ -159,6 +172,7 @@ click("#file", { double: true })
 
 | Option | Type | Description |
 |--------|------|-------------|
+| `name` | `string` | Human-readable step label |
 | `button` | `"left" \| "right" \| "middle"` | Mouse button |
 | `double` | `boolean` | Double-click |
 
@@ -176,6 +190,7 @@ type("hello@example.com", { selector: "#email-input", delay: 35 })
 
 | Option | Type | Description |
 |--------|------|-------------|
+| `name` | `string` | Human-readable step label |
 | `selector` | `string` | Target element (focuses it before typing) |
 | `delay` | `number` | Delay between keystrokes in ms |
 
@@ -189,6 +204,7 @@ scroll(0, 500, { smooth: true })
 
 | Option | Type | Description |
 |--------|------|-------------|
+| `name` | `string` | Human-readable step label |
 | `smooth` | `boolean` | Use smooth scrolling |
 
 ### `highlight(selector, options?)`
@@ -208,6 +224,7 @@ highlight("#feature-card", {
 
 | Option | Type | Description |
 |--------|------|-------------|
+| `name` | `string` | Human-readable step label |
 | `color` | `string` | Highlight border/glow color |
 | `duration` | `number` | How long the highlight stays visible (ms) |
 | `spotlight` | `boolean` | Dim everything outside the element |
@@ -225,6 +242,7 @@ zoom(1.5, { x: 960, y: 400, easing: "ease-out" })
 
 | Option | Type | Description |
 |--------|------|-------------|
+| `name` | `string` | Human-readable step label |
 | `x` | `number` | Zoom origin X |
 | `y` | `number` | Zoom origin Y |
 | `easing` | `string` | CSS easing function |
@@ -240,15 +258,17 @@ pan(200, 100, { duration: 500, easing: "ease-in-out" })
 
 | Option | Type | Description |
 |--------|------|-------------|
+| `name` | `string` | Human-readable step label |
 | `duration` | `number` | Animation time in ms (default: 360) |
 | `easing` | `string` | CSS easing function |
 
-### `wait(ms)`
+### `wait(ms, options?)`
 
 Pause for a fixed duration. Useful between steps for pacing.
 
 ```ts
 wait(500)
+wait(1000, { name: 'Wait for animation' })
 ```
 
 ### `hover(selector, options?)`
@@ -262,6 +282,7 @@ hover("#tooltip-target")
 
 | Option | Type | Description |
 |--------|------|-------------|
+| `name` | `string` | Human-readable step label |
 | `duration` | `number` | How long to hold the hover (ms). Default: `0` |
 | `cursor` | `Partial<CursorConfig>` | Per-step cursor override |
 
@@ -277,17 +298,23 @@ drag({ selector: "#slider-thumb" }, { x: 800, y: 200 })
 
 | Option | Type | Description |
 |--------|------|-------------|
+| `name` | `string` | Human-readable step label |
 | `cursor` | `Partial<CursorConfig>` | Per-step cursor override |
 
 Default duration: 1000 ms. Dispatches pointer and mouse events (not the HTML5 Drag and Drop API).
 
-### `clearCache()`
+### `clearCache(options?)`
 
 Clear browser cookies and storage. Useful at the start of a walkthrough to ensure a clean state.
 
 ```ts
 clearCache()
+clearCache({ name: "Reset browser state" })
 ```
+
+| Option | Type | Default | Description |
+| --- | --- | --- | --- |
+| `name` | `string` | — | Optional step name shown in the timeline and emitted in events. |
 
 ### `sequence(...steps)`
 
@@ -354,23 +381,24 @@ export default walkr({
   viewport: { width: 1920, height: 1080 },
   cursor: { shape: "arrow", color: "#10b981", size: 24, shadow: true },
   steps: [
-    clearCache(),
+    clearCache({ name: "Reset browser state" }),
     wait(800),
 
     // Fill in login form
-    moveTo('[data-testid="email-input"]', { duration: 600 }),
+    moveTo('[data-testid="email-input"]', { name: "Focus email", duration: 600 }),
     click('[data-testid="email-input"]'),
-    type("admin@example.com", { selector: '[data-testid="email-input"]', delay: 40 }),
+    type("admin@example.com", { name: "Enter email", selector: '[data-testid="email-input"]', delay: 40 }),
     wait(300),
 
-    moveTo('[data-testid="password-input"]', { duration: 400 }),
+    moveTo('[data-testid="password-input"]', { name: "Focus password", duration: 400 }),
     click('[data-testid="password-input"]'),
-    type("password123", { selector: '[data-testid="password-input"]', delay: 50 }),
+    type("password123", { name: "Enter password", selector: '[data-testid="password-input"]', delay: 50 }),
     wait(300),
 
     // Spotlight the submit button, then click
     parallel(
       highlight('[data-testid="login-btn"]', {
+        name: "Spotlight login button",
         spotlight: true,
         color: "#10b981",
         duration: 1000,
@@ -378,11 +406,11 @@ export default walkr({
       }),
       moveTo('[data-testid="login-btn"]', { duration: 600 }),
     ),
-    click('[data-testid="login-btn"]'),
+    click('[data-testid="login-btn"]', { name: "Submit login" }),
 
     // Wait for dashboard, then zoom into a feature
-    wait(1500),
-    zoom(1.4, { x: 960, y: 400, easing: "ease-out" }),
+    wait(1500, { name: "Wait for dashboard" }),
+    zoom(1.4, { name: "Zoom into feature", x: 960, y: 400, easing: "ease-out" }),
     wait(2000),
   ],
 });

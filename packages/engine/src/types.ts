@@ -82,7 +82,7 @@ export interface EngineState {
   progress: number;
 }
 
-export type PlaybackEvent = "start" | "step" | "complete" | "pause" | "resume" | "step_error";
+export type PlaybackEvent = "start" | "step" | "step_start" | "step_end" | "complete" | "pause" | "resume" | "step_error";
 
 export type StepErrorReason = "not-found" | "timeout" | "no-document";
 
@@ -94,21 +94,37 @@ export class StepError extends Error {
   readonly stepType: StepType;
   readonly selector: string | undefined;
   readonly reason: StepErrorReason;
+  /** The step's human-readable name, if one was provided. */
+  readonly stepName: string | undefined;
 
   constructor(options: {
     stepType: StepType;
     selector?: string;
     reason: StepErrorReason;
     message?: string;
+    /** The step's human-readable name. */
+    stepName?: string;
   }) {
     super(
       options.message ??
-        `Step "${options.stepType}" failed: selector ${options.selector ? `"${options.selector}" ` : ""}${options.reason}`,
+        StepError.buildMessage(options.stepType, options.selector, options.reason, options.stepName),
     );
     this.name = "StepError";
     this.stepType = options.stepType;
     this.selector = options.selector;
     this.reason = options.reason;
+    this.stepName = options.stepName;
+  }
+
+  private static buildMessage(
+    stepType: StepType,
+    selector?: string,
+    reason?: StepErrorReason,
+    stepName?: string,
+  ): string {
+    const nameLabel = stepName ? ` '${stepName}'` : "";
+    const selectorLabel = selector ? ` at selector "${selector}"` : "";
+    return `Step${nameLabel} "${stepType}" failed${selectorLabel}: ${reason}`;
   }
 }
 
@@ -116,8 +132,17 @@ export interface StepResult {
   status: "ok" | "error";
   stepType: StepType;
   selector?: string;
+  /** The step's human-readable name, if one was provided. */
+  stepName?: string;
   durationMs: number;
   error?: StepError;
+}
+
+export interface StepDetail {
+  stepIndex: number;
+  stepType: StepType;
+  /** The step's human-readable name, if one was provided. */
+  stepName?: string;
 }
 
 export interface StepErrorDetail {
@@ -129,5 +154,5 @@ export interface StepErrorDetail {
 export type EventHandler = (
   event: PlaybackEvent,
   state: EngineState,
-  detail?: StepErrorDetail,
+  detail?: StepErrorDetail | StepDetail,
 ) => void;
