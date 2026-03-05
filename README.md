@@ -303,13 +303,18 @@ drag({ selector: "#slider-thumb" }, { x: 800, y: 200 })
 
 Default duration: 1000 ms. Dispatches pointer and mouse events (not the HTML5 Drag and Drop API).
 
-### `clearCache()`
+### `clearCache(options?)`
 
 Clear browser cookies and storage. Useful at the start of a walkthrough to ensure a clean state.
 
 ```ts
 clearCache()
+clearCache({ name: "Reset browser state" })
 ```
+
+| Option | Type | Default | Description |
+| --- | --- | --- | --- |
+| `name` | `string` | — | Optional step name shown in the timeline and emitted in events. |
 
 ### `sequence(...steps)`
 

@@ -3,7 +3,7 @@
  *
  * Tests for step name propagation in executeStep results, debug logging, and StepError messages.
  */
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { executeStep } from "../executor.js";
 import type { ClickStep, MoveToStep, Step } from "../types.js";
 import { StepError } from "../types.js";
@@ -49,6 +49,10 @@ beforeEach(() => {
   document.body.innerHTML = "";
   iframe = makeIframe();
   cursor = makeCursor();
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
 });
 
 describe("step name in StepResult", () => {

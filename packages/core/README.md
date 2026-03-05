@@ -165,7 +165,11 @@ scroll(0, 700, { smooth: true })
 wait(500) // pause for 500ms
 ```
 
-No options — accepts a single `ms` value.
+Accepts a single `ms` value and the optional `name` option.
+
+| Option | Type | Default | Description |
+| --- | --- | --- | --- |
+| `name` | `string` | — | Optional step name shown in the timeline and emitted in events. |
 
 ### Highlight
 

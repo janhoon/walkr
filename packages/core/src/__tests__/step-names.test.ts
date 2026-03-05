@@ -41,9 +41,23 @@ describe("step name — builder functions", () => {
     expect(step.name).toBe("Click submit");
   });
 
+  it("click preserves cursor option alongside name", () => {
+    const cursorOverride = { size: 32 } as const;
+    const step = click("#btn", { name: "Click submit", cursor: cursorOverride });
+    expect(step.name).toBe("Click submit");
+    expect(step.options.cursor).toEqual(cursorOverride);
+  });
+
   it("clickCoords accepts a name option", () => {
     const step = clickCoords(50, 75, { name: "Click at position" });
     expect(step.name).toBe("Click at position");
+  });
+
+  it("clickCoords preserves cursor option alongside name", () => {
+    const cursorOverride = { size: 24 } as const;
+    const step = clickCoords(50, 75, { name: "Click at position", cursor: cursorOverride });
+    expect(step.name).toBe("Click at position");
+    expect(step.options.cursor).toEqual(cursorOverride);
   });
 
   it("type accepts a name option", () => {

@@ -108,6 +108,7 @@ export function click(selector: string, options: ClickOptions = {}): ClickStep {
     selector,
     button: rest.button ?? "left",
     double: rest.double ?? false,
+    ...(rest.cursor !== undefined && { cursor: rest.cursor }),
   };
   return createStep("click", stepOptions, DEFAULT_CLICK_DURATION, name);
 }
@@ -119,6 +120,7 @@ export function clickCoords(x: number, y: number, options: ClickOptions = {}): C
     y,
     button: rest.button ?? "left",
     double: rest.double ?? false,
+    ...(rest.cursor !== undefined && { cursor: rest.cursor }),
   };
   return createStep("clickCoords", stepOptions, DEFAULT_CLICK_DURATION, name);
 }

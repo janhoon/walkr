@@ -364,7 +364,7 @@ export class WalkrEngine {
             stepResult: {
               status: "error",
               stepType: error.stepType,
-              stepName,
+              stepName: error.stepName ?? stepName,
               selector: error.selector,
               durationMs: 0,
               error,
